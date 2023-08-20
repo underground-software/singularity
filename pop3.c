@@ -142,7 +142,7 @@ struct email
 	bool active;
 	char name[64 - sizeof(off_t) - sizeof(bool)];
 };
-_Static_assert(sizeof(struct email) == 64);
+_Static_assert(sizeof(struct email) == 64, "size of struct email should be 64");
 
 static int mail_dir_fd;
 static struct email *maildrop;
