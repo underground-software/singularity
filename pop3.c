@@ -350,7 +350,7 @@ int main(int argc, char **argv)
 				if(!maildrop[index].active)
 					REPLY("-ERR Invalid index")
 				char stat_message[64];
-				size_t message_len = (size_t)snprintf(stat_message, sizeof stat_message, "%zu %"SCNiMAX"\r\n", index + 1, (intmax_t)maildrop[index].size);
+				size_t message_len = (size_t)snprintf(stat_message, sizeof stat_message, "+OK %zu %"SCNiMAX"\r\n", index + 1, (intmax_t)maildrop[index].size);
 				if(sizeof stat_message <= message_len)
 				{
 					warnx("stat buffer was not big enough: %d", __LINE__);
@@ -394,7 +394,7 @@ int main(int argc, char **argv)
 				if(!maildrop[index].active)
 					REPLY("-ERR Invalid index")
 				char stat_message[64];
-				size_t message_len = (size_t)snprintf(stat_message, sizeof stat_message, "%zu %s\r\n", index + 1, maildrop[index].name);
+				size_t message_len = (size_t)snprintf(stat_message, sizeof stat_message, "+OK %zu %s\r\n", index + 1, maildrop[index].name);
 				if(sizeof stat_message <= message_len)
 				{
 					warnx("stat buffer was not big enough: %d", __LINE__);
