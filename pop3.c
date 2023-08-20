@@ -316,10 +316,10 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'list':
-			if(state != LOGIN)
-				REPLY("-ERR unauthenticated")
 			if(!read_line(line_buff, &line_size))
 				REPLY("-ERR Parameters too long")
+			if(state != LOGIN)
+				REPLY("-ERR unauthenticated")
 			if(line_size == 0)
 			{
 				SEND("+OK maildrop follows");
