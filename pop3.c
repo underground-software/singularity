@@ -371,14 +371,14 @@ int main(int argc, char **argv)
 				{
 					if(!maildrop[i].active)
 						continue;
-					char stat_message[64];
-					size_t message_len = (size_t)snprintf(stat_message, sizeof stat_message, "%zu %s\r\n", i + 1, maildrop[i].name);
-					if(sizeof stat_message <= message_len)
+					char uidl_message[64];
+					size_t message_len = (size_t)snprintf(uidl_message, sizeof uidl_message, "%zu %s\r\n", i + 1, maildrop[i].name);
+					if(sizeof uidl_message <= message_len)
 					{
 						warnx("stat buffer was not big enough: %d", __LINE__);
 						continue;
 					}
-					send(stat_message, message_len);
+					send(uidl_message, message_len);
 				}
 				SEND(".");
 			}
@@ -393,14 +393,14 @@ int main(int argc, char **argv)
 				size_t index = (size_t)arg - 1;
 				if(!maildrop[index].active)
 					REPLY("-ERR Invalid index")
-				char stat_message[64];
-				size_t message_len = (size_t)snprintf(stat_message, sizeof stat_message, "+OK %zu %s\r\n", index + 1, maildrop[index].name);
-				if(sizeof stat_message <= message_len)
+				char uidl_message[64];
+				size_t message_len = (size_t)snprintf(uidl_message, sizeof uidl_message, "+OK %zu %s\r\n", index + 1, maildrop[index].name);
+				if(sizeof uidl_message <= message_len)
 				{
 					warnx("stat buffer was not big enough: %d", __LINE__);
 					REPLY("-ERR internal server error")
 				}
-				send(stat_message, message_len);
+				send(uidl_message, message_len);
 			}
 			break;
 		case 'dele':
