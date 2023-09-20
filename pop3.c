@@ -125,6 +125,7 @@ static bool read_line(char buf[static LINE_LIMIT + 1], size_t *outsize)
 
 static bool check_credentials(size_t u_size, const char *username, size_t p_size, const char *password)
 {
+#ifdef CHECK_CREDS
 	if(u_size != 4)
 		return false;
 	if(memcmp(username, "test", 4))
@@ -133,6 +134,12 @@ static bool check_credentials(size_t u_size, const char *username, size_t p_size
 		return false;
 	if(memcmp(password, "asdf", 4))
 		return false;
+#else
+	(void)u_size;
+	(void)p_size;
+	(void)username;
+	(void)password;
+#endif
 	return true;
 }
 
