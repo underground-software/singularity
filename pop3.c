@@ -150,13 +150,13 @@ static size_t num_emails;
 
 static void load_emails(char *mail_directory)
 {
-	mail_dir_fd = openat(AT_FDCWD, mail_directory, O_CLOEXEC | O_DIRECTORY | O_PATH);
+	mail_dir_fd = openat(AT_FDCWD, mail_directory, O_CLOEXEC | O_DIRECTORY | O_RDONLY);
 	if(0 > mail_dir_fd)
 		err(1, "Unable to open mail directory %s", mail_directory);
-	char path[64];
-	if(sizeof path <= (size_t)snprintf(path, sizeof path, "/proc/self/fd/%d", mail_dir_fd))
-		errx(1, "Not enough space to make path");
-	DIR *dir = opendir(path);
+	int opendir_fd = dup(mail_dir_fd);
+	if(0 > opendir_fd)
+		err(1, "unable to dup mail dir fd");
+	DIR *dir = fdopendir(opendir_fd);
 	if(!dir)
 		err(1, "Unable to open mail directory %s", mail_directory);
 	size_t capacity = 16;
@@ -195,6 +195,7 @@ static void load_emails(char *mail_directory)
 	}
 	if(errno)
 		err(1, "Unable to read from directory");
+	closedir(dir);
 }
 
 static bool pending_deletes(void)
