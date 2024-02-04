@@ -1,0 +1,7 @@
+services:
+  nginx:
+    build:
+      dockerfile: Containerfile
+      target: nginx
+    ports:
+      - 1080:80
