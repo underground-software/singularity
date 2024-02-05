@@ -3,5 +3,7 @@ services:
     build:
       dockerfile: Containerfile
       target: nginx
+      args:
+        NGINX_HTTP_PORT: 1080
     ports:
-      - 1080:80
+      - 1080:1080

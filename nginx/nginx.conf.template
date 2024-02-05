@@ -81,8 +81,9 @@ http {
 
 
 	server {
-		listen 80 default_server;
-		listen [::]:80 default_server;
+		server_name ${NGINX_HOSTNAME};
+		listen ${NGINX_HTTP_PORT} default_server;
+		listen [::]:${NGINX_HTTP_PORT} default_server;
 
 		# Everything is a 404
 		location / {
