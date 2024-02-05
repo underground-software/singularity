@@ -3,5 +3,8 @@ services:
     build:
       dockerfile: Containerfile
       target: nginx
+    volumes:
+      - ./ssl:/etc/ssl/nginx
     ports:
       - 80:80
+      - 443:443

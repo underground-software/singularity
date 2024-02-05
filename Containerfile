@@ -2,6 +2,7 @@ FROM alpine:3.19 AS nginx
 
 ARG NGINX_HOSTNAME=localhost
 ARG NGINX_HTTP_PORT=80
+ARG NGINX_HTTPS_PORT=443
 
 RUN apk update && apk upgrade && apk add \
     nginx          \
@@ -9,9 +10,12 @@ RUN apk update && apk upgrade && apk add \
     envsubst
 
 COPY nginx /etc/nginx
-RUN envsubst '$NGINX_HOSTNAME:$NGINX_HTTP_PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+RUN envsubst '$NGINX_HOSTNAME:$NGINX_HTTP_PORT:$NGINX_HTTPS_PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+
+VOLUME /etc/ssl/nginx
 
 EXPOSE ${NGINX_HTTP_PORT}
+EXPOSE ${NGINX_HTTPS_PORT}
 
 ENTRYPOINT ["/usr/sbin/nginx", "-g", "daemon off;"]
 
