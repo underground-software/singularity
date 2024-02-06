@@ -11,7 +11,7 @@ RUN apk update && apk upgrade && apk add \
     nginx-mod-mail \
     envsubst
 
-COPY nginx /etc/nginx
+COPY nginx.conf.template /etc/nginx/
 RUN envsubst '$NGINX_HOSTNAME:$NGINX_HTTP_PORT:$NGINX_HTTPS_PORT:$NGINX_SMTPS_PORT:$NGINX_POP3S_PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 VOLUME /etc/ssl/nginx
