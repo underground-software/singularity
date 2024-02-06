@@ -10,6 +10,7 @@ services:
         NGINX_POP3S_PORT: 1995
     volumes:
       - ./ssl:/etc/ssl/nginx
+      - ./include.d:/etc/nginx/include.d
     ports:
       - 1080:1080
       - 1443:1443

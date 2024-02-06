@@ -19,6 +19,18 @@ RUN apk update && apk upgrade && apk add \
     nginx          \
     nginx-mod-mail
 
+RUN mkdir -p \
+    /etc/nginx/include.d/root \
+    /etc/nginx/include.d/events \
+    /etc/nginx/include.d/http \
+    /etc/nginx/include.d/server_https \
+    /etc/nginx/include.d/server_http \
+    /etc/nginx/include.d/mail \
+    /etc/nginx/include.d/server_smtps \
+    /etc/nginx/include.d/server_pop3s
+
+VOLUME /etc/nginx/include.d/
+
 COPY --from=build nginx.conf /etc/nginx/
 
 VOLUME /etc/ssl/nginx

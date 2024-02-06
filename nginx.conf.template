@@ -14,13 +14,18 @@ error_log /var/log/nginx/error.log warn;
 # Load dynamic modules.
 load_module "modules/ngx_mail_module.so";
 
+
 # Include files with config snippets into the root context.
-include /etc/nginx/conf.d/*.conf;
+include /etc/nginx/include.d/root/*.conf;
+
 
 events {
 	# The maximum number of simultaneous connections that can be opened by
 	# a worker process.
 	worker_connections 1024;
+
+
+	include /etc/nginx/include.d/events/*.conf;
 }
 
 http {
@@ -82,16 +87,27 @@ http {
 	access_log /var/log/nginx/access.log main;
 
 
+	include /etc/nginx/include.d/http/*.conf;
+
+
 	server {
 		server_name ${NGINX_HOSTNAME};
 		listen ${NGINX_HTTPS_PORT} ssl default_server;
 		listen [::]:${NGINX_HTTPS_PORT} ssl default_server;
+
+
+		include /etc/nginx/include.d/server_https/*.conf;
 	}
 
 	server {
 		server_name ${NGINX_HOSTNAME};
 		listen ${NGINX_HTTP_PORT} default_server;
 		listen [::]:${NGINX_HTTP_PORT} default_server;
+
+
+		include /etc/nginx/include.d/server_http/*.conf;
+
+
 		return 301 https://$host:${NGINX_HTTPS_PORT}$request_uri;
 	}
 }
@@ -129,11 +145,17 @@ mail {
 	auth_http [100::1337]:1337;
 
 
+	include /etc/nginx/include.d/mail/*.conf;
+
+
 	server {
 		server_name ${NGINX_HOSTNAME};
 		listen ${NGINX_SMTPS_PORT} ssl;
 		listen [::]:${NGINX_SMTPS_PORT} ssl;
 		protocol smtp;
+
+
+		include /etc/nginx/include.d/server_smtps/*.conf;
 	}
 
 	server {
@@ -141,5 +163,8 @@ mail {
 		listen ${NGINX_POP3S_PORT} ssl;
 		listen [::]:${NGINX_POP3S_PORT} ssl;
 		protocol pop3;
+
+
+		include /etc/nginx/include.d/server_pop3s/*.conf;
 	}
 }

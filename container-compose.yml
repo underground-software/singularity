@@ -5,6 +5,7 @@ services:
       target: nginx
     volumes:
       - ./ssl:/etc/ssl/nginx
+      - ./include.d:/etc/nginx/include.d
     ports:
       - 80:80
       - 443:443
