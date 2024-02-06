@@ -3,6 +3,8 @@ services:
     build:
       dockerfile: Containerfile
       target: nginx
+      args:
+        NGINX_SNIPPET_SOURCE: ./include.d
     volumes:
       - ./ssl:/etc/ssl/nginx
       - ./include.d:/etc/nginx/include.d
