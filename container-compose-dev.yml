@@ -8,6 +8,7 @@ services:
         NGINX_HTTPS_PORT: 1443
         NGINX_SMTPS_PORT: 1465
         NGINX_POP3S_PORT: 1995
+        NGINX_RUNTIME_SNIPPETS: 1
         NGINX_SNIPPET_SOURCE: ./include.d
     volumes:
       - ./ssl:/etc/ssl/nginx

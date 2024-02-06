@@ -1,3 +1,5 @@
+ARG NGINX_RUNTIME_SNIPPETS=0
+
 FROM alpine:3.19 AS build
 
 RUN apk update && apk upgrade && apk add \
@@ -13,11 +15,12 @@ ARG NGINX_POP3S_PORT=995
 
 RUN envsubst '$NGINX_HOSTNAME:$NGINX_HTTP_PORT:$NGINX_HTTPS_PORT:$NGINX_SMTPS_PORT:$NGINX_POP3S_PORT' < nginx.conf.template > nginx.conf
 
-FROM alpine:3.19 AS nginx
+FROM alpine:3.19 AS nginx-runtime-0
 
 RUN apk update && apk upgrade && apk add \
     nginx          \
     nginx-mod-mail
+
 
 RUN mkdir -p \
     /etc/nginx/include.d/root \
@@ -31,7 +34,6 @@ RUN mkdir -p \
 
 ARG NGINX_SNIPPET_SOURCE
 COPY ${NGINX_SNIPPET_SOURCE} /etc/nginx/include.d/
-VOLUME /etc/nginx/include.d/
 
 COPY --from=build nginx.conf /etc/nginx/
 
@@ -48,3 +50,7 @@ EXPOSE ${NGINX_POP3S_PORT}
 
 ENTRYPOINT ["/usr/sbin/nginx", "-g", "daemon off;"]
 
+FROM nginx-runtime-0 AS nginx-runtime-1
+VOLUME /etc/nginx/include.d/
+
+FROM nginx-runtime-${NGINX_RUNTIME_SNIPPETS} AS nginx

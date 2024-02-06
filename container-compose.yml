@@ -7,7 +7,6 @@ services:
         NGINX_SNIPPET_SOURCE: ./include.d
     volumes:
       - ./ssl:/etc/ssl/nginx
-      - ./include.d:/etc/nginx/include.d
     ports:
       - 80:80
       - 443:443
