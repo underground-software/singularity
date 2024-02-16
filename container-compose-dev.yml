@@ -1,0 +1,9 @@
+services:
+  pop:
+    build:
+      dockerfile: Containerfile
+      target: pop
+    volumes:
+      - ./email:/mnt/mail:Z
+    ports:
+      - 1995:995
