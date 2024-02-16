@@ -6,7 +6,7 @@ services:
       args:
         NGINX_SNIPPET_SOURCE: ./include.d
     volumes:
-      - ./ssl:/etc/ssl/nginx
+      - ./ssl:/etc/ssl/nginx:Z
     ports:
       - 80:80
       - 443:443

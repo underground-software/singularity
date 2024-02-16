@@ -10,19 +10,11 @@ and tell nginx to reload with no downtime.
 For development purposes, you can generate dh params,
 and a self signed cert with `create_dev_keys.sh`.
 
-*Note:* on systems with selinux enabled, the container
-will not be able to access the keys by default. To fix, run:
-`$ chcon -Rt container_file_t ssl`
-
 This container and its nginx config are designed around
 composing small config snippets to build a full configuration,
 and it can even be built with support for mounting the inclusion
 directory at runtime so that the snippets can be changed and
 hot reloaded for a fast development cycle with no downtime.
-
-*Note:* on systems with selinux enabled, the container
-will not be able to access the snippets by default. To fix, run:
-`$ chcon -Rt container_file_t include.d`
 
 The `include.d` directory and its subrdirectories are a template
 for what is possible with the configuration snippets and the `README.md`
