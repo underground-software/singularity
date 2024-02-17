@@ -32,8 +32,7 @@ RUN mkdir -p \
     /etc/nginx/include.d/server_smtps \
     /etc/nginx/include.d/server_pop3s
 
-ARG NGINX_SNIPPET_SOURCE
-COPY ${NGINX_SNIPPET_SOURCE} /etc/nginx/include.d/
+COPY --from=NGINX_SNIPPET_SOURCE . /etc/nginx/include.d/
 
 COPY --from=build nginx.conf /etc/nginx/
 

@@ -2,9 +2,9 @@ services:
   nginx:
     build:
       dockerfile: Containerfile
+      additional_contexts:
+        - NGINX_SNIPPET_SOURCE=./include.d/
       target: nginx
-      args:
-        NGINX_SNIPPET_SOURCE: ./include.d
     volumes:
       - ./ssl:/etc/ssl/nginx:Z
     ports:
