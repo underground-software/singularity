@@ -10,9 +10,11 @@ services:
         NGINX_POP3S_PORT: 1995
         NGINX_RUNTIME_SNIPPETS: 1
         NGINX_SNIPPET_SOURCE: ./include.d
+    security_opt:
+      - label:disable
     volumes:
-      - ./ssl:/etc/ssl/nginx:Z
-      - ./include.d:/etc/nginx/include.d:Z
+      - ./ssl:/etc/ssl/nginx
+      - ./include.d:/etc/nginx/include.d
     ports:
       - 1080:1080
       - 1443:1443
