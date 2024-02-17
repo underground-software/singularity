@@ -3,7 +3,9 @@ services:
     build:
       dockerfile: Containerfile
       target: pop
+    security-opt:
+      - label:disable
     volumes:
-      - ./email:/mnt/mail:Z
+      - ./email:/mnt/mail
     ports:
       - 1995:995
