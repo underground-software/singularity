@@ -1,14 +1,12 @@
-FROM fedora:latest AS build
-RUN dnf -y update
-RUN dnf -y install \
-	musl-clang \
-	musl-libc-static \
+FROM alpine:3.19 AS build
+RUN apk add \
+	clang \
 	make \
 	;
 
 ADD . /pop
 
-RUN make -C /pop CC='musl-clang -static'
+RUN make -C /pop CC='clang -static'
 
 RUN mkdir -p /mnt/mail
 
