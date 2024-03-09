@@ -6,6 +6,11 @@
 #include <time.h>
 #include <err.h>
 #include <unistd.h>
+#include <errno.h>
+
+void handle_sigalrm(int signal_index) {
+	signal(SIGALRM, handle_sigalrm);
+}
 
 /*
  * argv must contain pairs of timestamps and paths to executables delimited by spaces
@@ -13,13 +18,14 @@
  */
 int main (int argc, char **argv)
 {
-	// Avoid needing to reap children processes
-	struct sigaction child_act;
-	if(0 > sigaction(SIGCHLD, NULL, &child_act))
-		err(1, "failed to get default signal action for SIGCHLD (this is a bug)");
-	child_act.sa_flags |= SA_NOCLDWAIT;
-	if(0 > sigaction(SIGCHLD, &child_act, NULL))
-		err(1, "failed to set signal action for SIGCHLD (this is a bug)");
+	/* // Avoid needing to reap children processes */
+	/* struct sigaction child_act; */
+	/* if(0 > sigaction(SIGCHLD, NULL, &child_act)) */
+	/* 	err(1, "failed to get default signal action for SIGCHLD (this is a bug)"); */
+	/* child_act.sa_flags |= SA_NOCLDWAIT; */
+	/* if(0 > sigaction(SIGCHLD, &child_act, NULL)) */
+	/* 	err(1, "failed to set signal action for SIGCHLD (this is a bug)"); */
+	signal(SIGALRM, handle_sigalrm);
 	sigset_t mask;
 	if (sigfillset(&mask))
 		err(1, "sigfillset");
@@ -45,7 +51,7 @@ int main (int argc, char **argv)
 					execl(next, next, (char *)NULL);
 				default:
 					if (waitpid(pid, &childret, 0) == -1)
-						errx(1, "waitpid failed");
+						err(1, "waitpid failed");
 					if (!WIFEXITED(childret) || WEXITSTATUS(childret))
 						warnx("child (%s) exited abnormally with status=%d", next, childret);
 				}
