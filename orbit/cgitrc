@@ -1,0 +1,39 @@
+# Specify the css url
+css=/style.css
+
+# Allow http transport git clone
+enable-http-clone=1
+
+# Enable caching of up to 1000 output entries
+cache-size=0
+
+# Use a custom logo
+logo=/images/kdlp_logo.png
+
+# Set the title and heading of the repository index page
+root-title=Kernel Development Learning Pipeline Git Repositories
+
+# Set a subheading for the repository index page
+root-desc=Explore the class git repositories here!
+
+# Include some more info about this site on the index page
+# FIXME do we want a readme or not?
+#root-readme=/mnt/telomerase/cano.py/index.html
+
+enable-git-config=1
+
+##
+## List of common mimetypes
+##
+
+mimetype.gif=image/gif
+mimetype.html=text/html
+mimetype.jpg=image/jpeg
+mimetype.jpeg=image/jpeg
+mimetype.pdf=application/pdf
+mimetype.png=image/png
+mimetype.svg=image/svg+xml
+
+virtual-root=/cgit
+
+scan-path=/var/git

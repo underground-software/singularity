@@ -1,0 +1,11 @@
+services:
+  orbit:
+    build:
+      dockerfile: Containerfile
+      target: orbit
+    security_opt:
+      - label:disable
+    volumes:
+      - .:/var/git
+    ports:
+      - 9098:9098

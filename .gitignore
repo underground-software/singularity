@@ -1,0 +1,9 @@
+*.db*
+email_data*
+restore.*
+*-backup*
+__pycache__
+big.log*
+email*
+cert.tar.gz
+orbit-dev
