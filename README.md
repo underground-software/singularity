@@ -49,7 +49,7 @@ extenginx/create_dev_keys.sh
 - go to https://localhost:1443
 - accept the warning your browser probably gives you about the security certificate
 
-You should now have a working, local version of the kdlp site!  
+You should now have a working, local version of the kdlp site!
 To compose down, use
 ```
 ../podman-compose/podman_compose.py -f container-compose-dev.yml down -t0
