@@ -9,4 +9,5 @@ cert.tar.gz
 orbit-dev
 ssl
 pop3
+smtp
 email
