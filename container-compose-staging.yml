@@ -1,0 +1,63 @@
+services:
+  nginx:
+    build:
+      context: extenginx
+      additional_contexts:
+        - NGINX_SNIPPET_SOURCE=./nginx_snippets
+      dockerfile: Containerfile
+      target: nginx
+      args:
+        NGINX_HOSTNAME: dev.underground.software
+    volumes:
+      - ./ssl:/etc/ssl/nginx:ro,z
+      - ./kdlp.underground.software:/var/www/html:ro,z
+    ports:
+      - 80:80
+      - 443:443
+      - 465:465
+      - 995:995
+  orbit:
+    build:
+      context: orbit
+      dockerfile: Containerfile
+      target: orbit
+    volumes:
+      - ./.git:/var/git/syzygy:ro,z
+      - ./.git/modules/orbit:/var/git/orbit:ro,z
+      - ./.git/modules/tcp_server:/var/git/tcp_server:ro,z
+      - ./.git/modules/pop:/var/git/pop:ro,z
+      - ./.git/modules/smtp:/var/git/smtp:ro,z
+      - ./.git/modules/extenginx:/var/git/extenginx:ro,z
+      - ./.git/modules/kdlp.underground.software:/var/git/kdlp.underground.software:ro,z
+      - ./kdlp.underground.software:/orbit/docs:ro,z
+    ports:
+      - 9098:9098
+  tcp_server:
+    build:
+      context: tcp_server
+      dockerfile: Containerfile
+      target: tcp_server
+  smtp:
+    build:
+      context: smtp
+      dockerfile: Containerfile
+      additional_contexts:
+        - TCP_SERVER_CONTAINER=container-image://localhost/syzygy_tcp_server:latest
+      target: smtp
+      args:
+        hostname: dev.underground.software
+    volumes:
+      - ./email:/mnt/email_data:z
+    ports:
+      - 11465:465
+  pop:
+    build:
+      context: pop
+      dockerfile: Containerfile
+      additional_contexts:
+        - TCP_SERVER_CONTAINER=container-image://localhost/syzygy_tcp_server:latest
+      target: pop
+    volumes:
+      - ./email/mail:/mnt/mail:ro,z
+    ports:
+      - 11995:995

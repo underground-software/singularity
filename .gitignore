@@ -10,7 +10,6 @@ orbit-dev
 ssl
 pop3
 smtp
-email
 tcp_server
 template.tar.gz
 .*.swp
