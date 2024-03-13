@@ -5,9 +5,9 @@ We have crossed the event horizon
 ## Recommended Setup Instructions
 
 0. Make sure you have `podman`, `python3`, `pip`, and `git` installed on your host machine
-1. Clone the syzygy repo and its submodules
+1. Clone the singularity repo
 ```
-git clone --recurse-submodules https://github.com/underground-software/syzygy.git
+git clone https://github.com/underground-software/singularity.git
 ```
 2. Clone the kdlp podman-compose repo
 ```
@@ -28,13 +28,13 @@ git checkout origin/devel-kdlp
 ```
 pip install -r requirements.txt
 ```
-6. Go into `syzygy`, make the `email` directory and its subdirectories
+6. Go into `singularity`, make the `email` directory and its subdirectories
 ```
-cd ../syzygy
+cd ../singularity
 mkdir -p email/{logs,mail}
 ```
 7. Run the ssl setup script found in extenginx
-- Make sure you run it from within the syzygy directory!
+- Make sure you run it from within the singularity directory!
 - If you get the error `extenginx/create_dev_keys.sh: 2: set: Illegal_option -o pipefail`, edit the `create_dev_keys.sh` script and comment out the line `set -uexo pipefail`
 ```
 extenginx/create_dev_keys.sh
