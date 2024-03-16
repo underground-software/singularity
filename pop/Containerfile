@@ -10,8 +10,6 @@ RUN make -C /pop CC='clang -static'
 
 RUN mkdir -p /mnt/mail
 
-#FROM fedora:latest as smtp
-#RUN dnf -y update && dnf -y install libselinux-utils && dnf clean all
 FROM scratch as pop
 COPY --from=build /mnt/mail /mnt/mail
 VOLUME /mnt/mail

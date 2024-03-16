@@ -13,8 +13,6 @@ RUN make -C /smtp CC='clang -static' SRVNAME=$hostname
 
 RUN mkdir -p /mnt/email_data/mail /mnt/email_data/logs
 
-#FROM fedora:latest as smtp
-#RUN dnf -y update && dnf -y install libselinux-utils && dnf clean all
 FROM scratch as smtp
 COPY --from=build /mnt/email_data /mnt/email_data
 VOLUME /mnt/email_data/
