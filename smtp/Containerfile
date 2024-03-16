@@ -4,7 +4,7 @@ RUN apk add \
 	make \
 	;
 
-ADD . /smtp
+COPY . /smtp
 
 ARG hostname
 RUN test -n "$hostname" || (echo 'hostname is not set' && false)

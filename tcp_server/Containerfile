@@ -4,7 +4,7 @@ RUN apk add \
 	make \
 	;
 
-ADD . /tcp_server
+COPY . /tcp_server
 
 RUN make -C /tcp_server CC='clang -static'
 
