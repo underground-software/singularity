@@ -26,11 +26,6 @@ services:
       - ./kdlp.underground.software:/orbit/docs:ro,z
     ports:
       - 9098:9098
-  tcp_server:
-    build:
-      context: tcp_server
-      dockerfile: Containerfile
-      target: tcp_server
   smtp:
     build:
       context: smtp
