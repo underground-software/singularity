@@ -15,6 +15,13 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#ifndef DEFAULT_PORT
+#define DEFAULT_PORT 1337
+#endif
+
+#define STR_H(X) #X
+#define STR(X) STR_H(X)
+
 static int get_handler_fd(const char *handler_path, bool interpreted)
 {
 	int flags = O_PATH;
@@ -40,7 +47,7 @@ static int setup_socket(bool loopback, const char *port_str, const char *bind_ad
 	struct sockaddr_in bind_addr =
 	{
 		.sin_family = AF_INET,
-		.sin_port = htons(8080),
+		.sin_port = htons(DEFAULT_PORT),
 		.sin_addr = { .s_addr = htonl(loopback ? INADDR_LOOPBACK : INADDR_ANY), },
 	};
 	if(NULL != port_str)
@@ -128,7 +135,7 @@ static void usage(const char *prog_name, const char *error_message, ...)
 		"\t-i: specify that handler is an interpreted script that needs to have access to itself to run\n"
 		"Options:\n"
 		"\t-c directory: chroot into directory `directory` after setting up handler but before accepting any connections\n"
-		"\t-p port: listen on port `port` instead of default 1337\n"
+		"\t-p port: listen on port `port` instead of default " STR(DEFAULT_PORT) "\n"
 		"\t-b address: bind to address `address` instead of default 0.0.0.0 (incompatible with -l)\n"
 		"Arguments:\n"
 		"\thandler: this program will be executed for each incoming connection with its stdin and stdout attached to the socket\n"
