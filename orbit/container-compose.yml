@@ -1,9 +1,0 @@
-services:
-  orbit:
-    build:
-      dockerfile: Containerfile
-      target: orbit
-    volumes:
-      - .:/var/git:Z
-    ports:
-      - 9098:9098
