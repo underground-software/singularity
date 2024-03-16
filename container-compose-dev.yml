@@ -45,7 +45,7 @@ services:
       context: smtp
       dockerfile: Containerfile
       additional_contexts:
-        - TCP_SERVER_CONTAINER=container-image://localhost/singularity_tcp_server:latest
+        - TCP_SERVER_SOURCE=./tcp_server
       target: smtp
       args:
         hostname: localhost
@@ -58,7 +58,7 @@ services:
       context: pop
       dockerfile: Containerfile
       additional_contexts:
-        - TCP_SERVER_CONTAINER=container-image://localhost/singularity_tcp_server:latest
+        - TCP_SERVER_SOURCE=./tcp_server
       target: pop
     volumes:
       - ./email/mail:/mnt/mail:ro,z
