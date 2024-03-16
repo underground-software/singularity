@@ -103,6 +103,8 @@ services:
       additional_contexts:
         - TCP_SERVER_SOURCE=./tcp_server
       target: pop
+      args:
+        LISTEN_PORT: 1995
     volumes:
       - type: bind
         source: ./email/mail
@@ -110,7 +112,7 @@ services:
         read_only: true
         selinux: z
     ports:
-      - target: 995
+      - target: 1995
         published: 11995
         protocol: tcp
         app_protocol: pop3
