@@ -4,7 +4,7 @@ RUN apk add \
 	make \
 	;
 
-ADD . /pop
+COPY . /pop
 
 RUN make -C /pop CC='clang -static'
 
