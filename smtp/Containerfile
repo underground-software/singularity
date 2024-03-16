@@ -5,7 +5,8 @@ RUN apk add \
 	;
 
 COPY --from=TCP_SERVER_SOURCE . /tcp_server
-RUN make -C /tcp_server CC='clang -static' DEFAULT_PORT='465'
+ARG LISTEN_PORT=465
+RUN make -C /tcp_server CC='clang -static' DEFAULT_PORT=${LISTEN_PORT}
 
 COPY . /smtp
 
@@ -17,10 +18,12 @@ RUN make -C /smtp CC='clang -static' SRVNAME=$hostname
 RUN mkdir -p /mnt/email_data/mail /mnt/email_data/logs
 
 FROM scratch as smtp
+
 COPY --from=build /mnt/email_data /mnt/email_data
 VOLUME /mnt/email_data/
 COPY --from=build /tcp_server/tcp_server /usr/local/bin/tcp_server
 COPY --from=build /smtp/smtp /usr/local/bin/smtp
 
-EXPOSE 465
+ARG LISTEN_PORT=465
+EXPOSE ${LISTEN_PORT}
 ENTRYPOINT ["/usr/local/bin/tcp_server", "/usr/local/bin/smtp", "smtp", "/mnt/email_data"]
