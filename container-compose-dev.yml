@@ -92,6 +92,7 @@ services:
       target: smtp
       args:
         hostname: localhost
+        LISTEN_PORT: 1465
     volumes:
       - type: bind
         source: ./email
@@ -99,7 +100,7 @@ services:
         read_only: false
         selinux: z
     ports:
-      - target: 465
+      - target: 1465
         published: 11465
         protocol: tcp
         app_protocol: smtp
