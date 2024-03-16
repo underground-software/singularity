@@ -34,19 +34,27 @@ services:
       - target: 1080
         published: 1080
         protocol: tcp
+        app_protocol: http
         mode: host
+        name: "port for http connections to proxy"
       - target: 1443
         published: 1443
         protocol: tcp
+        app_protocol: https
         mode: host
+        name: "port for https connections to proxy"
       - target: 1465
         published: 1465
         protocol: tcp
+        app_protocol: smtps
         mode: host
+        name: "port for smtps connections to proxy"
       - target: 1995
         published: 1995
         protocol: tcp
+        app_protocol: pop3s
         mode: host
+        name: "port for pop3s connections to proxy"
   orbit:
     build:
       context: orbit
@@ -69,7 +77,9 @@ services:
       - target: 9098
         published: 9098
         protocol: tcp
+        app_protocol: http
         mode: host
+        name: "unencrypted http upstream server port"
   smtp:
     build:
       context: smtp
@@ -89,7 +99,9 @@ services:
       - target: 465
         published: 11465
         protocol: tcp
+        app_protocol: smtp
         mode: host
+        name: "unencrypted smtp upstream server port"
   pop:
     build:
       context: pop
@@ -107,4 +119,6 @@ services:
       - target: 995
         published: 11995
         protocol: tcp
+        app_protocol: pop3
         mode: host
+        name: "unencrypted pop3 upstream server port"
