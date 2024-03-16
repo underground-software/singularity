@@ -9,8 +9,16 @@ services:
       args:
         NGINX_HOSTNAME: kdlp.underground.software
     volumes:
-      - ./ssl:/etc/ssl/nginx:ro,z
-      - ./kdlp.underground.software:/var/www/html:ro,z
+      - type: bind
+        source: ./ssl
+        target: /etc/ssl/nginx
+        read_only: true
+        selinux: z
+      - type: bind
+        source: ./kdlp.underground.software
+        target: /var/www/html
+        read_only: true
+        selinux: z
     ports:
       - 80:80
       - 443:443
@@ -22,8 +30,16 @@ services:
       dockerfile: Containerfile
       target: orbit
     volumes:
-      - ./.git:/var/git/singularity:ro,z
-      - ./kdlp.underground.software:/orbit/docs:ro,z
+      - type: bind
+        source: ./.git
+        target: /var/git/singularity
+        read_only: true
+        selinux: z
+      - type: bind
+        source: ./kdlp.underground.software
+        target: /orbit/docs
+        read_only: true
+        selinux: z
     ports:
       - 9098:9098
   smtp:
@@ -36,7 +52,11 @@ services:
       args:
         hostname: kdlp.underground.software
     volumes:
-      - ./email:/mnt/email_data:z
+      - type: bind
+        source: ./email
+        target: /mnt/email_data
+        read_only: false
+        selinux: z
     ports:
       - 11465:465
   pop:
@@ -47,6 +67,10 @@ services:
         - TCP_SERVER_SOURCE=./tcp_server
       target: pop
     volumes:
-      - ./email/mail:/mnt/mail:ro,z
+      - type: bind
+        source: ./email/mail
+        target: /mnt/mail
+        read_only: true
+        selinux: z
     ports:
       - 11995:995
