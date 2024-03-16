@@ -31,10 +31,22 @@ services:
         read_only: true
         selinux: z
     ports:
-      - 1080:1080
-      - 1443:1443
-      - 1465:1465
-      - 1995:1995
+      - target: 1080
+        published: 1080
+        protocol: tcp
+        mode: host
+      - target: 1443
+        published: 1443
+        protocol: tcp
+        mode: host
+      - target: 1465
+        published: 1465
+        protocol: tcp
+        mode: host
+      - target: 1995
+        published: 1995
+        protocol: tcp
+        mode: host
   orbit:
     build:
       context: orbit
@@ -54,7 +66,10 @@ services:
         read_only: true
         selinux: z
     ports:
-      - 9098:9098
+      - target: 9098
+        published: 9098
+        protocol: tcp
+        mode: host
   smtp:
     build:
       context: smtp
@@ -71,7 +86,10 @@ services:
         read_only: false
         selinux: z
     ports:
-      - 11465:465
+      - target: 465
+        published: 11465
+        protocol: tcp
+        mode: host
   pop:
     build:
       context: pop
@@ -86,4 +104,7 @@ services:
         read_only: true
         selinux: z
     ports:
-      - 11995:995
+      - target: 995
+        published: 11995
+        protocol: tcp
+        mode: host
