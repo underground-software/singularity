@@ -5,7 +5,7 @@ RUN apk add \
 	;
 
 COPY --from=TCP_SERVER_SOURCE . /tcp_server
-RUN make -C /tcp_server CC='clang -static'
+RUN make -C /tcp_server CC='clang -static' DEFAULT_PORT='995'
 
 COPY . /pop
 
@@ -20,4 +20,4 @@ COPY --from=build /tcp_server/tcp_server /usr/local/bin/tcp_server
 COPY --from=build /pop/pop3 /usr/local/bin/pop3
 
 EXPOSE 995
-ENTRYPOINT ["/usr/local/bin/tcp_server", "-p", "995", "/usr/local/bin/pop3", "pop3", "/mnt/mail"]
+ENTRYPOINT ["/usr/local/bin/tcp_server", "/usr/local/bin/pop3", "pop3", "/mnt/mail"]
