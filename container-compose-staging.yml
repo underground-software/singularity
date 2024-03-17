@@ -23,12 +23,6 @@ services:
       target: orbit
     volumes:
       - ./.git:/var/git/syzygy:ro,z
-      - ./.git/modules/orbit:/var/git/orbit:ro,z
-      - ./.git/modules/tcp_server:/var/git/tcp_server:ro,z
-      - ./.git/modules/pop:/var/git/pop:ro,z
-      - ./.git/modules/smtp:/var/git/smtp:ro,z
-      - ./.git/modules/extenginx:/var/git/extenginx:ro,z
-      - ./.git/modules/kdlp.underground.software:/var/git/kdlp.underground.software:ro,z
       - ./kdlp.underground.software:/orbit/docs:ro,z
     ports:
       - 9098:9098
