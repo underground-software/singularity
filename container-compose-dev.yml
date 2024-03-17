@@ -31,7 +31,7 @@ services:
     security_opt:
       - label:disable
     volumes:
-      - ./.git:/var/git/syzygy:ro,z
+      - ./.git:/var/git/singularity:ro,z
       - ./kdlp.underground.software:/orbit/docs:ro,z
     ports:
       - 9098:9098
