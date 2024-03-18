@@ -5,9 +5,9 @@
 srvname = 'kdlp.underground.software'
 production = False
 
-appname = 'orbit'
+appname = 'singularity'
 version = '0.1'
-source = 'https://github.com/underground-software/orbit'
+source = 'https://github.com/underground-software/singularity'
 
 radius_port = '9098'
 
