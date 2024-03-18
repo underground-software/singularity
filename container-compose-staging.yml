@@ -60,6 +60,8 @@ services:
         target: /orbit/docs
         read_only: true
         selinux: z
+    environment:
+      - PRODUCTION=false
     ports:
       - target: 9098
         published: 9098

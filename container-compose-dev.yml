@@ -81,6 +81,8 @@ services:
         app_protocol: http
         mode: host
         name: "unencrypted http upstream server port"
+    environment:
+      - PRODUCTION=false
   smtp:
     build:
       context: smtp
