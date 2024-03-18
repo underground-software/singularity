@@ -2,8 +2,10 @@
 
 # TODO some can be generated at container build time
 
+import os
+
 srvname = 'kdlp.underground.software'
-production = False
+production = os.environ.get("PRODUCTION") == "true"
 
 appname = 'singularity'
 version = '0.1'
