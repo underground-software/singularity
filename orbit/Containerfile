@@ -33,7 +33,4 @@ COPY cgitrc /etc/cgitrc
 
 EXPOSE 9098
 
-ARG PRODUCTION
-ENV PRODUCTION=${PRODUCTION}
-
 CMD /bin/sh -c "source /radius-venv/bin/activate && uwsgi /orbit/radius.ini"

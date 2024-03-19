@@ -53,8 +53,6 @@ services:
       context: orbit
       dockerfile: Containerfile
       target: orbit
-      args:
-        - PRODUCTION: true
     volumes:
       - type: bind
         source: ./.git
@@ -73,6 +71,8 @@ services:
         app_protocol: http
         mode: host
         name: "unencrypted http upstream server port"
+    environment:
+      - PRODUCTION=true
   smtp:
     build:
       context: smtp
