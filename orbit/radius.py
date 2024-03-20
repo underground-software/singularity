@@ -315,10 +315,9 @@ class Rocket:
                              self.headers)
         return [body]
 
-    def respond(self, response_code, response_document, mail_auth=False):
-        if not mail_auth:
-            self.headers += [('Content-Type', 'text/html')]
-            response_document = self.format_html(response_document)
+    def respond(self, response_code, response_document):
+        self.headers += [('Content-Type', 'text/html')]
+        response_document = self.format_html(response_document)
         return self.raw_respond(response_code, encode(response_document))
 
 
