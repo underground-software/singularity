@@ -310,15 +310,18 @@ class Rocket:
         </html>
         """
 
+    def raw_respond(self, response_code, body=b''):
+        self._start_response(f'{response_code.value} {response_code.phrase}',
+                             self.headers)
+        return [body]
+
     def respond(self, response_code, response_document, mail_auth=False):
         # Given total correctness of the server
         # all user requests end up here
         if not mail_auth:
             self.headers += [('Content-Type', 'text/html')]
             response_document = self.format_html(response_document)
-        self._start_response(f'{response_code.value} {response_code.phrase}',
-                             self.headers)
-        return [encode(response_document)]
+        return self.raw_respond(response_code, encode(response_document))
 
 
 form_welcome_template = """
