@@ -107,8 +107,9 @@ http {
 
 		include /etc/nginx/include.d/server_http/*.conf;
 
-
-		return 301 https://$host:${NGINX_HTTPS_PORT}$request_uri;
+		location / {
+			return 301 https://$host:${NGINX_HTTPS_PORT}$request_uri;
+		}
 	}
 }
 
