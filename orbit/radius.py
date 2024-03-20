@@ -413,14 +413,10 @@ def handle_mail_auth(rocket):
         rocket.headers += [('Auth-Status', 'Invalid Credentials')]
         return rocket.raw_respond(HTTPStatus.OK)
 
-    # The authentication port depends on whether we are an lfx user
-    # and which service we are using. FIXME: redesign this area
-    instance = ['DFL', 'LFX'][
-            int(db.usr_getif_lfx_username(username)[0][0]) != 0]
     auth_port = {
-            'DFL': {'smtp': config.smtp_port_dfl, 'pop3': config.pop3_port_dfl},
-            'LFX': {'smtp': config.smtp_port_lfx, 'pop3': config.pop3_port_lfx}
-    }[instance][protocol]
+        'smtp': config.smtp_port,
+        'pop3': config.pop3_port,
+    }[protocol]
 
     rocket.headers += [('Auth-Status', 'OK'),
                        ('Auth-Port',    auth_port),
