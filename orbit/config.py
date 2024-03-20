@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # TODO some can be generated at container build time
 
 import os
@@ -26,11 +24,3 @@ database = f'{orbit_root}/orbit.db'
 minutes_each_session_token_is_valid = 180
 
 sql_verbose = False
-
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv) != 2:
-        print("Pass config var name as argument", file=sys.stderr)
-        sys.exit(1)
-    else:
-        print(locals()[sys.argv[1]])
