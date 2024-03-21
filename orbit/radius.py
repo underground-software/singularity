@@ -401,23 +401,12 @@ def handle_mail_auth(rocket):
     if not username or not password \
             or protocol not in ('smtp', 'pop3') \
             or method != 'plain':
-        rocket.headers += [('Auth-Status', 'Invalid Request')]
         return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
 
-    # Strange, but a request in valid form with bad credentials returns OK
     if (pwdhash := db.usr_pwdhashfor_username(username)[0]) is None \
             or not bcrypt.checkpw(encode(password), encode(pwdhash[0])):
-        rocket.headers += [('Auth-Status', 'Invalid Credentials')]
-        return rocket.raw_respond(HTTPStatus.OK)
+        return rocket.raw_respond(HTTPStatus.UNAUTHORIZED)
 
-    auth_port = {
-        'smtp': config.smtp_port,
-        'pop3': config.pop3_port,
-    }[protocol]
-
-    rocket.headers += [('Auth-Status', 'OK'),
-                       ('Auth-Port',    auth_port),
-                       ('Auth-Server', '127.0.0.1')]
     return rocket.raw_respond(HTTPStatus.OK)
 
 

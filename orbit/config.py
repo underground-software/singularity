@@ -8,9 +8,6 @@ appname = 'singularity'
 version = '0.1'
 source = 'https://github.com/underground-software/singularity'
 
-smtp_port = '2465'
-pop3_port = '2995'
-
 # read these documents from a filesystem path
 orbit_root = '/orbit'
 doc_root = f'{orbit_root}/docs'
