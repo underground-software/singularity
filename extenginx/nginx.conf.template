@@ -8,8 +8,8 @@ worker_processes auto;
 # Enables the use of JIT for regular expressions to speed-up their processing.
 pcre_jit on;
 
-# Configures default error logger.
-error_log /var/log/nginx/error.log warn;
+# Sends error message (of at least warn level) to stderr.
+error_log stderr warn;
 
 # Load dynamic modules.
 load_module "modules/ngx_mail_module.so";
@@ -83,8 +83,8 @@ http {
 			'$status $body_bytes_sent "$http_referer" '
 			'"$http_user_agent" "$http_x_forwarded_for"';
 
-	# Sets the path, format, and configuration for a buffered log write.
-	access_log /var/log/nginx/access.log main;
+	# Send logs to stdout using main log format.
+	access_log /proc/self/fd/1 main;
 
 
 	include /etc/nginx/include.d/http/*.conf;
