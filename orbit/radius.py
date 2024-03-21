@@ -295,7 +295,7 @@ class Rocket:
         return html_header + doc + f"""
         <hr>
         <code>msg = {self._msg}</code><br>
-        <code>whoami  = {self.username}</code><br>
+        <code>whoami = {self.username}</code><br>
         <code>
             {config.appname}
             {config.version}
