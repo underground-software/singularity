@@ -1,7 +1,4 @@
-# TODO some can be generated at container build time
-
-import os
-version_info = os.environ.get("ORBIT_VERSION_INFO")
+version_info = '${orbit_version_info}'
 
 # read these documents from a filesystem path
 orbit_root = '/orbit'

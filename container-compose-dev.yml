@@ -61,6 +61,8 @@ services:
       context: orbit
       dockerfile: Containerfile
       target: orbit
+      args:
+        orbit_version_info: "singularity v0.1 (in development) https://github.com/underground-software/singularity"
     security_opt:
       - label:disable
     volumes:
@@ -81,8 +83,6 @@ services:
         app_protocol: http
         mode: host
         name: "unencrypted http upstream server port"
-    environment:
-      - ORBIT_VERSION_INFO=singularity v0.1 (in development) https://github.com/underground-software/singularity
   smtp:
     build:
       context: smtp
