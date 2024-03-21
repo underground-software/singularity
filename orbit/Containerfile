@@ -5,12 +5,14 @@ RUN apk update && apk upgrade && apk add \
 	py3-pip \
 	sqlite \
 	build-base \
-	libffi-dev
+	libffi-dev \
+	;
 
 COPY requirements.txt /requirements.txt
 RUN python3 -m venv /radius-venv && \
 	source /radius-venv/bin/activate && \
-	pip install -r requirements.txt
+	pip install -r requirements.txt && \
+	:
 
 COPY . /orbit
 WORKDIR /orbit
@@ -21,7 +23,8 @@ FROM alpine:3.19 AS orbit
 
 RUN apk update && apk upgrade && apk add \
 	python3 \
-	cgit
+	cgit \
+	;
 
 COPY --from=build /orbit /orbit
 COPY --from=build /radius-venv /radius-venv
