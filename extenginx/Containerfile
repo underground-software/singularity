@@ -3,7 +3,8 @@ ARG NGINX_RUNTIME_SNIPPETS=0
 FROM alpine:3.19 AS build
 
 RUN apk update && apk upgrade && apk add \
-    envsubst
+    envsubst \
+    ;
 
 COPY nginx.conf.template .
 
@@ -19,7 +20,8 @@ FROM alpine:3.19 AS nginx-runtime-0
 
 RUN apk update && apk upgrade && apk add \
     nginx          \
-    nginx-mod-mail
+    nginx-mod-mail \
+    ;
 
 
 RUN mkdir -p \
@@ -30,7 +32,8 @@ RUN mkdir -p \
     /etc/nginx/include.d/server_http \
     /etc/nginx/include.d/mail \
     /etc/nginx/include.d/server_smtps \
-    /etc/nginx/include.d/server_pop3s
+    /etc/nginx/include.d/server_pop3s \
+    ;
 
 COPY --from=NGINX_SNIPPET_SOURCE . /etc/nginx/include.d/
 
