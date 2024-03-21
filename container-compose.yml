@@ -72,7 +72,7 @@ services:
         mode: host
         name: "unencrypted http upstream server port"
     environment:
-      - PRODUCTION=true
+      - ORBIT_VERSION_INFO=singularity v0.1 https://github.com/underground-software/singularity
   smtp:
     build:
       context: smtp

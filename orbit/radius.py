@@ -296,12 +296,7 @@ class Rocket:
         <hr>
         <code>msg = {self._msg}</code><br>
         <code>whoami = {self.username}</code><br>
-        <code>
-            {config.appname}
-            {config.version}
-            {"in development" if not config.production else ""}
-            {config.source}
-        </code>
+        <code>{config.version_info}</code><br>
         <hr>
         </body>
         </html>

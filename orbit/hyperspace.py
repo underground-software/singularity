@@ -189,7 +189,7 @@ def do_list_inbox(args):
 def hyperspace_main(raw_args):
     parser = argparse.ArgumentParser(prog='hyperspace',
                                      description='Administrate Orbit',
-                                     epilog=f'source code: {config.source}')
+                                     epilog=f'{config.version_info}')
 
     parser.add_argument('-u', '--username', help='Username to operate with')
     parser.add_argument('-p', '--password', help='Password to operate with')

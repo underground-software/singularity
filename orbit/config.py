@@ -1,12 +1,7 @@
 # TODO some can be generated at container build time
 
 import os
-
-production = os.environ.get("PRODUCTION") == "true"
-
-appname = 'singularity'
-version = '0.1'
-source = 'https://github.com/underground-software/singularity'
+version_info = os.environ.get("ORBIT_VERSION_INFO")
 
 # read these documents from a filesystem path
 orbit_root = '/orbit'

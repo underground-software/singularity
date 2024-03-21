@@ -65,7 +65,7 @@ services:
         read_only: true
         selinux: z
     environment:
-      - PRODUCTION=false
+      - ORBIT_VERSION_INFO=singularity v0.1 (staging) https://github.com/underground-software/singularity
     ports:
       - target: 9098
         published: 9098
