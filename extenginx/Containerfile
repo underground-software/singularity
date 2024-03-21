@@ -21,6 +21,7 @@ FROM alpine:3.19 AS nginx-runtime-0
 RUN apk update && apk upgrade && apk add \
     nginx          \
     nginx-mod-mail \
+    nginx-mod-stream \
     ;
 
 

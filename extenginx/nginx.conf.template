@@ -13,6 +13,7 @@ error_log stderr warn;
 
 # Load dynamic modules.
 load_module "modules/ngx_mail_module.so";
+load_module "modules/ngx_stream_module.so";
 
 
 # Include files with config snippets into the root context.
@@ -168,4 +169,17 @@ mail {
 
 		include /etc/nginx/include.d/server_pop3s/*.conf;
 	}
+}
+
+stream {
+	# Specifies the main log format.
+	log_format main '$remote_addr [$time_local] '
+			'$protocol $status $bytes_sent $bytes_received '
+			'$session_time "$upstream_addr" '
+			'"$upstream_bytes_sent" "$upstream_bytes_received" "$upstream_connect_time"';
+
+	# Send logs to stdout using main log format.
+	access_log /proc/self/fd/1 main;
+
+	include /etc/nginx/include.d/stream/*.conf;
 }
