@@ -412,6 +412,8 @@ def handle_stub(rocket, more=[]):
 
 
 def handle_dashboard(rocket):
+    if not rocket.session:
+        return rocket.raw_respond(HTTPStatus.UNAUTHORIZED)
     return handle_stub(rocket, ['dashboard in development, check back later'])
 
 
