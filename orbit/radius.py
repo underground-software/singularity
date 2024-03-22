@@ -337,7 +337,7 @@ form_welcome_buttons = """
 """.strip()  # NOQA: E501
 
 form_login = """
-    <form id="login" method="post" action="/login">
+    <form id="login" method="post" action="/login%(target_redir)s">
         <label for="username">Username:<br /></label>
         <input name="username" type="text" id="username" />
     <br />
@@ -365,9 +365,20 @@ def mk_form_welcome(session):
 
 
 def handle_login(rocket):
+    target = rocket.queries_query('target')
+
     def respond(welcome):
-        return rocket.respond(mk_form_welcome(rocket.session)
-                              if welcome else form_login)
+        if target and welcome:
+            rocket.headers += [('Location', target)]
+            return rocket.raw_respond(HTTPStatus.SEE_OTHER)
+        elif target:
+            return rocket.respond(form_login % ({'target_redir':
+                                                 f'?target={target}'}))
+        elif welcome:
+            return rocket.respond(mk_form_welcome(rocket.session))
+        else:
+            return rocket.respond(form_login % ({'target_redir': ''}))
+
     if rocket.session:
         rocket.msg(f'{rocket.username} authenticated by token')
         return respond(welcome=True)
