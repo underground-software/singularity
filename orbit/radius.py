@@ -444,24 +444,23 @@ register_response = """
 
 
 def handle_register(rocket):
-    response_document = form_register
-    response_status = HTTPStatus.OK
-    rocket.msg('welcome, please register')
-    if rocket.method == 'POST':
-        if student_id := rocket.body_args_query('student_id'):
-            if registration_data := db.reg_getby_stuid(student_id)[0]:
-                (regid, username, password) = registration_data
-                db.reg_delby_regid(regid)
-                response_document = register_response % {
-                    'username': username,
-                    'password': password,
-                }
-                rocket.msg('welcome to the classroom')
-            else:
-                rocket.msg('no such student')
-        else:
-            rocket.msg('you must provide a student id')
-    return rocket.respond(response_status, response_document)
+    def form_respond():
+        return rocket.respond(HTTPStatus.OK, form_register)
+    if rocket.method != 'POST':
+        return form_respond()
+    if not (student_id := rocket.body_args_query('student_id')):
+        rocket.msg('you must provide a student id')
+        return form_respond()
+    if not (registration_data := db.reg_getby_stuid(student_id)[0]):
+        rocket.msg('no such student')
+        return form_respond()
+    (regid, username, password) = registration_data
+    db.reg_delby_regid(regid)
+    rocket.msg('welcome to the classroom')
+    return rocket.respond(HTTPStatus.OK, (register_response % {
+        'username': username,
+        'password': password,
+    }))
 
 
 def handle_cgit(rocket):
