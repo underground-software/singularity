@@ -483,7 +483,7 @@ def handle_try_md(rocket):
             and os.access(md_path, os.R_OK):
         return handle_md(rocket, md_path)
     else:
-        return rocket.respond(HTTPStatus.NOT_FOUND, 'HTTP 404 NOT FOUND')
+        return rocket.raw_respond(HTTPStatus.NOT_FOUND)
 
 
 def application(env, SR):
