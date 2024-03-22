@@ -1,0 +1,145 @@
+#!/bin/bash
+#
+# Testing script for singularity and orbit
+
+set -exuo pipefail
+
+# Reset the tests and mail directories
+rm -rf test email/logs/* email/mail/*
+mkdir -p test
+
+# This is a temporary workaround until we properly implement volumes
+chcon -R -t container_file_t email
+
+# TODO: login returns 401 so we don't set --fail on the curl command
+
+# Check that registration fails before user creation
+curl --url 'https://localhost/register' \
+  --verbose \
+  --insecure \
+  --fail \
+  --no-progress-meter \
+  --data "student_id=1234" \
+  | tee test/register_fail_no_user \
+  | grep "msg = no such student"
+
+# Check that login fails before user creation
+curl --url 'https://localhost/login' \
+  --verbose \
+  --insecure \
+  --no-progress-meter \
+  --data "username=user&password=pass" \
+  | tee test/login_fail_no_user \
+  | grep "msg = authentication failure"
+
+# Check that we can create a user
+  DOCKER="sudo podman" \
+  CONTAINER="singularity_orbit_1" \
+orbit/warpdrive.sh \
+  -u user -p pass -i 1234 -n \
+  | tee test/create_user \
+  | grep "credentials(username: user, password:pass)"
+
+# Check that registration fails with incorrect student id
+curl --url 'https://localhost/register' \
+  --verbose \
+  --insecure \
+  --fail \
+  --no-progress-meter \
+  --data "student_id=123" \
+  | tee test/register_fail_wrong \
+  | grep "msg = no such student"
+
+# Check that registration suceeds with correct student id
+curl --url 'https://localhost/register' \
+  --verbose \
+  --insecure \
+  --fail \
+  --no-progress-meter \
+  --data "student_id=1234" \
+  | tee test/register_success \
+  | grep "msg = welcome to the classroom"
+
+# Check that registration fails when student id is used for a second time
+curl --url 'https://localhost/register' \
+  --verbose \
+  --insecure \
+  --fail \
+  --no-progress-meter \
+  --data "student_id=1234" \
+  | tee test/register_fail_duplicate \
+  | grep "msg = no such student"
+
+# Check that login fails when credentials are invalid
+curl --url 'https://localhost/login' \
+  --verbose \
+  --insecure \
+  --no-progress-meter \
+  --data "username=user&password=invalid" \
+  | tee test/login_fail_invalid \
+  | grep "msg = authentication failure"
+
+# Check that login succeeds when credentials are valid
+curl --url 'https://localhost/login' \
+  --verbose \
+  --insecure \
+  --fail \
+  --no-progress-meter \
+  --data "username=user&password=pass" \
+  | tee test/login_success \
+  | grep "msg = user authenticated by password"
+
+# Check that the user can get the empty list of email on the server
+curl --url 'pop3s://localhost/' \
+  --verbose \
+  --insecure \
+  --fail \
+  --no-progress-meter \
+  --user user:pass \
+  | tee test/pop_get_empty \
+  | diff <(printf '\r\n') /dev/stdin
+
+CR=$(printf "\r")
+# Check that the user can send a message to the sever
+curl --url 'smtps://localhost' \
+  --verbose \
+  --insecure \
+  --fail \
+  --no-progress-meter \
+  --mail-from 'user@kdlp.underground.software' \
+  --mail-rcpt 'other@kdlp.underground.software' \
+  --upload-file - \
+  --user 'user:pass' \
+  > test/smtp_send_email <<EOF
+Subject: Message Subject$CR
+$CR
+To whom it may concern,$CR
+$CR
+Bottom text$CR
+EOF
+  
+# Check that the user can get the most recent message sent to the server
+curl --url 'pop3s://localhost/1' \
+  --verbose \
+  --insecure \
+  --fail \
+  --no-progress-meter \
+  --user user:pass
+  > test/pop_get_message
+test_pop_get_message=$?
+
+# Check that we can delete a user
+  DOCKER="sudo podman" \
+  CONTAINER="singularity_orbit_1" \
+orbit/warpdrive.sh \
+  -u user -w \
+  > test/delete_user
+
+# Check style compliance
+python -m venv orbit-dev
+source orbit-dev/bin/activate
+pip install -r orbit/dev-requirements.txt
+pushd orbit
+./test-style.sh
+popd
+
