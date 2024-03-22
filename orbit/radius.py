@@ -490,11 +490,18 @@ def application(env, SR):
     rocket = Rocket(env, SR)
     if rocket.method != 'GET' and rocket.method != 'POST':
         return rocket.raw_respond(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    # routes supporting get and post
     if re.match("^/login", rocket.path_info):
         return handle_login(rocket)
     elif re.match("^/register", rocket.path_info):
         return handle_register(rocket)
-    elif re.match("^/logout", rocket.path_info):
+    else:
+        if rocket.method != 'GET':
+            return rocket.raw_respond(HTTPStatus.METHOD_NOT_ALLOWED)
+
+    # routes supporting only get
+    if re.match("^/logout", rocket.path_info):
         return handle_logout(rocket)
     elif re.match("^/mail_auth", rocket.path_info):
         return handle_mail_auth(rocket)
