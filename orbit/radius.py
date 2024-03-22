@@ -373,22 +373,20 @@ def mk_form_welcome(session):
 
 
 def handle_login(rocket):
-    response_document = form_login
-    response_status = HTTPStatus.OK
+    def respond(welcome):
+        return rocket.respond(HTTPStatus.OK, (mk_form_welcome(rocket.session)
+                                              if welcome else form_login))
     if rocket.session:
         rocket.msg(f'{rocket.username} authenticated by token')
-        response_document = mk_form_welcome(rocket.session)
-    elif rocket.method == "POST":
-        if rocket.launch():
-            rocket.msg(f'{rocket.username} authenticated by password')
-            response_document = mk_form_welcome(rocket.session)
-        else:
-            rocket.msg('authentication failure')
-            response_status = HTTPStatus.UNAUTHORIZED
-    else:
+        return respond(welcome=True)
+    if rocket.method != 'POST':
         rocket.msg('welcome, please login')
-        response_document = form_login
-    return rocket.respond(response_status, response_document)
+        return respond(welcome=False)
+    if not rocket.launch():
+        rocket.msg('authentication failure')
+        return respond(welcome=False)
+    rocket.msg(f'{rocket.username} authenticated by password')
+    return respond(welcome=True)
 
 
 def handle_mail_auth(rocket):
