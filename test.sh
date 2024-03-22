@@ -13,8 +13,25 @@ chcon -R -t container_file_t email
 
 # TODO: login returns 401 so we don't set --fail on the curl command
 
+PORT=${PORT:-443}
+POP_PORT=${POP_PORT:-995}
+SMTP_PORT=${SMTP_PORT:-465}
+EMAIL_HOSTNAME="kdlp.underground.software"
+export DOCKER=${DOCKER:-"sudo podman"}
+export CONTAINER=${CONTAINER:-"singularity_orbit_1"}
+
+# TODO make staging work (dev.underground.software)
+
+if [ ! -z "DEVEL" ]; then
+	PORT=1443
+	POP_PORT=1995
+	SMTP_PORT=1465
+	EMAIL_HOSTNAME="localhost"
+	export DOCKER="podman"
+fi
+
 # Check that registration fails before user creation
-curl --url 'https://localhost/register' \
+curl --url "https://localhost:$PORT/register" \
   --verbose \
   --insecure \
   --fail \
@@ -24,7 +41,7 @@ curl --url 'https://localhost/register' \
   | grep "msg = no such student"
 
 # Check that login fails before user creation
-curl --url 'https://localhost/login' \
+curl --url "https://localhost:$PORT/login" \
   --verbose \
   --insecure \
   --no-progress-meter \
@@ -33,15 +50,13 @@ curl --url 'https://localhost/login' \
   | grep "msg = authentication failure"
 
 # Check that we can create a user
-  DOCKER="sudo podman" \
-  CONTAINER="singularity_orbit_1" \
 orbit/warpdrive.sh \
   -u user -p pass -i 1234 -n \
   | tee test/create_user \
   | grep "credentials(username: user, password:pass)"
 
 # Check that registration fails with incorrect student id
-curl --url 'https://localhost/register' \
+curl --url "https://localhost:$PORT/register" \
   --verbose \
   --insecure \
   --fail \
@@ -51,7 +66,7 @@ curl --url 'https://localhost/register' \
   | grep "msg = no such student"
 
 # Check that registration suceeds with correct student id
-curl --url 'https://localhost/register' \
+curl --url "https://localhost:$PORT/register" \
   --verbose \
   --insecure \
   --fail \
@@ -61,7 +76,7 @@ curl --url 'https://localhost/register' \
   | grep "msg = welcome to the classroom"
 
 # Check that registration fails when student id is used for a second time
-curl --url 'https://localhost/register' \
+curl --url "https://localhost:$PORT/register" \
   --verbose \
   --insecure \
   --fail \
@@ -71,7 +86,7 @@ curl --url 'https://localhost/register' \
   | grep "msg = no such student"
 
 # Check that login fails when credentials are invalid
-curl --url 'https://localhost/login' \
+curl --url "https://localhost:$PORT/login" \
   --verbose \
   --insecure \
   --no-progress-meter \
@@ -80,7 +95,7 @@ curl --url 'https://localhost/login' \
   | grep "msg = authentication failure"
 
 # Check that login succeeds when credentials are valid
-curl --url 'https://localhost/login' \
+curl --url "https://localhost:$PORT/login" \
   --verbose \
   --insecure \
   --fail \
@@ -90,7 +105,7 @@ curl --url 'https://localhost/login' \
   | grep "msg = user authenticated by password"
 
 # Check that the user can get the empty list of email on the server
-curl --url 'pop3s://localhost/' \
+curl --url "pop3s://localhost:$POP_PORT" \
   --verbose \
   --insecure \
   --fail \
@@ -101,13 +116,13 @@ curl --url 'pop3s://localhost/' \
 
 CR=$(printf "\r")
 # Check that the user can send a message to the sever
-curl --url 'smtps://localhost' \
+curl --url "smtps://localhost:$SMTP_PORT" \
   --verbose \
   --insecure \
   --fail \
   --no-progress-meter \
-  --mail-from 'user@kdlp.underground.software' \
-  --mail-rcpt 'other@kdlp.underground.software' \
+  --mail-from "user@$EMAIL_HOSTNAME" \
+  --mail-rcpt "other@$EMAIL_HOSTNAME" \
   --upload-file - \
   --user 'user:pass' \
   > test/smtp_send_email <<EOF
@@ -119,7 +134,7 @@ Bottom text$CR
 EOF
   
 # Check that the user can get the most recent message sent to the server
-curl --url 'pop3s://localhost/1' \
+curl --url "pop3s://localhost:$POP_PORT/1" \
   --verbose \
   --insecure \
   --fail \
@@ -129,8 +144,6 @@ curl --url 'pop3s://localhost/1' \
 test_pop_get_message=$?
 
 # Check that we can delete a user
-  DOCKER="sudo podman" \
-  CONTAINER="singularity_orbit_1" \
 orbit/warpdrive.sh \
   -u user -w \
   > test/delete_user
