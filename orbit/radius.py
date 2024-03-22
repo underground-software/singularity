@@ -11,7 +11,7 @@ import re
 import subprocess
 from http import HTTPStatus, cookies
 from datetime import datetime, timedelta
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlparse
 
 # === internal imports & constants ===
 import config
@@ -366,6 +366,11 @@ def mk_form_welcome(session):
 
 def handle_login(rocket):
     target = rocket.queries_query('target')
+
+    # harden the redirect to prevent csrf type attacks
+    scheme, netloc, *_ = urlparse(target)
+    if scheme or netloc:
+        return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
 
     def respond(welcome):
         if target and welcome:
