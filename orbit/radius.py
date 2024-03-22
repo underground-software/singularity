@@ -351,12 +351,6 @@ form_login = """
     <h3>Need an account? Register <a href="/register">here</a></h3><br>
 """.strip()
 
-form_logout = """
-<head>
-    <meta http-equiv="Refresh" content="0; URL=/login" />
-</head>
-"""
-
 
 def cookie_info_table(session):
     return mk_table([
@@ -411,7 +405,8 @@ def handle_mail_auth(rocket):
 def handle_logout(rocket):
     if rocket.session:
         rocket.retire()
-    return rocket.respond(HTTPStatus.OK, form_logout)
+    rocket.headers += [('Location', '/login')]
+    return rocket.raw_respond(HTTPStatus.FOUND)
 
 
 def handle_stub(rocket, more=[]):
