@@ -13,3 +13,4 @@ smtp
 tcp_server
 template.tar.gz
 .*.swp
+test
