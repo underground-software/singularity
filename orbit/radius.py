@@ -488,6 +488,8 @@ def handle_try_md(rocket):
 
 def application(env, SR):
     rocket = Rocket(env, SR)
+    if rocket.method != 'GET' and rocket.method != 'POST':
+        return rocket.raw_respond(HTTPStatus.METHOD_NOT_ALLOWED)
     if re.match("^/login", rocket.path_info):
         return handle_login(rocket)
     elif re.match("^/logout", rocket.path_info):
