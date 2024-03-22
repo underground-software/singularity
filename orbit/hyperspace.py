@@ -167,14 +167,13 @@ def do_list_sessions(args):
 
 
 ASN_FMT = """
-{} submitted to {}@{}
+{} submitted to mailbox {}
 """.strip()
 
 
 def do_list_asn(args):
     raw_list = db.asn_get()
-    print('\n'.join([ASN_FMT.format(asn[0], asn[1],
-                                    config.srvname) for asn in raw_list]))
+    print('\n'.join([ASN_FMT.format(asn[0], asn[1]) for asn in raw_list]))
 
 
 INBOX_FMT = """
