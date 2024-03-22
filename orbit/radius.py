@@ -312,10 +312,10 @@ class Rocket:
                              self.headers)
         return [body]
 
-    def respond(self, response_code, response_document):
+    def respond(self, response_document):
         self.headers += [('Content-Type', 'text/html')]
         response_document = self.format_html(response_document)
-        return self.raw_respond(response_code, encode(response_document))
+        return self.raw_respond(HTTPStatus.OK, encode(response_document))
 
 
 form_welcome_template = """
@@ -368,8 +368,8 @@ def mk_form_welcome(session):
 
 def handle_login(rocket):
     def respond(welcome):
-        return rocket.respond(HTTPStatus.OK, (mk_form_welcome(rocket.session)
-                                              if welcome else form_login))
+        return rocket.respond(mk_form_welcome(rocket.session)
+                              if welcome else form_login)
     if rocket.session:
         rocket.msg(f'{rocket.username} authenticated by token')
         return respond(welcome=True)
@@ -413,7 +413,7 @@ def handle_stub(rocket, more=[]):
     meth_path = f'{rocket.method} {rocket.path_info}'
     content = f'<h3>Development stub for {meth_path} </h3>{"".join(more)}'
     rocket.msg('oops')
-    return rocket.respond(HTTPStatus.OK, content)
+    return rocket.respond(content)
 
 
 def handle_dashboard(rocket):
@@ -438,7 +438,7 @@ register_response = """
 
 def handle_register(rocket):
     def form_respond():
-        return rocket.respond(HTTPStatus.OK, form_register)
+        return rocket.respond(form_register)
     if rocket.method != 'POST':
         return form_respond()
     if not (student_id := rocket.body_args_query('student_id')):
@@ -450,7 +450,7 @@ def handle_register(rocket):
     (regid, username, password) = registration_data
     db.reg_delby_regid(regid)
     rocket.msg('welcome to the classroom')
-    return rocket.respond(HTTPStatus.OK, (register_response % {
+    return rocket.respond((register_response % {
         'username': username,
         'password': password,
     }))
@@ -467,14 +467,14 @@ def handle_cgit(rocket):
     so, se = proc.communicate()
     outstring = str(so, 'UTF-8')
     begin = outstring.index('\n\n')
-    return rocket.respond(HTTPStatus.OK, outstring[begin+2:])
+    return rocket.respond(outstring[begin+2:])
 
 
 def handle_md(rocket, md_path):
     with open(md_path, 'r', newline='') as f:
         content = markdown.markdown(f.read(),
                                     extensions=['tables', 'fenced_code'])
-        return rocket.respond(HTTPStatus.OK, content)
+        return rocket.respond(content)
 
 
 def handle_try_md(rocket):
