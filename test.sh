@@ -13,6 +13,8 @@ chcon -R -t container_file_t email
 
 # TODO: login returns 401 so we don't set --fail on the curl command
 
+DEVEL=${DEVEL:-""}
+STAGING=${STAGING:-""}
 PORT=${PORT:-443}
 POP_PORT=${POP_PORT:-995}
 SMTP_PORT=${SMTP_PORT:-465}
@@ -20,14 +22,18 @@ EMAIL_HOSTNAME="kdlp.underground.software"
 export DOCKER=${DOCKER:-"sudo podman"}
 export CONTAINER=${CONTAINER:-"singularity_orbit_1"}
 
-# TODO make staging work (dev.underground.software)
+# NOTE: don't set DEVEL and STAGING at the same time
 
-if [ ! -z "DEVEL" ]; then
+if [ ! -z "$DEVEL" ]; then
 	PORT=1443
 	POP_PORT=1995
 	SMTP_PORT=1465
 	EMAIL_HOSTNAME="localhost"
 	export DOCKER="podman"
+fi
+
+if [ ! -z "$STAGING" ]; then
+	EMAIL_HOSTNAME="dev.underground.software"
 fi
 
 # Check that registration fails before user creation
