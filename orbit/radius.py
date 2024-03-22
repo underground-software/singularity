@@ -270,6 +270,9 @@ class Rocket:
         return html.escape(
             decode(self.body_args.get(encode(key), [b''])[0]))
 
+    def queries_query(self, key):
+        return self.queries.get(key, [''])[0]
+
     # Attempt login using urelencoded credentials from request body
     def launch(self):
         new_ses = None
