@@ -46,26 +46,6 @@ def do_query_username(args):
     print(USR_FMT.format(*u))
 
 
-def do_set_lfx(args):
-    need(args, u=True)
-
-    if db.usr_getby_username(args.username)[0]:
-        db.usr_set_lfx(args.username)
-    else:
-        nou(args.username)
-    do_query_username(args)
-
-
-def do_set_nolfx(args):
-    need(args, u=True)
-
-    if db.usr_getby_username(args.username)[0]:
-        db.usr_set_nolfx(args.username)
-    else:
-        nou(args.username)
-    do_query_username(args)
-
-
 def do_validate_token(args):
     need(args, t=True)
 
