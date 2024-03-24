@@ -140,7 +140,7 @@ def do_newuser(args):
         errx(f'cannot create duplicate user "{args.username}"')
     else:
         db.usr_ins((args.username, do_bcrypt_hash(args, get=True),
-                    0, args.studentid or 0))
+                    args.studentid or 0))
     if args.studentid:
         db.reg_ins((args.username, args.password, args.studentid))
     do_validate_creds(args)
