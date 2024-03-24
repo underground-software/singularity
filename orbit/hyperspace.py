@@ -33,7 +33,6 @@ USR_FMT = """
 Orbit ID        : {}
 Username        : {}
 Hashed Password : {}
-LFX enabled     : {}
 Student ID      : {}
 """.strip()
 
