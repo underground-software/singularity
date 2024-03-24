@@ -209,12 +209,6 @@ def hyperspace_main(raw_args):
     actions.add_argument('-l', '--listsessions', action='store_const',
                          help='List of all known sessions (some could be invalid)',  # NOQA: E501
                          dest='do', const=do_list_sessions)
-    actions.add_argument('-x', '--lfxenable', action='store_const',
-                         help='Set supplied username lfx status to true',
-                         dest='do', const=do_set_lfx)
-    actions.add_argument('-y', '--lfxdisable', action='store_const',
-                         help='Set supplied username lfx status to false',
-                         dest='do', const=do_set_nolfx)
     actions.add_argument('-q', '--queryuser', action='store_const',
                          help='Get information about supplied username if valid',  # NOQA: E501
                          dest='do', const=do_query_username)
