@@ -38,7 +38,7 @@ class Session(BaseModel):
 
     def insert_new(token: str, username: str, expiry: str):
         Session.create(token=token, username=username, expiry=expiry)
-    
+
     def set_expiry(token: str, expiry: str):
         Session.update(expiry=expiry).where(Session.token == token).execute()
 
