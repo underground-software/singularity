@@ -1,7 +1,13 @@
 import config
 from peewee import *
+from typing import Optional, Self
 
 DB = SqliteDatabase(config.database)
+
+# Helpful peewee orm docs:
+# http://docs.peewee-orm.com/en/latest/peewee/models.html
+# http://docs.peewee-orm.com/en/latest/peewee/querying.html
+
 
 class BaseModel(Model):
     class Meta:
@@ -20,6 +26,27 @@ class Session(BaseModel):
     token = CharField(primary_key=True)
     username = CharField(unique=True)
     expiry = CharField()
+
+    def get_by_token(token: str) -> Optional[Self]:
+        return Session.get_or_none(Session.token == token)
+
+    def get_by_username(username: str) -> Optional[Self]:
+        return Session.get_or_none(Session.username == username)
+
+    def get_all() -> list[Self]:
+        return list(Session.select())
+
+    def insert_new(token: str, username: str, expiry: str):
+        Session.create(token=token, username=username, expiry=expiry)
+    
+    def set_expiry(token: str, expiry: str):
+        Session.update(expiry=expiry).where(Session.token == token).execute()
+
+    def del_by_token(token: str):
+        Session.delete().where(Session.token == token).execute()
+
+    def del_by_username(username: str):
+        Session.delete().where(Session.username == username).execute()
 
 
 class Submission(BaseModel):
@@ -58,5 +85,6 @@ def init_db():
         ("F0", "final0"),
         ("F1", "final1"),
     ]
-    Assignment.insert_many(ASSIGNMENTS, fields=(Assignment.web_id, Assignment.email_id)).execute()
-
+    Assignment.insert_many(
+        ASSIGNMENTS, fields=(Assignment.web_id, Assignment.email_id)
+    ).execute()
