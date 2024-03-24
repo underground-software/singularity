@@ -129,22 +129,6 @@ WHERE username = ?;
 def usr_getby_username(usn): return _get(USR_GETBY_USERNAME, usn)
 
 
-USR_SET_LFX = """
-UPDATE users
-SET lfx = True
-WHERE username = ?;
-""".strip()
-def usr_set_lfx(usn): return _set(USR_SET_LFX, usn)
-
-
-USR_SET_NOLFX = """
-UPDATE users
-SET lfx = False
-WHERE username = ?;
-""".strip()
-def usr_set_nolfx(usn): return _set(USR_SET_NOLFX, usn)
-
-
 # registration table inferface
 
 REG_INS = """
