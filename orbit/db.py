@@ -145,14 +145,6 @@ WHERE username = ?;
 def usr_set_nolfx(usn): return _set(USR_SET_NOLFX, usn)
 
 
-USR_GETIF_LFX_USERNAME = """
-SELECT lfx
-FROM users
-WHERE username = ?;
-""".strip()
-def usr_getif_lfx_username(usn): return _get(USR_GETIF_LFX_USERNAME, usn)
-
-
 # registration table inferface
 
 REG_INS = """
