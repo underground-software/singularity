@@ -115,14 +115,14 @@ def usr_setpwdhash_username(usr): return _set(USR_SETPWDHASH_USERNAME, usr)
 
 
 USR_GET = """
-SELECT id, username, pwdhash, lfx, student_id
+SELECT id, username, pwdhash, student_id
 FROM users;
 """.strip()
 def usr_get(): return _get(USR_GET)
 
 
 USR_GETBY_USERNAME = """
-SELECT id, username, pwdhash, lfx, student_id
+SELECT id, username, pwdhash, student_id
 FROM users
 WHERE username = ?;
 """.strip()
