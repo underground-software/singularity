@@ -92,8 +92,8 @@ def usr_pwdhashfor_username(usn): return _get(USR_PWDHASHFOR_USERNAME, usn)
 
 
 USR_INS = """
-INSERT INTO users (username, pwdhash, lfx, student_id)
-VALUES (?, ?, ?, ?);
+INSERT INTO users (username, pwdhash, student_id)
+VALUES (?, ?, ?);
 """.strip()
 def usr_ins(usr): return _set(USR_INS, usr)
 
