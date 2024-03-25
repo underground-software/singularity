@@ -80,13 +80,6 @@ services:
         target: /orbit/docs
         read_only: true
         selinux: z
-    ports:
-      - target: 9098
-        published: 9098
-        protocol: tcp
-        app_protocol: http
-        mode: host
-        name: "unencrypted http upstream server port"
   smtp:
     build:
       context: smtp
