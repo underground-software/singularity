@@ -2,7 +2,6 @@ import sqlite3
 import config
 # nickname  table name
 # USR => users
-# ASN => assignments
 # REG => newusers
 import sys
 
