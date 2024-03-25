@@ -1,0 +1,17 @@
+{
+  "// this file should be merged with some global config file later": 0,
+  "// eg the one that holds the grading scheme": 0,
+
+  "// due field is parsed with `date`": 0,
+  "assignments": [
+    { "web_id": "setup", "email_id": "introductions", "due": "3 seconds" },
+    { "web_id": "E0",    "email_id": "exercise0",     "due": "4 seconds" },
+    { "web_id": "E1",    "email_id": "exercise1",     "due": "5 seconds" },
+    { "web_id": "E2",    "email_id": "exercise2",     "due": "6 seconds" },
+    { "web_id": "P0",    "email_id": "programming0",  "due": "7 seconds" },
+    { "web_id": "P1",    "email_id": "programming1",  "due": "8 seconds" },
+    { "web_id": "P2",    "email_id": "programming2",  "due": "9 seconds" },
+    { "web_id": "F0",    "email_id": "final0",        "due": "10 seconds" },
+    { "web_id": "F1",    "email_id": "final1",        "due": "11 seconds" }
+  ]
+}
