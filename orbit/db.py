@@ -43,14 +43,6 @@ WHERE token = ?;
 def ses_getby_token(tok): return _get(SES_GETBY_TOKEN, tok)
 
 
-SES_SETEXPIRY_TOKEN = """
-UPDATE sessions
-SET expiry = ?
-WHERE token = ?;
-""".strip()
-def ses_setexpiry_token(tex): return _set(SES_SETEXPIRY_TOKEN, tex)
-
-
 SES_GETBY_USERNAME = """
 SELECT token, username, expiry
 FROM sessions
