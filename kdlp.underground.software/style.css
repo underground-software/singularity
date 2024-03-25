@@ -228,6 +228,10 @@ li > p {
 	padding: 0;
 }
 
+li > p > img {
+	margin: 1rem auto;
+}
+
 li {
 	padding-top: .4rem;
 }
