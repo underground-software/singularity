@@ -166,26 +166,6 @@ def do_list_sessions(args):
                                         session[0]) for session in raw_list]))
 
 
-ASN_FMT = """
-{} submitted to mailbox {}
-""".strip()
-
-
-def do_list_asn(args):
-    raw_list = db.asn_get()
-    print('\n'.join([ASN_FMT.format(asn[0], asn[1]) for asn in raw_list]))
-
-
-INBOX_FMT = """
-{} submitted to {}@{}
-""".strip()
-
-
-def do_list_inbox(args):
-    raw_list = db.asn_get()
-    print('\n'.join([asn[1] for asn in raw_list]))
-
-
 def hyperspace_main(raw_args):
     parser = argparse.ArgumentParser(prog='hyperspace',
                                      description='Administrate Orbit',
