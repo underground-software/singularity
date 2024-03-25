@@ -31,56 +31,6 @@ def _do(cmd, reps=(), set_=False, get_=False):
 def _set(cmd, reps=()): return _do(cmd, reps, set_=True, get_=True)
 def _get(cmd, reps=()): return _do(cmd, reps, get_=True)
 
-
-# session table interface
-
-SES_GETBY_TOKEN = """
-SELECT token, username, expiry
-FROM sessions
-WHERE token = ?;
-""".strip()
-def ses_getby_token(tok): return _get(SES_GETBY_TOKEN, tok)
-
-
-SES_GETBY_USERNAME = """
-SELECT token, username, expiry
-FROM sessions
-WHERE username = ?;
-""".strip()
-def ses_getby_username(usn): return _get(SES_GETBY_USERNAME, usn)
-
-
-SES_INS = """
-INSERT INTO sessions (token, username, expiry)
-VALUES (?, ?, ?)
-RETURNING username;
-""".strip()
-def ses_ins(tpl): return _set(SES_INS, tpl)
-
-
-SES_DELBY_TOKEN = """
-DELETE FROM sessions
-WHERE token = ?
-RETURNING username;
-""".strip()
-def ses_delby_token(tok): return _set(SES_DELBY_TOKEN, tok)
-
-
-SES_DELBY_USERNAME = """
-DELETE FROM sessions
-WHERE username = ?
-RETURNING username;
-""".strip()
-def ses_delby_username(usn): return _set(SES_DELBY_USERNAME, usn)
-
-
-SES_GET = """
-SELECT token, username, expiry
-FROM sessions;
-""".strip()
-def ses_get(): return _get(SES_GET)
-
-
 # users table interface
 
 USR_PWDHASHFOR_USERNAME = """

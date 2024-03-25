@@ -16,6 +16,7 @@ from urllib.parse import parse_qs, urlparse
 # === internal imports & constants ===
 import config
 import db
+import db2
 
 sec_per_min = 60
 min_per_ses = config.minutes_each_session_token_is_valid
@@ -105,9 +106,8 @@ class Session:
             self.token = self.mk_hash(username)
             self.expiry = datetime.utcnow() + timedelta(minutes=min_per_ses)
 
-            if db.ses_getby_username(username):
-                db.ses_delby_username(username)
-            db.ses_ins((self.token, self.username, self.expiry_ts()))
+            db2.Session.del_by_username(username)
+            db2.Session.insert_new(self.token, self.username, self.expiry_ts())
 
         # try to load active session from database using user token
         else:
@@ -116,13 +116,13 @@ class Session:
                 cok.load(raw)
                 res = cok.get('auth', cookies.Morsel()).value
 
-                if (ses_found := db.ses_getby_token(res)[0]):
-                    self.token = ses_found[0]
-                    self.username = ses_found[1]
-                    self.expiry = datetime.fromtimestamp(ses_found[2])
+                if ses_found := db2.Session.get_by_token(res):
+                    self.token = ses_found.token
+                    self.username = ses_found.username
+                    self.expiry = datetime.fromtimestamp(ses_found.expiry)
 
     def end(self):
-        res = db.ses_delby_token(self.token)
+        res = db2.Session.del_by_token(self.token)
         self.token = None
         self.username = None
         self.expiry = None

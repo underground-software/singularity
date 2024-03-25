@@ -1,5 +1,5 @@
 import config
-from peewee import *
+from peewee import Model, IntegerField, CharField, BooleanField, SqliteDatabase
 from typing import Optional, Self
 
 DB = SqliteDatabase(config.database)
@@ -24,14 +24,20 @@ class User(BaseModel):
 
 class Session(BaseModel):
     token = CharField(primary_key=True)
-    username = CharField(unique=True)
+    username = CharField()
     expiry = CharField()
+
+    def __repr__(self):
+        return f'Session(token={self.token}, username={self.username}, expiry={self.expiry})'  # noqa: 501 (long line)
+
+    def __str__(self):
+        return repr(self)
 
     def get_by_token(token: str) -> Optional[Self]:
         return Session.get_or_none(Session.token == token)
 
-    def get_by_username(username: str) -> Optional[Self]:
-        return Session.get_or_none(Session.username == username)
+    def get_by_username(username: str) -> list[Self]:
+        return list(Session.select().where(Session.username == username))
 
     def get_all() -> list[Self]:
         return list(Session.select())
@@ -42,11 +48,20 @@ class Session(BaseModel):
     def set_expiry(token: str, expiry: str):
         Session.update(expiry=expiry).where(Session.token == token).execute()
 
-    def del_by_token(token: str):
-        Session.delete().where(Session.token == token).execute()
+    def del_by_token(token: str) -> Optional[Self]:
+        res = Session.delete()                      \
+                     .where(Session.token == token) \
+                     .returning(Session)            \
+                     .execute()
+        if res.count > 0:
+            return res[0]
 
-    def del_by_username(username: str):
-        Session.delete().where(Session.username == username).execute()
+    def del_by_username(username: str) -> list[Self]:
+        res = Session.delete()                            \
+                     .where(Session.username == username) \
+                     .returning(Session)                  \
+                     .execute()
+        return list(res)
 
 
 class Submission(BaseModel):
@@ -71,20 +86,7 @@ class NewUser(BaseModel):
     password = CharField()
 
 
-# TODO move this information to some config file
-def init_db():
-    DB.create_tables([User, Session, Submission, Assignment, NewUser])
-    ASSIGNMENTS = [
-        ("setup", "introductions"),
-        ("E0", "exercise0"),
-        ("E1", "exercise1"),
-        ("E2", "exercise2"),
-        ("P0", "programming0"),
-        ("P1", "programming1"),
-        ("P2", "programming2"),
-        ("F0", "final0"),
-        ("F1", "final1"),
-    ]
-    Assignment.insert_many(
-        ASSIGNMENTS, fields=(Assignment.web_id, Assignment.email_id)
-    ).execute()
+# automatically create tables
+# this actually does IO, creates orbit.db calls CREATE TABLE, etc.
+# maybe this should move to some initializer function
+DB.create_tables(BaseModel.__subclasses__())
