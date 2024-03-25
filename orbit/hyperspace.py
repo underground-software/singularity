@@ -238,13 +238,6 @@ def hyperspace_main(raw_args):
     actions.add_argument('-q', '--queryuser', action='store_const',
                          help='Get information about supplied username if valid',  # NOQA: E501
                          dest='do', const=do_query_username)
-    actions.add_argument('-a', '--assignments', action='store_const',
-                         help='Get the full assignment list',
-                         dest='do', const=do_list_asn)
-
-    actions.add_argument('-z', '--plaininboxes', action='store_const',
-                         help='Get plain list of local submission inboxes',
-                         dest='do', const=do_list_inbox)
 
     args = parser.parse_args(raw_args)
     if (args.do):
