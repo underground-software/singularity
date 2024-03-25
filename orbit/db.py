@@ -153,31 +153,6 @@ WHERE username = ?;
 def usr_getif_lfx_username(usn): return _get(USR_GETIF_LFX_USERNAME, usn)
 
 
-# assignment table interface
-
-ASN_GETBY_WID = """
-SELECT web_id, email_id
-FROM assignments
-WHERE web_id = ?;
-""".strip()
-def asn_getby_webid(wid): return _get(ASN_GETBY_WID, wid)
-
-
-ASN_GETBY_EID = """
-SELECT web_id, email_id
-FROM assignments
-WHERE email_id = ?;
-""".strip()
-def asn_getby_email_id(eid): return _get(ASN_GETBY_EID, eid)
-
-
-ASN_GET = """
-SELECT *
-FROM assignments;
-""".strip()
-def asn_get(): return _get(ASN_GET)
-
-
 # registration table inferface
 
 REG_INS = """
