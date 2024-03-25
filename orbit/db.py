@@ -154,48 +154,6 @@ WHERE username = ?;
 def usr_getif_lfx_username(usn): return _get(USR_GETIF_LFX_USERNAME, usn)
 
 
-# submission table interface
-
-SUB_GETFOR_USERNAME_ASN = """
-SELECT (submission_id, student_id, assignment_id,
-    submission_name, submission_grade, submission_comments)
-FROM submissions
-WHERE student_id = ?
-AND assignment_id = ?;
-""".strip()
-def sub_getfor_username_asn(dub): return _get(SUB_GETFOR_USERNAME_ASN, dub)
-
-
-SUB_GET = """
-SELECT *
-FROM submissions;
-""".strip()
-def sub_get(): return _get(SUB_GET)
-
-
-SUB_INS = """
-INSERT INTO submissions (sub_id, username, timestamp, _from, _to, email_ids, subjects)
-VALUES (?,?,?,?,?,?,?);
-""".strip()  # NOQA: E501
-def sub_ins(sub): return _set(SUB_INS, sub)
-
-
-SUB_GETBY_SUBID = """
-SELECT sub_id, username, timestamp, _from, _to, email_ids, subjects
-FROM submissions
-WHERE sub_id = ?;
-""".strip()
-def sub_getby_subid(sid): return _get(SUB_GETBY_SUBID, sid)
-
-
-SUB_GETBY_USERNAME = """
-SELECT sub_id, username, timestamp, _from, _to, email_ids, subjects
-FROM submissions
-WHERE user = ?;
-""".strip()
-def sub_getby_username(usr): return _get(SUB_GETBY_USERNAME, usr)
-
-
 # assignment table interface
 
 ASN_GETBY_WID = """
