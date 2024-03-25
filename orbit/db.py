@@ -2,6 +2,7 @@ import sqlite3
 import config
 # nickname  table name
 # USR => users
+# SES => sessions
 # REG => newusers
 import sys
 
