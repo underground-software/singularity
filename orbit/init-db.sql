@@ -10,14 +10,6 @@ CREATE TABLE sessions (
         token string PRIMARY KEY,
         username string UNIQUE NOT NULL,
         expiry string NOT NULL);
-CREATE TABLE submissions (
-	sub_id string PRIMARY KEY,
-	username string NOT NULL,
-	time string NOT NULL,
-	_to string NOT NULL,
-	_from string NOT NULL,
-	email_ids string NOT NULL,
-	subjects string NOT NULL);
 CREATE TABLE assignments (
 	web_id string PRIMARY KEY,
 	email_id string NOT NULL);

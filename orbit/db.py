@@ -3,7 +3,6 @@ import config
 # nickname  table name
 # USR => users
 # ASN => assignments
-# SUB => submissions
 # REG => newusers
 import sys
 
