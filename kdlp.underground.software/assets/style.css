@@ -459,3 +459,7 @@ li {
 #cgit ul.pager li::marker {
 	content: none;
 }
+
+#cgit .content > a {
+	display: none;
+}
