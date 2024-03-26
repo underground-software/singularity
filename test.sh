@@ -10,10 +10,12 @@
 #   of the furthest right failing command or zero if no command failed (o pipefail)
 set -exuo pipefail
 
-command -v curl || { echo "error: curl command required yet absent" ; exit 1 ; }
-command -v flake8 || { echo "error: flake8 command required yet absent" ; exit 1 ; }
-command -v chcon || { echo "error: chcon command required yet absent" ; exit 1 ; }
-command -v podman || { echo "error: podman command required yet absent" ; exit 1 ; }
+require() { command -v "$1" || { echo "error: $1 command required yet absent" ; exit 1 ; } ; }
+require curl
+require flake8
+require chcon
+require podman
+require shellcheck
 
 # Reset the tests and mail directories
 sudo rm -rf test email/logs/* email/mail/*
