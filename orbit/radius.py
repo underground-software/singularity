@@ -463,15 +463,13 @@ def handle_register(rocket):
     if not (student_id := rocket.body_args_query('student_id')):
         rocket.msg('you must provide a student id')
         return form_respond()
-    if not (registration_data := db.reg_getby_stuid(student_id)[0]):
+    if not (reg := db2.Registration.del_by_student_id(student_id)):
         rocket.msg('no such student')
         return form_respond()
-    (regid, username, password) = registration_data
-    db.reg_delby_regid(regid)
     rocket.msg('welcome to the classroom')
     return rocket.respond((register_response % {
-        'username': username,
-        'password': password,
+        'username': reg.username,
+        'password': reg.password,
     }))
 
 
