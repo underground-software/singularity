@@ -1,5 +1,5 @@
 import config
-from peewee import Model, IntegerField, CharField, BooleanField, SqliteDatabase
+from peewee import Model, IntegerField, CharField, SqliteDatabase
 from typing import Optional, Self
 
 DB = SqliteDatabase(config.database)
@@ -18,7 +18,6 @@ class User(BaseModel):
     id = IntegerField(primary_key=True)
     username = CharField(unique=True)
     pwdhash = CharField()
-    lfx = BooleanField()
     student_id = IntegerField()
 
 
@@ -62,21 +61,6 @@ class Session(BaseModel):
                      .returning(Session)                  \
                      .execute()
         return list(res)
-
-
-class Submission(BaseModel):
-    id = CharField(primary_key=True)
-    username = CharField()
-    time = CharField()
-    _to = CharField()
-    _from = CharField()
-    email_ids = CharField()
-    subjects = CharField()
-
-
-class Assignment(BaseModel):
-    web_id = CharField(primary_key=True)
-    email_id = CharField()
 
 
 class NewUser(BaseModel):
