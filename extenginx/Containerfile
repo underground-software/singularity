@@ -1,5 +1,3 @@
-ARG NGINX_RUNTIME_SNIPPETS=0
-
 FROM alpine:3.19 AS build
 
 RUN apk update && apk upgrade && apk add \
@@ -43,7 +41,7 @@ ARG NGINX_POP3S_PORT=995
 
 RUN envsubst '$NGINX_HOSTNAME:$NGINX_HTTP_PORT:$NGINX_HTTPS_PORT:$NGINX_SMTPS_PORT:$NGINX_POP3S_PORT' < nginx.conf.template > nginx.conf
 
-FROM alpine:3.19 AS nginx-runtime-0
+FROM alpine:3.19 AS nginx
 
 RUN apk update && apk upgrade && apk add \
     nginx          \
@@ -81,8 +79,3 @@ EXPOSE ${NGINX_SMTPS_PORT}
 EXPOSE ${NGINX_POP3S_PORT}
 
 ENTRYPOINT ["/usr/sbin/nginx", "-g", "daemon off;"]
-
-FROM nginx-runtime-0 AS nginx-runtime-1
-VOLUME /etc/nginx/include.d/
-
-FROM nginx-runtime-${NGINX_RUNTIME_SNIPPETS} AS nginx
