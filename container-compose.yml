@@ -8,10 +8,15 @@ services:
       target: nginx
       args:
         NGINX_HOSTNAME: kdlp.underground.software
-        NGINX_HTTPS_LISTEN: '[::]:1443 ipv6only=off'
-        NGINX_SMTPS_LISTEN: '[::]:1465 ipv6only=off'
-        NGINX_POP3S_LISTEN: '[::]:1995 ipv6only=off'
+        NGINX_HTTPS_LISTEN: 'unix:/run/nginx/socks/https.sock'
+        NGINX_SMTPS_LISTEN: 'unix:/run/nginx/socks/smtps.sock'
+        NGINX_POP3S_LISTEN: 'unix:/run/nginx/socks/pop3s.sock'
     volumes:
+      - type: bind
+        source: ./socks
+        target: /run/nginx/socks
+        read_only: false
+        selinux: z
       - type: bind
         source: ./ssl
         target: /etc/ssl/nginx
@@ -22,25 +27,6 @@ services:
         target: /var/www/html
         read_only: true
         selinux: z
-    ports:
-      - target: 1443
-        published: 443
-        protocol: tcp
-        app_protocol: https
-        mode: host
-        name: "port for https connections to proxy"
-      - target: 1465
-        published: 465
-        protocol: tcp
-        app_protocol: smtps
-        mode: host
-        name: "port for smtps connections to proxy"
-      - target: 1995
-        published: 995
-        protocol: tcp
-        app_protocol: pop3s
-        mode: host
-        name: "port for pop3s connections to proxy"
     depends_on:
       - orbit
       - smtp
