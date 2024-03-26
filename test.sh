@@ -4,6 +4,11 @@
 
 set -exuo pipefail
 
+command -v curl || { echo "error: curl command required yet absent" ; exit 1 ; }
+command -v flake8 || { echo "error: flake8 command required yet absent" ; exit 1 ; }
+command -v chcon || { echo "error: chcon command required yet absent" ; exit 1 ; }
+command -v podman || { echo "error: podman command required yet absent" ; exit 1 ; }
+
 # Reset the tests and mail directories
 sudo rm -rf test email/logs/* email/mail/*
 mkdir -p test
