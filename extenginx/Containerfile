@@ -39,7 +39,17 @@ ARG NGINX_HTTPS_PORT=443
 ARG NGINX_SMTPS_PORT=465
 ARG NGINX_POP3S_PORT=995
 
-RUN envsubst '$NGINX_HOSTNAME:$NGINX_HTTP_PORT:$NGINX_HTTPS_PORT:$NGINX_SMTPS_PORT:$NGINX_POP3S_PORT' < nginx.conf.template > nginx.conf
+RUN envsubst \
+	' \
+		$NGINX_HOSTNAME \
+		$NGINX_HTTP_PORT \
+		$NGINX_HTTPS_PORT \
+		$NGINX_SMTPS_PORT \
+		$NGINX_POP3S_PORT \
+	' \
+	< nginx.conf.template \
+	> nginx.conf \
+	;
 
 FROM alpine:3.19 AS nginx
 
