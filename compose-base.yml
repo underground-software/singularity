@@ -33,7 +33,7 @@ services:
       context: orbit
       dockerfile: Containerfile
       additional_contexts:
-        - orbit_singularity_git_dir=./.git
+        - orbit_singularity_git_dir=./gitdir
         - orbit_docs_source=./kdlp.underground.software
       target: orbit
       args:
@@ -82,8 +82,11 @@ services:
       - pop
 networks:
   orbit:
+    name: orbit
   smtp:
+    name: smtp
   pop:
+    name: pop
 volumes:
   ssl-certs:
   email:
