@@ -15,7 +15,6 @@ from urllib.parse import parse_qs, urlparse
 
 # === internal imports & constants ===
 import config
-import db
 import db2
 
 sec_per_min = 60

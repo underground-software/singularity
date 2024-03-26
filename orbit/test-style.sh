@@ -23,5 +23,5 @@ scan() {
 
 scan radius.py
 scan config.py
-scan db.py
+scan db2.py
 scan hyperspace.py
