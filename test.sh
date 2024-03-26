@@ -1,5 +1,5 @@
-#!/bin/bash
-#
+#!/usr/bin/env bash
+
 # Testing script for singularity and orbit
 
 set -exuo pipefail
