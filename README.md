@@ -52,5 +52,5 @@ extenginx/create_dev_keys.sh
 You should now have a working, local version of the kdlp site!
 To compose down, use
 ```
-../podman-compose/podman_compose.py -f container-compose-dev.yml down -t0
+../podman-compose/podman_compose.py -f container-compose-dev.yml down
 ```
