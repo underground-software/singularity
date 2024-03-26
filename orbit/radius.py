@@ -476,6 +476,11 @@ def handle_cgit(rocket):
     cgit_env = os.environ.copy()
     cgit_env['PATH_INFO'] = rocket.path_info.removeprefix('/cgit')
     cgit_env['QUERY_STRING'] = rocket.env.get('QUERY_STRING', '')
+
+    path_array = cgit_env['PATH_INFO'].split('/')
+    if len(path_array) > 2 and path_array[2] == 'plain':
+        return rocket.raw_respond(HTTPStatus.NOT_FOUND)
+
     proc = subprocess.Popen(['/usr/share/webapps/cgit/cgit'],
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
