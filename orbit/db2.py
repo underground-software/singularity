@@ -1,5 +1,5 @@
 import config
-from peewee import Model, IntegerField, CharField, SqliteDatabase
+from peewee import Model, IntegerField, CharField, SqliteDatabase, FieldAccessor  # noqa 501
 from typing import Optional, Self
 
 DB = SqliteDatabase(config.database)
@@ -13,24 +13,47 @@ class BaseModel(Model):
     class Meta:
         database = DB
 
+    # Custom string for table rows that is prettier than what peewee generates
+    def __str__(self):
+        self_ty = self.__class__
+        fields = [name for name, val in vars(self_ty).items()
+                  if isinstance(val, FieldAccessor)]
+        fields = map(lambda name: f"{name}={getattr(self, name)}", fields)
+        fields = ", ".join(fields)
+        return f"{self_ty.__qualname__}({fields})"
+
 
 class User(BaseModel):
-    id = IntegerField(primary_key=True)
-    username = CharField(unique=True)
+    username = CharField(primary_key=True)
     pwdhash = CharField()
     student_id = IntegerField()
+
+    def get_all() -> list[Self]:
+        return list(User.select())
+
+    def get_by_username(username: str) -> Optional[Self]:
+        return User.get_or_none(User.username == username)
+
+    def insert_new(username: str, pwdhash: str, student_id: int):
+        User.create(username=username, pwdhash=pwdhash, student_id=student_id)
+
+    def set_pwdhash(username: str, pwdhash: str):
+        User.update(pwdhash=pwdhash).where(
+            Session.username == username).execute()
+
+    def del_by_username(username: str) -> Optional[Self]:
+        res = User.delete()                         \
+                  .where(User.username == username) \
+                  .returning(User)                  \
+                  .execute()
+        if res.count > 0:
+            return res[0]
 
 
 class Session(BaseModel):
     token = CharField(primary_key=True)
     username = CharField()
     expiry = CharField()
-
-    def __repr__(self):
-        return f'Session(token={self.token}, username={self.username}, expiry={self.expiry})'  # noqa: 501 (long line)
-
-    def __str__(self):
-        return repr(self)
 
     def get_by_token(token: str) -> Optional[Self]:
         return Session.get_or_none(Session.token == token)
@@ -63,11 +86,10 @@ class Session(BaseModel):
         return list(res)
 
 
-class NewUser(BaseModel):
-    id = IntegerField(primary_key=True)
-    student_id = CharField(unique=True)
-    username = CharField(unique=True)
+class Registration(BaseModel):
+    username = CharField(primary_key=True)
     password = CharField()
+    student_id = CharField(unique=True)
 
 
 # automatically create tables
