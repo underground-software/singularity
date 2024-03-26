@@ -8,7 +8,6 @@ services:
       target: nginx
       args:
         NGINX_HOSTNAME: kdlp.underground.software
-        NGINX_HTTP_PORT: 1080
         NGINX_HTTPS_PORT: 1443
         NGINX_SMTPS_PORT: 1465
         NGINX_POP3S_PORT: 1995
@@ -24,12 +23,6 @@ services:
         read_only: true
         selinux: z
     ports:
-      - target: 1080
-        published: 80
-        protocol: tcp
-        app_protocol: http
-        mode: host
-        name: "port for http connections to proxy"
       - target: 1443
         published: 443
         protocol: tcp
