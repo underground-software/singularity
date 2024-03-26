@@ -27,6 +27,14 @@ RUN test -n "$orbit_version_info" || (echo 'version info is not set' && false) &
 	rm config.py.template \
 	;
 
+RUN mkdir \
+	/var/git \
+	/orbit/docs \
+	;
+
+COPY --from=ORBIT_SINGULARITY_GIT_DIR . /var/git/singularity
+COPY --from=ORBIT_DOCS_SOURCE . /orbit/docs
+
 FROM alpine:3.19 AS orbit
 
 RUN apk update && apk upgrade && apk add \
@@ -36,9 +44,7 @@ RUN apk update && apk upgrade && apk add \
 
 COPY --from=build /orbit /orbit
 COPY --from=build /radius-venv /radius-venv
-
-RUN mkdir /var/git
-VOLUME /var/git
+COPY --from=build /var/git /var/git
 
 COPY cgitrc /etc/cgitrc
 

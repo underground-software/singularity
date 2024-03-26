@@ -44,17 +44,15 @@ services:
     build:
       context: orbit
       dockerfile: Containerfile
+      additional_contexts:
+        - ORBIT_SINGULARITY_GIT_DIR=./.git
+        - ORBIT_DOCS_SOURCE=./kdlp.underground.software
       target: orbit
       args:
         orbit_version_info: "singularity v0.1 (in development) https://github.com/underground-software/singularity"
     security_opt:
       - label:disable
     volumes:
-      - type: bind
-        source: ./.git
-        target: /var/git/singularity
-        read_only: true
-        selinux: z
       - type: bind
         source: ./kdlp.underground.software
         target: /orbit/docs
