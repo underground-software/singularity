@@ -73,11 +73,10 @@ services:
         hostname: localhost
         LISTEN_PORT: 1465
     volumes:
-      - type: bind
-        source: ./email
+      - type: volume
+        source: email
         target: /mnt/email_data
         read_only: false
-        selinux: z
     networks:
       - smtp
   pop:
@@ -90,11 +89,12 @@ services:
       args:
         LISTEN_PORT: 1995
     volumes:
-      - type: bind
-        source: ./email/mail
-        target: /mnt/mail
+      - type: volume
+        source: email
+        target: /mnt/email_data
         read_only: true
-        selinux: z
+    depends_on:
+      - smtp
     networks:
       - pop
 networks:
@@ -103,3 +103,4 @@ networks:
   pop:
 volumes:
   ssl-certs:
+  email:
