@@ -48,6 +48,10 @@ services:
         app_protocol: pop3s
         mode: host
         name: "port for pop3s connections to proxy"
+    depends_on:
+      - orbit
+      - smtp
+      - pop
   orbit:
     build:
       context: orbit
