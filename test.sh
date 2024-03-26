@@ -33,14 +33,14 @@ EMAIL_HOSTNAME="kdlp.underground.software"
 
 # NOTE: don't set DEVEL and STAGING at the same time
 
-if [ ! -z "$DEVEL" ]; then
+if [ -n "$DEVEL" ]; then
 	PORT=1443
 	POP_PORT=1995
 	SMTP_PORT=1465
 	EMAIL_HOSTNAME="localhost"
 fi
 
-if [ ! -z "$STAGING" ]; then
+if [ -n "$STAGING" ]; then
 	EMAIL_HOSTNAME="dev.underground.software"
 fi
 
