@@ -16,11 +16,10 @@ services:
     security_opt:
       - label:disable
     volumes:
-      - type: bind
-        source: ./ssl
+      - type: volume
+        source: ssl-certs
         target: /etc/ssl/nginx
         read_only: true
-        selinux: z
       - type: bind
         source: ./nginx_snippets
         target: /etc/nginx/include.d
@@ -125,3 +124,5 @@ networks:
   orbit:
   smtp:
   pop:
+volumes:
+  ssl-certs:

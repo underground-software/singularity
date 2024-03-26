@@ -13,11 +13,10 @@ services:
         NGINX_SMTPS_PORT: 1465
         NGINX_POP3S_PORT: 1995
     volumes:
-      - type: bind
-        source: ./ssl
+      - type: volume
+        source: ssl-certs
         target: /etc/ssl/nginx
         read_only: true
-        selinux: z
       - type: bind
         source: ./kdlp.underground.software
         target: /var/www/html
@@ -115,3 +114,5 @@ networks:
   orbit:
   smtp:
   pop:
+volumes:
+  ssl-certs:
