@@ -86,13 +86,6 @@ services:
         target: /mnt/email_data
         read_only: false
         selinux: z
-    ports:
-      - target: 1465
-        published: 11465
-        protocol: tcp
-        app_protocol: smtp
-        mode: host
-        name: "unencrypted smtp upstream server port"
   pop:
     build:
       context: pop
