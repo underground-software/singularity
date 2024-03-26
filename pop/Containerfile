@@ -4,7 +4,7 @@ RUN apk add \
 	make \
 	;
 
-COPY --from=TCP_SERVER_SOURCE . /tcp_server
+COPY --from=tcp_server_source . /tcp_server
 ARG LISTEN_PORT=995
 RUN make -C /tcp_server CC='clang -static' DEFAULT_PORT=${LISTEN_PORT}
 

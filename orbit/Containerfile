@@ -32,8 +32,8 @@ RUN mkdir \
 	/orbit/docs \
 	;
 
-COPY --from=ORBIT_SINGULARITY_GIT_DIR . /var/git/singularity
-COPY --from=ORBIT_DOCS_SOURCE . /orbit/docs
+COPY --from=orbit_singularity_git_dir . /var/git/singularity
+COPY --from=orbit_docs_source . /orbit/docs
 
 FROM alpine:3.19 AS orbit
 
