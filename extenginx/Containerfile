@@ -34,16 +34,16 @@ RUN cd /etc/ssl/nginx && \
 
 COPY nginx.conf.template .
 
-ARG NGINX_HTTPS_PORT=443
-ARG NGINX_SMTPS_PORT=465
-ARG NGINX_POP3S_PORT=995
+ARG NGINX_HTTPS_LISTEN='[::]:443 ipv6only=off'
+ARG NGINX_SMTPS_LISTEN='[::]:465 ipv6only=off'
+ARG NGINX_POP3S_LISTEN='[::]:995 ipv6only=off'
 
 RUN envsubst \
 	' \
 		$NGINX_HOSTNAME \
-		$NGINX_HTTPS_PORT \
-		$NGINX_SMTPS_PORT \
-		$NGINX_POP3S_PORT \
+		$NGINX_HTTPS_LISTEN \
+		$NGINX_SMTPS_LISTEN \
+		$NGINX_POP3S_LISTEN \
 	' \
 	< nginx.conf.template \
 	> nginx.conf \

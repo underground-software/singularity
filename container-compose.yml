@@ -8,9 +8,9 @@ services:
       target: nginx
       args:
         NGINX_HOSTNAME: kdlp.underground.software
-        NGINX_HTTPS_PORT: 1443
-        NGINX_SMTPS_PORT: 1465
-        NGINX_POP3S_PORT: 1995
+        NGINX_HTTPS_LISTEN: '[::]:1443 ipv6only=off'
+        NGINX_SMTPS_LISTEN: '[::]:1465 ipv6only=off'
+        NGINX_POP3S_LISTEN: '[::]:1995 ipv6only=off'
     volumes:
       - type: bind
         source: ./ssl
