@@ -165,7 +165,7 @@ orbit/warpdrive.sh \
   | tee test/delete_user \
   | grep "user"
 
-# Check style compliance
+# Check python style compliance with flake8
 pushd orbit
 ./test-style.sh
 popd
