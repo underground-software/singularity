@@ -142,7 +142,7 @@ curl --url "pop3s://localhost:$POP_PORT/1" \
   --insecure \
   --fail \
   --no-progress-meter \
-  --user user:pass
+  --user user:pass \
   > test/pop_get_message
 test_pop_get_message=$?
 
