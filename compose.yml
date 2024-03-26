@@ -1,0 +1,2 @@
+include:
+  - "${SINGULARITY_COMPOSE_BASE}"
