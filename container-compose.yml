@@ -108,10 +108,3 @@ services:
         target: /mnt/mail
         read_only: true
         selinux: z
-    ports:
-      - target: 1995
-        published: 11995
-        protocol: tcp
-        app_protocol: pop3
-        mode: host
-        name: "unencrypted pop3 upstream server port"
