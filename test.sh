@@ -119,6 +119,7 @@ curl --url "pop3s://localhost:$POP_PORT" \
 
 CR=$(printf "\r")
 # Check that the user can send a message to the server
+(
 curl --url "smtps://localhost:$SMTP_PORT" \
   --verbose \
   --insecure \
@@ -127,14 +128,15 @@ curl --url "smtps://localhost:$SMTP_PORT" \
   --mail-from "user@$EMAIL_HOSTNAME" \
   --mail-rcpt "other@$EMAIL_HOSTNAME" \
   --upload-file - \
-  --user 'user:pass' \
-  > test/smtp_send_email <<EOF
+  --user 'user:pass' <<EOF
 Subject: Message Subject$CR
 $CR
 To whom it may concern,$CR
 $CR
 Bottom text$CR
 EOF
+) | tee test/smtp_send_email \
+  | diff <(printf "") /dev/stdin
   
 # Check that the user can get the most recent message sent to the server
 curl --url "pop3s://localhost:$POP_PORT/1" \
@@ -143,13 +145,14 @@ curl --url "pop3s://localhost:$POP_PORT/1" \
   --fail \
   --no-progress-meter \
   --user user:pass \
-  > test/pop_get_message
-test_pop_get_message=$?
+  | tee test/pop_get_message \
+  | grep "Bottom text"
 
 # Check that we can delete a user
 orbit/warpdrive.sh \
   -u user -w \
-  > test/delete_user
+  | tee test/delete_user \
+  | grep "user"
 
 # Check style compliance
 python -m venv orbit-dev
