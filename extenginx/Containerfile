@@ -70,6 +70,7 @@ RUN mkdir -p \
     ;
 
 COPY --from=nginx_snippet_source . /etc/nginx/include.d/
+COPY --from=nginx_webroot_content . /var/www/html
 
 COPY --from=build nginx.conf /etc/nginx/
 COPY --from=build /etc/ssl/nginx /etc/ssl/nginx

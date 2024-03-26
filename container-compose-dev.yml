@@ -4,6 +4,7 @@ services:
       context: extenginx
       additional_contexts:
         - nginx_snippet_source=./nginx_snippets
+        - nginx_webroot_content=./kdlp.underground.software
       dockerfile: Containerfile
       target: nginx
       args:
