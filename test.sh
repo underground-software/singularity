@@ -23,8 +23,11 @@ add_cleanup() {
 	)" EXIT
 }
 
+DOCKER=${DOCKER:-podman}
+
 require() { command -v "$1" > /dev/null || { echo "error: $1 command required yet absent" ; exit 1 ; } ; }
 require curl
+require "${DOCKER}"
 
 # Check for shell script style compliance with shellcheck
 ./script-lint.sh
@@ -54,9 +57,11 @@ if [ -n "$STAGING" ]; then
 	EMAIL_HOSTNAME="dev.underground.software"
 fi
 
+${DOCKER} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem test/ca_cert.pem
+
 CURL_OPTS=( \
 --verbose \
---cacert ssl/fullchain.pem \
+--cacert test/ca_cert.pem \
 --fail \
 --no-progress-meter \
 )
