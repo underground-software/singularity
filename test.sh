@@ -40,8 +40,8 @@ popd
 # Create test dir if it does not exist yet
 mkdir -p test
 
-# Reset the tests and mail directories
-rm -f test/* email/logs/* email/mail/*
+# Reset the test directory
+rm -f test/*
 
 DEVEL=${DEVEL:-""}
 STAGING=${STAGING:-""}
@@ -58,6 +58,17 @@ if [ -n "$STAGING" ]; then
 fi
 
 ${DOCKER} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem test/ca_cert.pem
+
+nuke_mail() {
+	${DOCKER} run --rm -v singularity_email:/mnt alpine:3.19 sh -c 'rm -f /mnt/mail/* /mnt/logs/*'
+}
+
+# Save original contents of mail volume
+${DOCKER} volume export singularity_email > test/email_orig.tar
+
+#start with no mail and restore any saved messages once the test completes
+nuke_mail
+add_cleanup "${DOCKER} volume import singularity_email test/email_orig.tar"
 
 CURL_OPTS=( \
 --verbose \
@@ -160,6 +171,9 @@ Bottom text$CR
 EOF
 ) | tee test/smtp_send_email \
   | diff <(printf "") /dev/stdin
+
+# Remove the email we just sent
+add_cleanup nuke_mail
 
 # Check that the user can get the most recent message sent to the server
 curl --url "pop3s://$EMAIL_HOSTNAME/1" \
