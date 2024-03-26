@@ -160,10 +160,6 @@ orbit/warpdrive.sh \
   | grep "user"
 
 # Check style compliance
-python -m venv orbit-dev
-source orbit-dev/bin/activate
-pip install -r orbit/dev-requirements.txt
 pushd orbit
 ./test-style.sh
 popd
-
