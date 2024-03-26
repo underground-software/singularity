@@ -99,19 +99,6 @@ http {
 
 		include /etc/nginx/include.d/server_https/*.conf;
 	}
-
-	server {
-		server_name ${NGINX_HOSTNAME};
-		listen ${NGINX_HTTP_PORT} default_server;
-		listen [::]:${NGINX_HTTP_PORT} default_server;
-
-
-		include /etc/nginx/include.d/server_http/*.conf;
-
-		location / {
-			return 301 https://$host:${NGINX_HTTPS_PORT}$request_uri;
-		}
-	}
 }
 
 mail {
