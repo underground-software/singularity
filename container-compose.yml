@@ -4,6 +4,7 @@ services:
       context: extenginx
       additional_contexts:
         - nginx_snippet_source=./nginx_snippets
+        - nginx_webroot_content=./kdlp.underground.software
       dockerfile: Containerfile
       target: nginx
       args:
@@ -21,11 +22,6 @@ services:
         source: ssl-certs
         target: /etc/ssl/nginx
         read_only: true
-      - type: bind
-        source: ./kdlp.underground.software
-        target: /var/www/html
-        read_only: true
-        selinux: z
     depends_on:
       - orbit
       - smtp
