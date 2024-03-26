@@ -3,7 +3,6 @@
 import argparse
 import sys
 import bcrypt
-import db
 import db2
 from pprint import pprint
 from datetime import datetime

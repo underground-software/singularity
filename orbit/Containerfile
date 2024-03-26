@@ -18,10 +18,6 @@ RUN python3 -m venv /radius-venv && \
 COPY . /orbit
 WORKDIR /orbit
 
-RUN mkdir -p /var/orbit/ && \
-	sqlite3 /var/orbit/orbit.db ".read init-db.sql" && \
-	:
-
 ARG orbit_version_info
 RUN test -n "$orbit_version_info" || (echo 'version info is not set' && false) && \
 	mv config.py config.py.template && \
