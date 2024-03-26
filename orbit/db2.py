@@ -87,9 +87,24 @@ class Session(BaseModel):
 
 
 class Registration(BaseModel):
-    username = CharField(primary_key=True)
+    student_id = CharField(primary_key=True)
+    username = CharField(unique=True)
     password = CharField()
-    student_id = CharField(unique=True)
+
+    def insert_new(student_id: int, username: str, password: str):
+        Registration.create(username=username,
+                            password=password, student_id=student_id)
+
+    def get_by_student_id(student_id: str) -> Optional[Self]:
+        return Registration.get_or_none(Registration.student_id == student_id)
+
+    def del_by_student_id(student_id: int) -> Optional[Self]:
+        res = Registration.delete()                                     \
+                          .where(Registration.student_id == student_id) \
+                          .returning(Registration)                      \
+                          .execute()
+        if res.count > 0:
+            return res[0]
 
 
 # automatically create tables
