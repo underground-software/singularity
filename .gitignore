@@ -7,7 +7,6 @@ big.log*
 email*
 cert.tar.gz
 orbit-dev
-ssl
 pop3
 smtp
 tcp_server

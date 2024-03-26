@@ -17,11 +17,10 @@ services:
         target: /run/nginx/socks
         read_only: false
         selinux: z
-      - type: bind
-        source: ./ssl
+      - type: volume
+        source: ssl-certs
         target: /etc/ssl/nginx
         read_only: true
-        selinux: z
       - type: bind
         source: ./kdlp.underground.software
         target: /var/www/html
@@ -94,3 +93,5 @@ networks:
   orbit:
   smtp:
   pop:
+volumes:
+  ssl-certs:
