@@ -3,8 +3,8 @@ services:
     build:
       context: extenginx
       additional_contexts:
-        - NGINX_SNIPPET_SOURCE=./nginx_snippets
-        - NGINX_WEBROOT_CONTENT=./kdlp.underground.software
+        - nginx_snippet_source=./nginx_snippets
+        - nginx_webroot_content=./kdlp.underground.software
       dockerfile: Containerfile
       target: nginx
       args:
@@ -33,8 +33,8 @@ services:
       context: orbit
       dockerfile: Containerfile
       additional_contexts:
-        - ORBIT_SINGULARITY_GIT_DIR=./.git
-        - ORBIT_DOCS_SOURCE=./kdlp.underground.software
+        - orbit_singularity_git_dir=./.git
+        - orbit_docs_source=./kdlp.underground.software
       target: orbit
       args:
         orbit_version_info: "singularity ${SINGULARITY_VERSION_INFO} https://github.com/underground-software/singularity"
@@ -50,7 +50,7 @@ services:
       context: smtp
       dockerfile: Containerfile
       additional_contexts:
-        - TCP_SERVER_SOURCE=./tcp_server
+        - tcp_server_source=./tcp_server
       target: smtp
       args:
         hostname: ${SINGULARITY_HOSTNAME}
@@ -67,7 +67,7 @@ services:
       context: pop
       dockerfile: Containerfile
       additional_contexts:
-        - TCP_SERVER_SOURCE=./tcp_server
+        - tcp_server_source=./tcp_server
       target: pop
       args:
         LISTEN_PORT: 1995

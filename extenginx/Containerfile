@@ -69,8 +69,8 @@ RUN mkdir -p \
     /etc/nginx/include.d/server_pop3s \
     ;
 
-COPY --from=NGINX_SNIPPET_SOURCE . /etc/nginx/include.d/
-COPY --from=NGINX_WEBROOT_CONTENT . /var/www/html
+COPY --from=nginx_snippet_source . /etc/nginx/include.d/
+COPY --from=nginx_webroot_content . /var/www/html
 
 COPY --from=build nginx.conf /etc/nginx/
 COPY --from=build /etc/ssl/nginx /etc/ssl/nginx
