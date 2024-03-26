@@ -279,8 +279,7 @@ class Rocket:
         if self.method == "POST":
             username = self.body_args_query('username')
             password = self.body_args_query('password')
-            if (pwdhash := db.usr_pwdhashfor_username(username)[0]) and \
-                    bcrypt.checkpw(encode(password), encode(pwdhash[0])):
+            if valid_password(username, password):
                 new_ses = Session(username=username)
             if new_ses:
                 self._session = new_ses
@@ -314,6 +313,11 @@ class Rocket:
         self.headers += [('Content-Type', 'text/html')]
         response_document = self.format_html(response_document)
         return self.raw_respond(HTTPStatus.OK, encode(response_document))
+
+
+def valid_password(username: str, password: str) -> bool:
+    user = db2.User.get_by_username(username)
+    return user and bcrypt.checkpw(encode(password), encode(user.pwdhash))
 
 
 form_welcome_template = """
@@ -409,8 +413,7 @@ def handle_mail_auth(rocket):
             or method != 'plain':
         return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
 
-    if (pwdhash := db.usr_pwdhashfor_username(username)[0]) is None \
-            or not bcrypt.checkpw(encode(password), encode(pwdhash[0])):
+    if not valid_password(username, password):
         return rocket.raw_respond(HTTPStatus.UNAUTHORIZED)
 
     return rocket.raw_respond(HTTPStatus.OK)
