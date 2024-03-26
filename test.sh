@@ -5,7 +5,7 @@
 set -exuo pipefail
 
 # Reset the tests and mail directories
-rm -rf test email/logs/* email/mail/*
+sudo rm -rf test email/logs/* email/mail/*
 mkdir -p test
 
 # This is a temporary workaround until we properly implement volumes
