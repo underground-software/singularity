@@ -165,7 +165,12 @@ orbit/warpdrive.sh \
   | tee test/delete_user \
   | grep "user"
 
+# Check for shell script styyle compliance with shellcheck
+shellcheck test.sh
+shellcheck orbit/test-style.sh
+
 # Check python style compliance with flake8
 pushd orbit
 ./test-style.sh
 popd
+
