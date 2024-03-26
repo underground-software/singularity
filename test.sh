@@ -19,8 +19,6 @@ PORT=${PORT:-443}
 POP_PORT=${POP_PORT:-995}
 SMTP_PORT=${SMTP_PORT:-465}
 EMAIL_HOSTNAME="kdlp.underground.software"
-export DOCKER=${DOCKER:-"sudo podman"}
-export CONTAINER=${CONTAINER:-"singularity_orbit_1"}
 
 # NOTE: don't set DEVEL and STAGING at the same time
 
@@ -29,7 +27,6 @@ if [ ! -z "$DEVEL" ]; then
 	POP_PORT=1995
 	SMTP_PORT=1465
 	EMAIL_HOSTNAME="localhost"
-	export DOCKER="podman"
 fi
 
 if [ ! -z "$STAGING" ]; then
