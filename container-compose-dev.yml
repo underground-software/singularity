@@ -1,55 +1,19 @@
+include:
+  - container-compose.yml
 services:
   nginx:
-    build:
-      context: extenginx
-      additional_contexts:
-        - NGINX_SNIPPET_SOURCE=./nginx_snippets
-        - NGINX_WEBROOT_CONTENT=./kdlp.underground.software
-      dockerfile: Containerfile
-      target: nginx
-      args:
-        NGINX_HOSTNAME: ${SINGULARITY_HOSTNAME}
-        NGINX_HTTPS_LISTEN: 'unix:/run/nginx/socks/https.sock'
-        NGINX_SMTPS_LISTEN: 'unix:/run/nginx/socks/smtps.sock'
-        NGINX_POP3S_LISTEN: 'unix:/run/nginx/socks/pop3s.sock'
     security_opt:
       - label:disable
     volumes:
       - type: bind
-        source: ./socks
-        target: /run/nginx/socks
-      - type: volume
-        source: ssl-certs
-        target: /etc/ssl/nginx
-        read_only: true
-      - type: bind
         source: ./nginx_snippets
         target: /etc/nginx/include.d
         read_only: true
-        selinux: z
       - type: bind
         source: ./kdlp.underground.software
         target: /var/www/html
         read_only: true
-        selinux: z
-    depends_on:
-      - orbit
-      - smtp
-      - pop
-    networks:
-      - orbit
-      - smtp
-      - pop
   orbit:
-    build:
-      context: orbit
-      dockerfile: Containerfile
-      additional_contexts:
-        - ORBIT_SINGULARITY_GIT_DIR=./.git
-        - ORBIT_DOCS_SOURCE=./kdlp.underground.software
-      target: orbit
-      args:
-        orbit_version_info: "singularity ${SINGULARITY_VERSION_INFO} https://github.com/underground-software/singularity"
     security_opt:
       - label:disable
     volumes:
@@ -57,53 +21,3 @@ services:
         source: ./kdlp.underground.software
         target: /orbit/docs
         read_only: true
-        selinux: z
-      - type: volume
-        source: orbit-db
-        target: /var/orbit
-        read_only: false
-    networks:
-      - orbit
-  smtp:
-    build:
-      context: smtp
-      dockerfile: Containerfile
-      additional_contexts:
-        - TCP_SERVER_SOURCE=./tcp_server
-      target: smtp
-      args:
-        hostname: ${SINGULARITY_HOSTNAME}
-        LISTEN_PORT: 1465
-    volumes:
-      - type: volume
-        source: email
-        target: /mnt/email_data
-        read_only: false
-    networks:
-      - smtp
-  pop:
-    build:
-      context: pop
-      dockerfile: Containerfile
-      additional_contexts:
-        - TCP_SERVER_SOURCE=./tcp_server
-      target: pop
-      args:
-        LISTEN_PORT: 1995
-    volumes:
-      - type: volume
-        source: email
-        target: /mnt/email_data
-        read_only: true
-    depends_on:
-      - smtp
-    networks:
-      - pop
-networks:
-  orbit:
-  smtp:
-  pop:
-volumes:
-  ssl-certs:
-  email:
-  orbit-db:
