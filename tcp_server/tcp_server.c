@@ -95,6 +95,8 @@ static void setup_signal_handler(void)
 	child_act.sa_flags |= SA_NOCLDWAIT; //avoid needing to reap children processes
 	if(0 > sigaction(SIGCHLD, &child_act, NULL))
 		err(1, "failed to set signal action for SIGCHLD (this is a bug)");
+	if(SIG_ERR == signal(SIGTERM, _Exit))
+		err(1, "failed to set handler for SIGTERM (this is a bug)");
 }
 
 static void setup_chroot(const char *chroot_path)
