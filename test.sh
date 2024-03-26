@@ -71,7 +71,7 @@ curl --url "https://localhost:$PORT/register" \
   | tee test/register_fail_wrong \
   | grep "msg = no such student"
 
-# Check that registration suceeds with correct student id
+# Check that registration succeeds with correct student id
 curl --url "https://localhost:$PORT/register" \
   --verbose \
   --insecure \
@@ -121,7 +121,7 @@ curl --url "pop3s://localhost:$POP_PORT" \
   | diff <(printf '\r\n') /dev/stdin
 
 CR=$(printf "\r")
-# Check that the user can send a message to the sever
+# Check that the user can send a message to the server
 curl --url "smtps://localhost:$SMTP_PORT" \
   --verbose \
   --insecure \
