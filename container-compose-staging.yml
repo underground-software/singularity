@@ -52,6 +52,10 @@ services:
       - orbit
       - smtp
       - pop
+    networks:
+      - orbit
+      - smtp
+      - pop
   orbit:
     build:
       context: orbit
@@ -70,6 +74,8 @@ services:
         target: /orbit/docs
         read_only: true
         selinux: z
+    networks:
+      - orbit
   smtp:
     build:
       context: smtp
@@ -86,6 +92,8 @@ services:
         target: /mnt/email_data
         read_only: false
         selinux: z
+    networks:
+      - smtp
   pop:
     build:
       context: pop
@@ -101,3 +109,9 @@ services:
         target: /mnt/mail
         read_only: true
         selinux: z
+    networks:
+      - pop
+networks:
+  orbit:
+  smtp:
+  pop:
