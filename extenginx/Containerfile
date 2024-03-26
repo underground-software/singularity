@@ -67,6 +67,9 @@ RUN mkdir -p \
     ;
 
 COPY --from=NGINX_SNIPPET_SOURCE . /etc/nginx/include.d/
+COPY --from=NGINX_WEBROOT_CONTENT . /var/www/html
+
+RUN chown -R nginx:nginx /var/www/html
 
 COPY --from=build nginx.conf /etc/nginx/
 COPY --from=build /etc/ssl/nginx /etc/ssl/nginx

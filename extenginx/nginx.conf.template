@@ -95,6 +95,9 @@ http {
 		server_name ${NGINX_HOSTNAME};
 		listen ${NGINX_HTTPS_LISTEN} ssl;
 
+		location / {
+			root /var/www/html;
+		}
 
 		include /etc/nginx/include.d/server_https/*.conf;
 	}
