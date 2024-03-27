@@ -9,6 +9,7 @@ import markdown
 import os
 import re
 import subprocess
+import sys
 from http import HTTPStatus, cookies
 from datetime import datetime, timedelta
 from urllib.parse import parse_qs, urlparse
@@ -486,9 +487,15 @@ def handle_cgit(rocket):
                             stderr=subprocess.PIPE,
                             env=cgit_env)
     so, se = proc.communicate()
-    outstring = str(so, 'UTF-8')
-    begin = outstring.index('\n\n')
-    return rocket.respond(outstring[begin+2:])
+    try:
+        outstring = str(so, 'UTF-8')
+        begin = outstring.index('\n\n')
+        return rocket.respond(outstring[begin+2:])
+    except (UnicodeDecodeError, ValueError) as ex:
+        print(f'cgit: Error {type(ex)} at path_info "{cgit_env["PATH_INFO"]}"'
+              f' and query string "{cgit_env["QUERY_STRING"]}"',
+              file=sys.stderr)
+        return rocket.raw_respond(HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
 def handle_md(rocket, md_path):
