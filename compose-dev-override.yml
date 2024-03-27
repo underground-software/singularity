@@ -1,5 +1,5 @@
 include:
-  - compose-base.yml
+  - ${SINGULARITY_INCLUDE_PATH}
 services:
   nginx:
     security_opt:
