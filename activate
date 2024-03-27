@@ -1,0 +1,68 @@
+_SINGULARITY_ACTIVATE_CONTAINER_BACKEND=${CONTAINER_BACKEND:-podman}
+
+[ "$(command -v deactivate)" = "deactivate" ] && [ -z "${SINGULARITY_ACTIVATE_OVERWRITE_DEACTIVATE+x}" ] && {
+	echo 'refusing to overwrite deactivate function. set SINGULARITY_ACTIVATE_OVERWRITE_DEACTIVATE to override' >&2
+	return 1
+}
+
+deactivate () {
+	unset -v PS1
+	if [ -n "${_SINGULARITY_ACTIVATE_OLD_PS1_VALUE+x}" ]
+	then
+		PS1="${_SINGULARITY_ACTIVATE_OLD_PS1_VALUE}"
+		unset -v _SINGULARITY_ACTIVATE_OLD_PS1_VALUE
+		if [ -n "${_SINGULARITY_ACTIVATE_PS1_WAS_EXPORTED+x}" ]
+		then
+			export PS1
+			unset -v _SINGULARITY_ACTIVATE_PS1_WAS_EXPORTED
+		fi
+	fi
+
+	unset -v DOCKER_HOST
+	if [ -n "${_SINGULARITY_ACTIVATE_OLD_DOCKER_HOST_VALUE+x}" ]
+	then
+		DOCKER_HOST="${_SINGULARITY_ACTIVATE_OLD_DOCKER_HOST_VALUE}"
+		unset -v _SINGULARITY_ACTIVATE_OLD_DOCKER_HOST_VALUE
+		if [ -n "${_SINGULARITY_ACTIVATE_DOCKER_HOST_WAS_EXPORTED+x}" ]
+		then
+			export DOCKER_HOST
+			unset -v _SINGULARITY_ACTIVATE_DOCKER_HOST_WAS_EXPORTED
+		fi
+	fi
+
+	if [ -n "${_SINGULARITY_ACTIVATE_CONTAINER_SOCKET_WAS_ACTIVE+x}" ]
+	then
+		unset -v _SINGULARITY_ACTIVATE_CONTAINER_SOCKET_WAS_ACTIVE
+	else
+		systemctl stop --user ${_SINGULARITY_ACTIVATE_CONTAINER_BACKEND}.socket
+	fi
+
+	unset -f deactivate
+}
+
+if systemctl --user is-active ${_SINGULARITY_ACTIVATE_CONTAINER_BACKEND}.socket --quiet
+then
+	 _SINGULARITY_ACTIVATE_CONTAINER_SOCKET_WAS_ACTIVE=1
+else
+	systemctl --user start ${_SINGULARITY_ACTIVATE_CONTAINER_BACKEND}.socket
+fi
+
+if [ -n "${DOCKER_HOST+x}" ]
+then
+	_SINGULARITY_ACTIVATE_OLD_DOCKER_HOST_VALUE="${DOCKER_HOST}"
+	if env | grep -q '^DOCKER_HOST='
+	then
+		_SINGULARITY_ACTIVATE_DOCKER_HOST_WAS_EXPORTED=1
+	fi
+fi
+export DOCKER_HOST="unix://${XDG_RUNTIME_DIR}/${_SINGULARITY_ACTIVATE_CONTAINER_BACKEND}/${_SINGULARITY_ACTIVATE_CONTAINER_BACKEND}.sock"
+
+if [ -n "${PS1+x}" ]
+then
+	_SINGULARITY_ACTIVATE_OLD_PS1_VALUE="${PS1}"
+	if env | grep '^PS1='
+	then
+		_SINGULARITY_ACTIVATE_PS1_WAS_EXPORTED=1
+	fi
+fi
+PS1="(singularity) ${PS1}"
