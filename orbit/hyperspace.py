@@ -3,7 +3,8 @@
 import argparse
 import sys
 import bcrypt
-import db
+import db2
+from pprint import pprint
 from datetime import datetime
 
 # internal imports
@@ -30,7 +31,6 @@ def nou(u):
 
 
 USR_FMT = """
-Orbit ID        : {}
 Username        : {}
 Hashed Password : {}
 Student ID      : {}
@@ -39,29 +39,25 @@ Student ID      : {}
 
 def do_query_username(args):
     need(args, u=True)
-    u = db.usr_getby_username(args.username)[0]
+    u = db2.User.get_by_username(args.username)
     if u is None:
         nou(args.username)
-    print(USR_FMT.format(*u))
+    print(USR_FMT.format(u.username, u.pwdhash, u.student_id))
 
 
 def do_validate_token(args):
     need(args, t=True)
 
-    ses = db.ses_getby_token(args.token)[0]
-    if ses:
-        print(ses[1])
+    if ses := db2.Session.get_by_token(args.token):
+        print(ses.username)
     else:
         print('null')
 
 
 def do_drop_session(args):
     need(args, u=True)
-    dropped = db.ses_delby_username(args.username)[0]
-    if dropped:
-        print(dropped[0])
-    else:
-        print('null')
+    dropped = db2.Session.del_by_username(args.username)
+    print(dropped)
 
 
 def do_create_session(args):
@@ -73,12 +69,11 @@ def do_create_session(args):
 def do_validate_creds(args):
     need(args, u=True, p=True)
     u, p = args.username, args.password
-    pwdhash = db.usr_pwdhashfor_username(u)[0]
-    if pwdhash is None:
+    user = db2.User.get_by_username(u)
+    if user is None:
         nou(u)
-    pwdhash = pwdhash[0]
 
-    if bcrypt.checkpw(bytes(p, "UTF-8"), bytes(pwdhash, "UTF-8")):
+    if bcrypt.checkpw(bytes(p, "UTF-8"), bytes(user.pwdhash, "UTF-8")):
         print('credentials(username: {}, password:{})'.format(u, p))
     else:
         print('null')
@@ -87,8 +82,8 @@ def do_validate_creds(args):
 def do_change_password(args):
     need(args, u=True, p=True)
     u, _ = args.username, args.password
-    if db.usr_getby_username(u)[0]:
-        db.usr_setpwdhash_username((do_bcrypt_hash(args, get=True), u))
+    if db2.User.get_by_username(u):
+        db2.User.set_pwdhash(u, do_bcrypt_hash(args, get=True))
         do_validate_creds(args)
     else:
         nou(u)
@@ -96,11 +91,9 @@ def do_change_password(args):
 
 def do_delete_user(args):
     need(args, u=True)
-    deleted = db.usr_delby_username(args.username)[0]
-    if deleted:
-        print(deleted[0])
-    else:
-        print('null')
+    if not db2.User.get_by_username(args.username):
+        nou(args.username)
+    db2.User.del_by_username(args.username)
 
 
 def do_bcrypt_hash(args, get=False):
@@ -115,19 +108,19 @@ def do_bcrypt_hash(args, get=False):
 
 def do_newuser(args):
     need(args, u=True, p=True)
-    if db.usr_getby_username(args.username)[0]:
+    if db2.User.get_by_username(args.username):
         errx(f'cannot create duplicate user "{args.username}"')
     else:
-        db.usr_ins((args.username, do_bcrypt_hash(args, get=True),
-                    args.studentid or 0))
+        db2.User.insert_new(args.username, do_bcrypt_hash(
+            args, get=True), args.studentid or 0)
     if args.studentid:
-        db.reg_ins((args.username, args.password, args.studentid))
+        db2.Registration.insert_new(
+            args.studentid, args.username, args.password)
     do_validate_creds(args)
 
 
 def do_roster(args):
-    r = db.usr_get()
-    print(r)
+    pprint(db2.User.get_all())
 
 
 SES_FMT = """
@@ -136,13 +129,13 @@ SES_FMT = """
 
 
 def do_list_sessions(args):
-    raw_list = db.ses_get()
-    if raw_list[0] is None:
+    raw_list = db2.Session.get_all()
+    if len(raw_list) == 0:
         print("(no sessions)")
     else:
-        print('\n'.join([SES_FMT.format(session[1],
-                                        datetime.fromtimestamp(session[2]),
-                                        session[0]) for session in raw_list]))
+        print('\n'.join([SES_FMT.format(ses.username,
+                                        datetime.fromtimestamp(ses.expiry),
+                                        ses.token) for ses in raw_list]))
 
 
 def hyperspace_main(raw_args):
@@ -173,6 +166,9 @@ def hyperspace_main(raw_args):
     actions.add_argument('-c', '--createsession', action='store_const',
                          help='Create session for supplied username',
                          dest='do', const=do_create_session)
+    actions.add_argument('-l', '--listsessions', action='store_const',
+                         help='List of all known sessions (some could be invalid)',  # NOQA: E501
+                         dest='do', const=do_list_sessions)
     actions.add_argument('-v', '--validatecreds', action='store_const',
                          help='Create session for supplied username',
                          dest='do', const=do_validate_creds)
@@ -185,9 +181,6 @@ def hyperspace_main(raw_args):
     actions.add_argument('-b', '--bcrypthash', action='store_const',
                          help='Generate bcrypt hash from supplied password',
                          dest='do', const=do_bcrypt_hash)
-    actions.add_argument('-l', '--listsessions', action='store_const',
-                         help='List of all known sessions (some could be invalid)',  # NOQA: E501
-                         dest='do', const=do_list_sessions)
     actions.add_argument('-q', '--queryuser', action='store_const',
                          help='Get information about supplied username if valid',  # NOQA: E501
                          dest='do', const=do_query_username)
@@ -196,7 +189,7 @@ def hyperspace_main(raw_args):
     if (args.do):
         args.do(args)
     else:
-        print("Nothing to do. Tip: -h")
+        parser.print_help()
 
 
 if __name__ == "__main__":

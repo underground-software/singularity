@@ -15,7 +15,7 @@ from urllib.parse import parse_qs, urlparse
 
 # === internal imports & constants ===
 import config
-import db
+import db2
 
 sec_per_min = 60
 min_per_ses = config.minutes_each_session_token_is_valid
@@ -105,9 +105,8 @@ class Session:
             self.token = self.mk_hash(username)
             self.expiry = datetime.utcnow() + timedelta(minutes=min_per_ses)
 
-            if db.ses_getby_username(username):
-                db.ses_delby_username(username)
-            db.ses_ins((self.token, self.username, self.expiry_ts()))
+            db2.Session.del_by_username(username)
+            db2.Session.insert_new(self.token, self.username, self.expiry_ts())
 
         # try to load active session from database using user token
         else:
@@ -116,13 +115,13 @@ class Session:
                 cok.load(raw)
                 res = cok.get('auth', cookies.Morsel()).value
 
-                if (ses_found := db.ses_getby_token(res)[0]):
-                    self.token = ses_found[0]
-                    self.username = ses_found[1]
-                    self.expiry = datetime.fromtimestamp(ses_found[2])
+                if ses_found := db2.Session.get_by_token(res):
+                    self.token = ses_found.token
+                    self.username = ses_found.username
+                    self.expiry = datetime.fromtimestamp(ses_found.expiry)
 
     def end(self):
-        res = db.ses_delby_token(self.token)
+        res = db2.Session.del_by_token(self.token)
         self.token = None
         self.username = None
         self.expiry = None
@@ -279,8 +278,7 @@ class Rocket:
         if self.method == "POST":
             username = self.body_args_query('username')
             password = self.body_args_query('password')
-            if (pwdhash := db.usr_pwdhashfor_username(username)[0]) and \
-                    bcrypt.checkpw(encode(password), encode(pwdhash[0])):
+            if valid_password(username, password):
                 new_ses = Session(username=username)
             if new_ses:
                 self._session = new_ses
@@ -314,6 +312,11 @@ class Rocket:
         self.headers += [('Content-Type', 'text/html')]
         response_document = self.format_html(response_document)
         return self.raw_respond(HTTPStatus.OK, encode(response_document))
+
+
+def valid_password(username: str, password: str) -> bool:
+    user = db2.User.get_by_username(username)
+    return user and bcrypt.checkpw(encode(password), encode(user.pwdhash))
 
 
 form_welcome_template = """
@@ -409,8 +412,7 @@ def handle_mail_auth(rocket):
             or method != 'plain':
         return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
 
-    if (pwdhash := db.usr_pwdhashfor_username(username)[0]) is None \
-            or not bcrypt.checkpw(encode(password), encode(pwdhash[0])):
+    if not valid_password(username, password):
         return rocket.raw_respond(HTTPStatus.UNAUTHORIZED)
 
     return rocket.raw_respond(HTTPStatus.OK)
@@ -460,15 +462,13 @@ def handle_register(rocket):
     if not (student_id := rocket.body_args_query('student_id')):
         rocket.msg('you must provide a student id')
         return form_respond()
-    if not (registration_data := db.reg_getby_stuid(student_id)[0]):
+    if not (reg := db2.Registration.del_by_student_id(student_id)):
         rocket.msg('no such student')
         return form_respond()
-    (regid, username, password) = registration_data
-    db.reg_delby_regid(regid)
     rocket.msg('welcome to the classroom')
     return rocket.respond((register_response % {
-        'username': username,
-        'password': password,
+        'username': reg.username,
+        'password': reg.password,
     }))
 
 
