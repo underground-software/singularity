@@ -10,19 +10,52 @@
 #   of the furthest right failing command or zero if no command failed (o pipefail)
 set -exuo pipefail
 
+# This function will push an action to a stack of items to be done on script exit
+# in the reverse order that they are passed to this function
+trap ":" EXIT
+cleanup_add() {
+	trap -- "$(
+		printf '%s\n' "$1"
+		# get stack is invoked in eval but shellcheck cannot tell since it is indirect
+		# shellcheck disable=SC2317
+		get_stack() { printf '%s\n' "$3"; }
+		eval "get_stack $(trap -p EXIT)"
+	)" EXIT
+}
+
+# Deliver a bomb.exe to the inbox
+nuke_mail() {
+	podman run --rm -v singularity_email:/mnt alpine:3.19 sh -c 'rm -f /mnt/mail/* /mnt/logs/*'
+}
+
 require() { command -v "$1" || { echo "error: $1 command required yet absent" ; exit 1 ; } ; }
 require curl
 require flake8
-require chcon
 require podman
 require shellcheck
 
-# Reset the tests and mail directories
-sudo rm -rf test email/logs/* email/mail/*
+# Reset the test directory
 mkdir -p test
+rm -f test/*
 
-# This is a temporary workaround until we properly implement volumes
-chcon -R -t container_file_t email
+podman volume export singularity_email > test/email_orig.tar
+
+cleanup_add "podman volume import singularity_email test/email_orig.tar"
+
+nuke_mail
+
+# Import empty email volume for testing
+xxd -r <<-'EOF' | gunzip | podman volume import singularity_email -
+00000000: 1f8b 0800 0000 0000 0003 cbc9 4f2f d667  ............O/.g
+00000010: a02d 3000 0273 5353 300d 04e8 3498 6d68  .-0..sSS0...4.mh
+00000020: 6266 6068 6868 6c60 6acc 6060 6860 6460  bf`hhhl`j.``h`d`
+00000030: c4a0 604a 6377 8141 6971 4962 11d0 2994  ..`Jcw.AiqIb..).
+00000040: 9a83 eeb9 2102 7213 3373 0661 fc1b 9a19  ....!.r.3s.a....
+00000050: 8cc6 ff28 1805 a360 14d0 1200 00a5 4bb9  ...(...`......K.
+00000060: 5f00 0800 00                             _....
+EOF
+
+cleanup_add nuke_mail
 
 # TODO: login returns 401 so we don't set --fail on the curl command
 
@@ -66,6 +99,11 @@ orbit/warpdrive.sh \
   -u user -p pass -i 1234 -n \
   | tee test/create_user \
   | grep "credentials(username: user, password:pass)"
+
+cleanup_add "orbit/warpdrive.sh \
+  -u user -w \
+  | tee test/delete_user \
+  | grep 'user'"
 
 # Check that registration fails with incorrect student id
 curl --url "https://$EMAIL_HOSTNAME/register" \
@@ -165,18 +203,11 @@ curl --url "pop3s://$EMAIL_HOSTNAME/1" \
   | tee test/pop_get_message \
   | grep "Bottom text"
 
-# Check that we can delete a user
-orbit/warpdrive.sh \
-  -u user -w \
-  | tee test/delete_user \
-  | grep "user"
-
 # Check for shell script styyle compliance with shellcheck
 shellcheck test.sh
 shellcheck orbit/test-style.sh
 
 # Check python style compliance with flake8
 pushd orbit
+cleanup_add popd
 ./test-style.sh
-popd
-
