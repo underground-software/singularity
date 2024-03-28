@@ -1,0 +1,17 @@
+FROM alpine:latest as submatrix
+
+RUN apk add synapse envsubst
+
+ARG MATRIX_HOSTNAME=localhost
+
+COPY homeserver.yaml.template .
+
+RUN envsubst '$MATRIX_HOSTNAME' < homeserver.yaml.template > /homeserver.yaml
+
+VOLUME /ssl
+
+VOLUME /secrets
+
+EXPOSE 8448
+
+CMD /usr/bin/synapse_homeserver -c /homeserver.yaml

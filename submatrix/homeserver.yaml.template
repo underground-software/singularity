@@ -1,0 +1,43 @@
+# Configuration file for Synapse.
+#
+# This is a YAML file: see [1] for a quick introduction. Note in particular
+# that *indentation is important*: all the elements of a list or dictionary
+# should have the same indentation.
+#
+# [1] https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html
+#
+# For more information on how to configure Synapse, including a complete accounting of
+# each option, go to docs/usage/configuration/config_documentation.md or
+# https://matrix-org.github.io/synapse/latest/usage/configuration/config_documentation.html
+server_name: "$MATRIX_HOSTNAME"
+pid_file: /homeserver.pid
+listeners:
+  - port: 8448
+    tls: true
+    type: http
+    resources:
+      - names: [federation, client]
+        compress: true
+  - port: 8008
+    tls: false
+    type: http
+    bind_addresses: ['::1', '127.0.0.1']
+    resources:
+      - names: [client]
+        compress: false
+database:
+  name: sqlite3
+  args:
+    database: /homeserver.db
+tls_certificate_path: "/ssl/fullchain.pem"
+tls_private_key_path: "/ssl/privkey.pem"
+log_config: "/etc/synapse/config"
+media_store_path: /media_store
+registration_shared_secret_path: /secrets/registration_shared
+report_stats: true
+signing_key_path: "/etc/synapse/${MATRIX_HOSTNAME}.signing.key"
+federation_domain_whitelist:
+  - underground.software # TODO also harden at firewall level
+trusted_key_servers: []
+
+# vim:ft=yaml

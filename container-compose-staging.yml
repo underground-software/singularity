@@ -52,10 +52,12 @@ services:
       - orbit
       - smtp
       - pop
+      - submatrix
     networks:
       - orbit
       - smtp
       - pop
+      - submatrix
   orbit:
     build:
       context: orbit
@@ -111,7 +113,30 @@ services:
         selinux: z
     networks:
       - pop
+  submatrix:
+    build:
+      context: submatrix
+      dockerfile: Containerfile
+      target: submatrix
+      args:
+        MATRIX_HOSTNAME=dev.underground.software
+    volumes:
+      - type: bind
+        source: ./ssl
+        target: /ssl
+        read_only: true
+        selinux: z
+      - type: bind
+        source: ./secrets
+        target: /secrets
+        read_only: false
+        selinux: z
+    ports:
+      - 8448:8448
+    networks:
+      - submatrix
 networks:
   orbit:
   smtp:
   pop:
+  submatrix:
