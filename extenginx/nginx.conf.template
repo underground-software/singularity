@@ -93,24 +93,13 @@ http {
 
 	server {
 		server_name ${NGINX_HOSTNAME};
-		listen ${NGINX_HTTPS_PORT} ssl default_server;
-		listen [::]:${NGINX_HTTPS_PORT} ssl default_server;
-
-
-		include /etc/nginx/include.d/server_https/*.conf;
-	}
-
-	server {
-		server_name ${NGINX_HOSTNAME};
-		listen ${NGINX_HTTP_PORT} default_server;
-		listen [::]:${NGINX_HTTP_PORT} default_server;
-
-
-		include /etc/nginx/include.d/server_http/*.conf;
+		listen ${NGINX_HTTPS_LISTEN} ssl;
 
 		location / {
-			return 301 https://$host:${NGINX_HTTPS_PORT}$request_uri;
+			root /var/www/html;
 		}
+
+		include /etc/nginx/include.d/server_https/*.conf;
 	}
 }
 
@@ -152,8 +141,7 @@ mail {
 
 	server {
 		server_name ${NGINX_HOSTNAME};
-		listen ${NGINX_SMTPS_PORT} ssl;
-		listen [::]:${NGINX_SMTPS_PORT} ssl;
+		listen ${NGINX_SMTPS_LISTEN} ssl;
 		protocol smtp;
 
 
@@ -162,8 +150,7 @@ mail {
 
 	server {
 		server_name ${NGINX_HOSTNAME};
-		listen ${NGINX_POP3S_PORT} ssl;
-		listen [::]:${NGINX_POP3S_PORT} ssl;
+		listen ${NGINX_POP3S_LISTEN} ssl;
 		protocol pop3;
 
 

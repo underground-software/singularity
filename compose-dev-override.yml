@@ -1,0 +1,23 @@
+include:
+  - ${SINGULARITY_INCLUDE_PATH}
+services:
+  nginx:
+    security_opt:
+      - label:disable
+    volumes:
+      - type: bind
+        source: ./nginx_snippets
+        target: /etc/nginx/include.d
+        read_only: true
+      - type: bind
+        source: ./kdlp.underground.software
+        target: /var/www/html
+        read_only: true
+  orbit:
+    security_opt:
+      - label:disable
+    volumes:
+      - type: bind
+        source: ./kdlp.underground.software
+        target: /orbit/docs
+        read_only: true

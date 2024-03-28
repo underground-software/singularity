@@ -1,22 +1,52 @@
-ARG NGINX_RUNTIME_SNIPPETS=0
-
 FROM alpine:3.19 AS build
 
 RUN apk update && apk upgrade && apk add \
     envsubst \
+    openssl \
     ;
+
+ARG NGINX_HOSTNAME=localhost
+
+RUN mkdir /etc/ssl/nginx && \
+	cd /etc/ssl/nginx && \
+	openssl \
+		genpkey \
+		-genparam \
+		-algorithm DH \
+		-pkeyopt dh_paramgen_prime_len:2048 \
+		-out ssl-dhparams.pem \
+	&& \
+	openssl \
+		req \
+		-sha256 \
+		-newkey rsa:4096 \
+		-x509 \
+		-days 133337 \
+		-subj "/CN=${NGINX_HOSTNAME}" \
+		-noenc \
+		-keyout privkey.pem \
+		-out fullchain.pem \
+	&& \
+	:
 
 COPY nginx.conf.template .
 
-ARG NGINX_HOSTNAME=localhost
-ARG NGINX_HTTP_PORT=80
-ARG NGINX_HTTPS_PORT=443
-ARG NGINX_SMTPS_PORT=465
-ARG NGINX_POP3S_PORT=995
+ARG NGINX_HTTPS_LISTEN='[::]:443 ipv6only=off'
+ARG NGINX_SMTPS_LISTEN='[::]:465 ipv6only=off'
+ARG NGINX_POP3S_LISTEN='[::]:995 ipv6only=off'
 
-RUN envsubst '$NGINX_HOSTNAME:$NGINX_HTTP_PORT:$NGINX_HTTPS_PORT:$NGINX_SMTPS_PORT:$NGINX_POP3S_PORT' < nginx.conf.template > nginx.conf
+RUN envsubst \
+	' \
+		$NGINX_HOSTNAME \
+		$NGINX_HTTPS_LISTEN \
+		$NGINX_SMTPS_LISTEN \
+		$NGINX_POP3S_LISTEN \
+	' \
+	< nginx.conf.template \
+	> nginx.conf \
+	;
 
-FROM alpine:3.19 AS nginx-runtime-0
+FROM alpine:3.19 AS nginx
 
 RUN apk update && apk upgrade && apk add \
     nginx          \
@@ -36,25 +66,14 @@ RUN mkdir -p \
     /etc/nginx/include.d/server_pop3s \
     ;
 
-COPY --from=NGINX_SNIPPET_SOURCE . /etc/nginx/include.d/
+COPY --from=nginx_snippet_source . /etc/nginx/include.d/
+COPY --from=nginx_webroot_content . /var/www/html
+
+RUN chown -R nginx:nginx /var/www/html
 
 COPY --from=build nginx.conf /etc/nginx/
+COPY --from=build /etc/ssl/nginx /etc/ssl/nginx
 
 VOLUME /etc/ssl/nginx
 
-ARG NGINX_HOSTNAME=localhost
-ARG NGINX_HTTP_PORT=80
-ARG NGINX_HTTPS_PORT=443
-ARG NGINX_SMTPS_PORT=465
-ARG NGINX_POP3S_PORT=995
-EXPOSE ${NGINX_HTTP_PORT}
-EXPOSE ${NGINX_HTTPS_PORT}
-EXPOSE ${NGINX_SMTPS_PORT}
-EXPOSE ${NGINX_POP3S_PORT}
-
 ENTRYPOINT ["/usr/sbin/nginx", "-g", "daemon off;"]
-
-FROM nginx-runtime-0 AS nginx-runtime-1
-VOLUME /etc/nginx/include.d/
-
-FROM nginx-runtime-${NGINX_RUNTIME_SNIPPETS} AS nginx
