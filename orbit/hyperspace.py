@@ -3,7 +3,7 @@
 import argparse
 import sys
 import bcrypt
-import db2
+import db
 from pprint import pprint
 from datetime import datetime
 
@@ -39,7 +39,7 @@ Student ID      : {}
 
 def do_query_username(args):
     need(args, u=True)
-    u = db2.User.get_by_username(args.username)
+    u = db.User.get_by_username(args.username)
     if u is None:
         nou(args.username)
     print(USR_FMT.format(u.username, u.pwdhash, u.student_id))
@@ -48,7 +48,7 @@ def do_query_username(args):
 def do_validate_token(args):
     need(args, t=True)
 
-    if ses := db2.Session.get_by_token(args.token):
+    if ses := db.Session.get_by_token(args.token):
         print(ses.username)
     else:
         print('null')
@@ -56,7 +56,7 @@ def do_validate_token(args):
 
 def do_drop_session(args):
     need(args, u=True)
-    dropped = db2.Session.del_by_username(args.username)
+    dropped = db.Session.del_by_username(args.username)
     print(dropped)
 
 
@@ -69,7 +69,7 @@ def do_create_session(args):
 def do_validate_creds(args):
     need(args, u=True, p=True)
     u, p = args.username, args.password
-    user = db2.User.get_by_username(u)
+    user = db.User.get_by_username(u)
     if user is None:
         nou(u)
 
@@ -82,8 +82,8 @@ def do_validate_creds(args):
 def do_change_password(args):
     need(args, u=True, p=True)
     u, _ = args.username, args.password
-    if db2.User.get_by_username(u):
-        db2.User.set_pwdhash(u, do_bcrypt_hash(args, get=True))
+    if db.User.get_by_username(u):
+        db.User.set_pwdhash(u, do_bcrypt_hash(args, get=True))
         do_validate_creds(args)
     else:
         nou(u)
@@ -91,9 +91,9 @@ def do_change_password(args):
 
 def do_delete_user(args):
     need(args, u=True)
-    if not db2.User.get_by_username(args.username):
+    if not db.User.get_by_username(args.username):
         nou(args.username)
-    db2.User.del_by_username(args.username)
+    db.User.del_by_username(args.username)
 
 
 def do_bcrypt_hash(args, get=False):
@@ -108,19 +108,19 @@ def do_bcrypt_hash(args, get=False):
 
 def do_newuser(args):
     need(args, u=True, p=True)
-    if db2.User.get_by_username(args.username):
+    if db.User.get_by_username(args.username):
         errx(f'cannot create duplicate user "{args.username}"')
     else:
-        db2.User.insert_new(args.username, do_bcrypt_hash(
+        db.User.insert_new(args.username, do_bcrypt_hash(
             args, get=True), args.studentid or 0)
     if args.studentid:
-        db2.Registration.insert_new(
+        db.Registration.insert_new(
             args.studentid, args.username, args.password)
     do_validate_creds(args)
 
 
 def do_roster(args):
-    pprint(db2.User.get_all())
+    pprint(db.User.get_all())
 
 
 SES_FMT = """
@@ -129,7 +129,7 @@ SES_FMT = """
 
 
 def do_list_sessions(args):
-    raw_list = db2.Session.get_all()
+    raw_list = db.Session.get_all()
     if len(raw_list) == 0:
         print("(no sessions)")
     else:

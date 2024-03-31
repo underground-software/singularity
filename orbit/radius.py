@@ -15,7 +15,7 @@ from urllib.parse import parse_qs, urlparse
 
 # === internal imports & constants ===
 import config
-import db2
+import db
 
 sec_per_min = 60
 min_per_ses = config.minutes_each_session_token_is_valid
@@ -105,8 +105,8 @@ class Session:
             self.token = self.mk_hash(username)
             self.expiry = datetime.utcnow() + timedelta(minutes=min_per_ses)
 
-            db2.Session.del_by_username(username)
-            db2.Session.insert_new(self.token, self.username, self.expiry_ts())
+            db.Session.del_by_username(username)
+            db.Session.insert_new(self.token, self.username, self.expiry_ts())
 
         # try to load active session from database using user token
         else:
@@ -115,13 +115,13 @@ class Session:
                 cok.load(raw)
                 res = cok.get('auth', cookies.Morsel()).value
 
-                if ses_found := db2.Session.get_by_token(res):
+                if ses_found := db.Session.get_by_token(res):
                     self.token = ses_found.token
                     self.username = ses_found.username
                     self.expiry = datetime.fromtimestamp(ses_found.expiry)
 
     def end(self):
-        res = db2.Session.del_by_token(self.token)
+        res = db.Session.del_by_token(self.token)
         self.token = None
         self.username = None
         self.expiry = None
@@ -315,7 +315,7 @@ class Rocket:
 
 
 def valid_password(username: str, password: str) -> bool:
-    user = db2.User.get_by_username(username)
+    user = db.User.get_by_username(username)
     return user and bcrypt.checkpw(encode(password), encode(user.pwdhash))
 
 
@@ -462,7 +462,7 @@ def handle_register(rocket):
     if not (student_id := rocket.body_args_query('student_id')):
         rocket.msg('you must provide a student id')
         return form_respond()
-    if not (reg := db2.Registration.del_by_student_id(student_id)):
+    if not (reg := db.Registration.del_by_student_id(student_id)):
         rocket.msg('no such student')
         return form_respond()
     rocket.msg('welcome to the classroom')
