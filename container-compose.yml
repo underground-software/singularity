@@ -52,6 +52,10 @@ services:
         target: /orbit/docs
         read_only: true
         selinux: z
+      - type: volume
+        source: orbit-db
+        target: /var/orbit
+        read_only: false
     networks:
       - orbit
   smtp:
@@ -96,3 +100,4 @@ networks:
 volumes:
   ssl-certs:
   email:
+  orbit-db:
