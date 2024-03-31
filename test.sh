@@ -27,6 +27,7 @@ DOCKER=${DOCKER:-podman}
 
 require() { command -v "$1" > /dev/null || { echo "error: $1 command required yet absent" ; exit 1 ; } ; }
 require curl
+require jq
 require "${DOCKER}"
 
 # Check for shell script style compliance with shellcheck
@@ -43,19 +44,13 @@ mkdir -p test
 # Reset the test directory
 rm -f test/*
 
-DEVEL=${DEVEL:-""}
-STAGING=${STAGING:-""}
-EMAIL_HOSTNAME="kdlp.underground.software"
+HOSTNAME_FROM_DOTENV="$(env -i sh -c '
+set -o allexport
+. ./.env
+exec jq -r -n "env.SINGULARITY_HOSTNAME"
+')"
 
-# NOTE: don't set DEVEL and STAGING at the same time
-
-if [ -n "$DEVEL" ]; then
-	EMAIL_HOSTNAME="localhost"
-fi
-
-if [ -n "$STAGING" ]; then
-	EMAIL_HOSTNAME="dev.underground.software"
-fi
+SINGULARITY_HOSTNAME=${SINGULARITY_HOSTNAME:-"${HOSTNAME_FROM_DOTENV}"}
 
 ${DOCKER} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem test/ca_cert.pem
 
@@ -125,7 +120,7 @@ EOF
 add_cleanup "${DOCKER} volume import singularity_orbit-db test/orbit_orig.tar"
 
 # Check that registration fails before user creation
-curl --url "https://$EMAIL_HOSTNAME/register" \
+curl --url "https://$SINGULARITY_HOSTNAME/register" \
   --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "student_id=1234" \
@@ -133,7 +128,7 @@ curl --url "https://$EMAIL_HOSTNAME/register" \
   | grep "msg = no such student"
 
 # Check that login fails before user creation
-curl --url "https://$EMAIL_HOSTNAME/login" \
+curl --url "https://$SINGULARITY_HOSTNAME/login" \
   --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "username=user&password=pass" \
@@ -152,7 +147,7 @@ add_cleanup "orbit/warpdrive.sh \
   | grep 'user'"
 
 # Check that registration fails with incorrect student id
-curl --url "https://$EMAIL_HOSTNAME/register" \
+curl --url "https://$SINGULARITY_HOSTNAME/register" \
   --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "student_id=123" \
@@ -160,7 +155,7 @@ curl --url "https://$EMAIL_HOSTNAME/register" \
   | grep "msg = no such student"
 
 # Check that registration succeeds with correct student id
-curl --url "https://$EMAIL_HOSTNAME/register" \
+curl --url "https://$SINGULARITY_HOSTNAME/register" \
   --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "student_id=1234" \
@@ -168,7 +163,7 @@ curl --url "https://$EMAIL_HOSTNAME/register" \
   | grep "msg = welcome to the classroom"
 
 # Check that registration fails when student id is used for a second time
-curl --url "https://$EMAIL_HOSTNAME/register" \
+curl --url "https://$SINGULARITY_HOSTNAME/register" \
   --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "student_id=1234" \
@@ -176,7 +171,7 @@ curl --url "https://$EMAIL_HOSTNAME/register" \
   | grep "msg = no such student"
 
 # Check that login fails when credentials are invalid
-curl --url "https://$EMAIL_HOSTNAME/login" \
+curl --url "https://$SINGULARITY_HOSTNAME/login" \
   --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "username=user&password=invalid" \
@@ -184,7 +179,7 @@ curl --url "https://$EMAIL_HOSTNAME/login" \
   | grep "msg = authentication failure"
 
 # Check that login succeeds when credentials are valid
-curl --url "https://$EMAIL_HOSTNAME/login" \
+curl --url "https://$SINGULARITY_HOSTNAME/login" \
   --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "username=user&password=pass" \
@@ -192,7 +187,7 @@ curl --url "https://$EMAIL_HOSTNAME/login" \
   | grep "msg = user authenticated by password"
 
 # Check that the user can get the empty list of email on the server
-curl --url "pop3s://$EMAIL_HOSTNAME" \
+curl --url "pop3s://$SINGULARITY_HOSTNAME" \
   --unix-socket ./socks/pop3s.sock \
   "${CURL_OPTS[@]}" \
   --user user:pass \
@@ -202,11 +197,11 @@ curl --url "pop3s://$EMAIL_HOSTNAME" \
 CR=$(printf "\r")
 # Check that the user can send a message to the server
 (
-curl --url "smtps://$EMAIL_HOSTNAME" \
+curl --url "smtps://$SINGULARITY_HOSTNAME" \
   --unix-socket ./socks/smtps.sock \
   "${CURL_OPTS[@]}" \
-  --mail-from "user@$EMAIL_HOSTNAME" \
-  --mail-rcpt "other@$EMAIL_HOSTNAME" \
+  --mail-from "user@$SINGULARITY_HOSTNAME" \
+  --mail-rcpt "other@$SINGULARITY_HOSTNAME" \
   --upload-file - \
   --user 'user:pass' <<EOF
 Subject: Message Subject$CR
@@ -222,7 +217,7 @@ EOF
 add_cleanup nuke_mail
 
 # Check that the user can get the most recent message sent to the server
-curl --url "pop3s://$EMAIL_HOSTNAME/1" \
+curl --url "pop3s://$SINGULARITY_HOSTNAME/1" \
   --unix-socket ./socks/pop3s.sock \
   "${CURL_OPTS[@]}" \
   --user user:pass \

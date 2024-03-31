@@ -8,7 +8,7 @@ services:
       dockerfile: Containerfile
       target: nginx
       args:
-        NGINX_HOSTNAME: localhost
+        NGINX_HOSTNAME: ${SINGULARITY_HOSTNAME}
         NGINX_HTTPS_LISTEN: 'unix:/run/nginx/socks/https.sock'
         NGINX_SMTPS_LISTEN: 'unix:/run/nginx/socks/smtps.sock'
         NGINX_POP3S_LISTEN: 'unix:/run/nginx/socks/pop3s.sock'
@@ -51,7 +51,7 @@ services:
         - orbit_docs_source=./kdlp.underground.software
       target: orbit
       args:
-        orbit_version_info: "singularity v0.1 (in development) https://github.com/underground-software/singularity"
+        orbit_version_info: "singularity ${SINGULARITY_VERSION} ${SINGULARITY_DEPLOYMENT_STATUS} https://github.com/underground-software/singularity"
     security_opt:
       - label:disable
     volumes:
@@ -74,7 +74,7 @@ services:
         - tcp_server_source=./tcp_server
       target: smtp
       args:
-        hostname: localhost
+        hostname: ${SINGULARITY_HOSTNAME}
         LISTEN_PORT: 1465
     volumes:
       - type: volume
