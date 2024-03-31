@@ -38,8 +38,7 @@ class User(BaseModel):
         User.create(username=username, pwdhash=pwdhash, student_id=student_id)
 
     def set_pwdhash(username: str, pwdhash: str):
-        User.update(pwdhash=pwdhash).where(
-            Session.username == username).execute()
+        User.update(pwdhash=pwdhash).where(User.username == username).execute()
 
     def del_by_username(username: str) -> Optional[Self]:
         res = User.delete()                         \
