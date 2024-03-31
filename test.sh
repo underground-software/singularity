@@ -42,17 +42,11 @@ rm -f test/* email/logs/* email/mail/*
 
 DEVEL=${DEVEL:-""}
 STAGING=${STAGING:-""}
-PORT=${PORT:-443}
-POP_PORT=${POP_PORT:-995}
-SMTP_PORT=${SMTP_PORT:-465}
 EMAIL_HOSTNAME="kdlp.underground.software"
 
 # NOTE: don't set DEVEL and STAGING at the same time
 
 if [ -n "$DEVEL" ]; then
-	PORT=1443
-	POP_PORT=1995
-	SMTP_PORT=1465
 	EMAIL_HOSTNAME="localhost"
 fi
 
@@ -69,14 +63,16 @@ CURL_OPTS=( \
 
 
 # Check that registration fails before user creation
-curl --url "https://localhost:$PORT/register" \
+curl --url "https://$EMAIL_HOSTNAME/register" \
+  --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "student_id=1234" \
   | tee test/register_fail_no_user \
   | grep "msg = no such student"
 
 # Check that login fails before user creation
-curl --url "https://localhost:$PORT/login" \
+curl --url "https://$EMAIL_HOSTNAME/login" \
+  --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "username=user&password=pass" \
   | tee test/login_fail_no_user \
@@ -94,42 +90,48 @@ add_cleanup "orbit/warpdrive.sh \
   | grep 'user'"
 
 # Check that registration fails with incorrect student id
-curl --url "https://localhost:$PORT/register" \
+curl --url "https://$EMAIL_HOSTNAME/register" \
+  --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "student_id=123" \
   | tee test/register_fail_wrong \
   | grep "msg = no such student"
 
 # Check that registration succeeds with correct student id
-curl --url "https://localhost:$PORT/register" \
+curl --url "https://$EMAIL_HOSTNAME/register" \
+  --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "student_id=1234" \
   | tee test/register_success \
   | grep "msg = welcome to the classroom"
 
 # Check that registration fails when student id is used for a second time
-curl --url "https://localhost:$PORT/register" \
+curl --url "https://$EMAIL_HOSTNAME/register" \
+  --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "student_id=1234" \
   | tee test/register_fail_duplicate \
   | grep "msg = no such student"
 
 # Check that login fails when credentials are invalid
-curl --url "https://localhost:$PORT/login" \
+curl --url "https://$EMAIL_HOSTNAME/login" \
+  --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "username=user&password=invalid" \
   | tee test/login_fail_invalid \
   | grep "msg = authentication failure"
 
 # Check that login succeeds when credentials are valid
-curl --url "https://localhost:$PORT/login" \
+curl --url "https://$EMAIL_HOSTNAME/login" \
+  --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
   --data "username=user&password=pass" \
   | tee test/login_success \
   | grep "msg = user authenticated by password"
 
 # Check that the user can get the empty list of email on the server
-curl --url "pop3s://localhost:$POP_PORT" \
+curl --url "pop3s://$EMAIL_HOSTNAME" \
+  --unix-socket ./socks/pop3s.sock \
   "${CURL_OPTS[@]}" \
   --user user:pass \
   | tee test/pop_get_empty \
@@ -138,7 +140,8 @@ curl --url "pop3s://localhost:$POP_PORT" \
 CR=$(printf "\r")
 # Check that the user can send a message to the server
 (
-curl --url "smtps://localhost:$SMTP_PORT" \
+curl --url "smtps://$EMAIL_HOSTNAME" \
+  --unix-socket ./socks/smtps.sock \
   "${CURL_OPTS[@]}" \
   --mail-from "user@$EMAIL_HOSTNAME" \
   --mail-rcpt "other@$EMAIL_HOSTNAME" \
@@ -154,7 +157,8 @@ EOF
   | diff <(printf "") /dev/stdin
 
 # Check that the user can get the most recent message sent to the server
-curl --url "pop3s://localhost:$POP_PORT/1" \
+curl --url "pop3s://$EMAIL_HOSTNAME/1" \
+  --unix-socket ./socks/pop3s.sock \
   "${CURL_OPTS[@]}" \
   --user user:pass \
   | tee test/pop_get_message \
