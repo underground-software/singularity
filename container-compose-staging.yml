@@ -81,7 +81,7 @@ services:
       context: smtp
       dockerfile: Containerfile
       additional_contexts:
-        - TCP_SERVER_SOURCE=./tcp_server
+        - tcp_server_source=./tcp_server
       target: smtp
       args:
         hostname: dev.underground.software
@@ -99,7 +99,7 @@ services:
       context: pop
       dockerfile: Containerfile
       additional_contexts:
-        - TCP_SERVER_SOURCE=./tcp_server
+        - tcp_server_source=./tcp_server
       target: pop
       args:
         LISTEN_PORT: 1995
