@@ -53,7 +53,7 @@ class User(BaseModel):
 class Session(BaseModel):
     token = CharField(primary_key=True)
     username = CharField()
-    expiry = CharField()
+    expiry = IntegerField()
 
     def get_by_token(token: str) -> Optional[Self]:
         return Session.get_or_none(Session.token == token)
@@ -67,7 +67,7 @@ class Session(BaseModel):
     def insert_new(token: str, username: str, expiry: str):
         Session.create(token=token, username=username, expiry=expiry)
 
-    def set_expiry(token: str, expiry: str):
+    def set_expiry(token: str, expiry: int):
         Session.update(expiry=expiry).where(Session.token == token).execute()
 
     def del_by_token(token: str) -> Optional[Self]:
