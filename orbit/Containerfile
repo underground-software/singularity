@@ -18,7 +18,9 @@ RUN python3 -m venv /radius-venv && \
 COPY . /orbit
 WORKDIR /orbit
 
-RUN sqlite3 orbit.db ".read init-db.sql"
+RUN mkdir -p /var/orbit/ && \
+	sqlite3 /var/orbit/orbit.db ".read init-db.sql" && \
+	:
 
 ARG orbit_version_info
 RUN test -n "$orbit_version_info" || (echo 'version info is not set' && false) && \
@@ -36,6 +38,7 @@ RUN apk update && apk upgrade && apk add \
 
 COPY --from=build /orbit /orbit
 COPY --from=build /radius-venv /radius-venv
+COPY --from=build /var/orbit /var/orbit
 
 RUN mkdir /var/git
 VOLUME /var/git
