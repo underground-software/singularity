@@ -10,6 +10,19 @@
 #   of the furthest right failing command or zero if no command failed (o pipefail)
 set -exuo pipefail
 
+# This function will push an action to a stack of items to be done on script exit
+# in the reverse order that they are passed to this function
+trap ":" EXIT
+add_cleanup() {
+	trap -- "$(
+		printf '%s\n' "$1"
+		# get stack is invoked in eval but shellcheck cannot tell since it is indirect
+		# shellcheck disable=SC2317
+		get_stack() { printf '%s\n' "$3"; }
+		eval "get_stack $(trap -p EXIT)"
+	)" EXIT
+}
+
 require() { command -v "$1" > /dev/null || { echo "error: $1 command required yet absent" ; exit 1 ; } ; }
 require curl
 
@@ -70,6 +83,11 @@ orbit/warpdrive.sh \
   -u user -p pass -i 1234 -n \
   | tee test/create_user \
   | grep "credentials(username: user, password:pass)"
+
+add_cleanup "orbit/warpdrive.sh \
+  -u user -w \
+  | tee test/delete_user \
+  | grep 'user'"
 
 # Check that registration fails with incorrect student id
 curl --url "https://localhost:$PORT/register" \
@@ -161,9 +179,3 @@ curl --url "pop3s://localhost:$POP_PORT/1" \
   --user user:pass \
   | tee test/pop_get_message \
   | grep "Bottom text"
-
-# Check that we can delete a user
-orbit/warpdrive.sh \
-  -u user -w \
-  | tee test/delete_user \
-  | grep "user"
