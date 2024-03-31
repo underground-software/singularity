@@ -18,12 +18,16 @@ def errx(msg):
 
 
 def need(a, u=False, p=False, t=False):
+    needs = []
     if u and a.username is None:
-        errx("Need username. Bye.")
+        needs.append("username")
     if p and a.password is None:
-        errx("Need password. Bye.")
+        needs.append("password")
     if t and a.token is None:
-        errx("Need token. Bye.")
+        needs.append("token")
+
+    if needs:
+        errx(f"Need {' and '.join(needs)}. Bye")
 
 
 def nou(u):
