@@ -38,7 +38,7 @@ popd
 mkdir -p test
 
 # Reset the tests and mail directories
-sudo rm -f test/* email/logs/* email/mail/*
+rm -f test/* email/logs/* email/mail/*
 
 DEVEL=${DEVEL:-""}
 STAGING=${STAGING:-""}
