@@ -3,7 +3,7 @@ services:
     build:
       context: extenginx
       additional_contexts:
-        - NGINX_SNIPPET_SOURCE=./nginx_snippets
+        - nginx_snippet_source=./nginx_snippets
       dockerfile: Containerfile
       target: nginx
       args:
