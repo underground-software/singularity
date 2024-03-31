@@ -38,6 +38,11 @@ services:
       target: orbit
       args:
         orbit_version_info: "singularity v0.1 https://github.com/underground-software/singularity"
+    volumes:
+      - type: volume
+        source: orbit-db
+        target: /var/orbit
+        read_only: false
     networks:
       - orbit
   smtp:
@@ -82,3 +87,4 @@ networks:
 volumes:
   ssl-certs:
   email:
+  orbit-db:
