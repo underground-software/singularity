@@ -28,17 +28,11 @@ chcon -R -t container_file_t email
 
 DEVEL=${DEVEL:-""}
 STAGING=${STAGING:-""}
-PORT=${PORT:-443}
-POP_PORT=${POP_PORT:-995}
-SMTP_PORT=${SMTP_PORT:-465}
 EMAIL_HOSTNAME="kdlp.underground.software"
 
 # NOTE: don't set DEVEL and STAGING at the same time
 
 if [ -n "$DEVEL" ]; then
-	PORT=1443
-	POP_PORT=1995
-	SMTP_PORT=1465
 	EMAIL_HOSTNAME="localhost"
 fi
 
@@ -47,7 +41,8 @@ if [ -n "$STAGING" ]; then
 fi
 
 # Check that registration fails before user creation
-curl --url "https://localhost:$PORT/register" \
+curl --url "https://$EMAIL_HOSTNAME/register" \
+  --unix-socket ./socks/https.sock \
   --verbose \
   --insecure \
   --fail \
@@ -57,7 +52,8 @@ curl --url "https://localhost:$PORT/register" \
   | grep "msg = no such student"
 
 # Check that login fails before user creation
-curl --url "https://localhost:$PORT/login" \
+curl --url "https://$EMAIL_HOSTNAME/login" \
+  --unix-socket ./socks/https.sock \
   --verbose \
   --insecure \
   --no-progress-meter \
@@ -72,7 +68,8 @@ orbit/warpdrive.sh \
   | grep "credentials(username: user, password:pass)"
 
 # Check that registration fails with incorrect student id
-curl --url "https://localhost:$PORT/register" \
+curl --url "https://$EMAIL_HOSTNAME/register" \
+  --unix-socket ./socks/https.sock \
   --verbose \
   --insecure \
   --fail \
@@ -82,7 +79,8 @@ curl --url "https://localhost:$PORT/register" \
   | grep "msg = no such student"
 
 # Check that registration succeeds with correct student id
-curl --url "https://localhost:$PORT/register" \
+curl --url "https://$EMAIL_HOSTNAME/register" \
+  --unix-socket ./socks/https.sock \
   --verbose \
   --insecure \
   --fail \
@@ -92,7 +90,8 @@ curl --url "https://localhost:$PORT/register" \
   | grep "msg = welcome to the classroom"
 
 # Check that registration fails when student id is used for a second time
-curl --url "https://localhost:$PORT/register" \
+curl --url "https://$EMAIL_HOSTNAME/register" \
+  --unix-socket ./socks/https.sock \
   --verbose \
   --insecure \
   --fail \
@@ -102,7 +101,8 @@ curl --url "https://localhost:$PORT/register" \
   | grep "msg = no such student"
 
 # Check that login fails when credentials are invalid
-curl --url "https://localhost:$PORT/login" \
+curl --url "https://$EMAIL_HOSTNAME/login" \
+  --unix-socket ./socks/https.sock \
   --verbose \
   --insecure \
   --no-progress-meter \
@@ -111,7 +111,8 @@ curl --url "https://localhost:$PORT/login" \
   | grep "msg = authentication failure"
 
 # Check that login succeeds when credentials are valid
-curl --url "https://localhost:$PORT/login" \
+curl --url "https://$EMAIL_HOSTNAME/login" \
+  --unix-socket ./socks/https.sock \
   --verbose \
   --insecure \
   --fail \
@@ -121,7 +122,8 @@ curl --url "https://localhost:$PORT/login" \
   | grep "msg = user authenticated by password"
 
 # Check that the user can get the empty list of email on the server
-curl --url "pop3s://localhost:$POP_PORT" \
+curl --url "pop3s://$EMAIL_HOSTNAME" \
+  --unix-socket ./socks/pop3s.sock \
   --verbose \
   --insecure \
   --fail \
@@ -133,7 +135,8 @@ curl --url "pop3s://localhost:$POP_PORT" \
 CR=$(printf "\r")
 # Check that the user can send a message to the server
 (
-curl --url "smtps://localhost:$SMTP_PORT" \
+curl --url "smtps://$EMAIL_HOSTNAME" \
+  --unix-socket ./socks/smtps.sock \
   --verbose \
   --insecure \
   --fail \
@@ -152,7 +155,8 @@ EOF
   | diff <(printf "") /dev/stdin
   
 # Check that the user can get the most recent message sent to the server
-curl --url "pop3s://localhost:$POP_PORT/1" \
+curl --url "pop3s://$EMAIL_HOSTNAME/1" \
+  --unix-socket ./socks/pop3s.sock \
   --verbose \
   --insecure \
   --fail \
