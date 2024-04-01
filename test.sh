@@ -60,22 +60,24 @@ if [ -n "$STAGING" ]; then
 	EMAIL_HOSTNAME="dev.underground.software"
 fi
 
+CURL_OPTS=( \
+--verbose \
+--insecure \
+--fail \
+--no-progress-meter \
+)
+
+
 # Check that registration fails before user creation
 curl --url "https://localhost:$PORT/register" \
-  --verbose \
-  --insecure \
-  --fail \
-  --no-progress-meter \
+  "${CURL_OPTS[@]}" \
   --data "student_id=1234" \
   | tee test/register_fail_no_user \
   | grep "msg = no such student"
 
 # Check that login fails before user creation
 curl --url "https://localhost:$PORT/login" \
-  --verbose \
-  --insecure \
-  --fail \
-  --no-progress-meter \
+  "${CURL_OPTS[@]}" \
   --data "username=user&password=pass" \
   | tee test/login_fail_no_user \
   | grep "msg = authentication failure"
@@ -93,60 +95,42 @@ add_cleanup "orbit/warpdrive.sh \
 
 # Check that registration fails with incorrect student id
 curl --url "https://localhost:$PORT/register" \
-  --verbose \
-  --insecure \
-  --fail \
-  --no-progress-meter \
+  "${CURL_OPTS[@]}" \
   --data "student_id=123" \
   | tee test/register_fail_wrong \
   | grep "msg = no such student"
 
 # Check that registration succeeds with correct student id
 curl --url "https://localhost:$PORT/register" \
-  --verbose \
-  --insecure \
-  --fail \
-  --no-progress-meter \
+  "${CURL_OPTS[@]}" \
   --data "student_id=1234" \
   | tee test/register_success \
   | grep "msg = welcome to the classroom"
 
 # Check that registration fails when student id is used for a second time
 curl --url "https://localhost:$PORT/register" \
-  --verbose \
-  --insecure \
-  --fail \
-  --no-progress-meter \
+  "${CURL_OPTS[@]}" \
   --data "student_id=1234" \
   | tee test/register_fail_duplicate \
   | grep "msg = no such student"
 
 # Check that login fails when credentials are invalid
 curl --url "https://localhost:$PORT/login" \
-  --verbose \
-  --insecure \
-  --fail \
-  --no-progress-meter \
+  "${CURL_OPTS[@]}" \
   --data "username=user&password=invalid" \
   | tee test/login_fail_invalid \
   | grep "msg = authentication failure"
 
 # Check that login succeeds when credentials are valid
 curl --url "https://localhost:$PORT/login" \
-  --verbose \
-  --insecure \
-  --fail \
-  --no-progress-meter \
+  "${CURL_OPTS[@]}" \
   --data "username=user&password=pass" \
   | tee test/login_success \
   | grep "msg = user authenticated by password"
 
 # Check that the user can get the empty list of email on the server
 curl --url "pop3s://localhost:$POP_PORT" \
-  --verbose \
-  --insecure \
-  --fail \
-  --no-progress-meter \
+  "${CURL_OPTS[@]}" \
   --user user:pass \
   | tee test/pop_get_empty \
   | diff <(printf '\r\n') /dev/stdin
@@ -155,10 +139,7 @@ CR=$(printf "\r")
 # Check that the user can send a message to the server
 (
 curl --url "smtps://localhost:$SMTP_PORT" \
-  --verbose \
-  --insecure \
-  --fail \
-  --no-progress-meter \
+  "${CURL_OPTS[@]}" \
   --mail-from "user@$EMAIL_HOSTNAME" \
   --mail-rcpt "other@$EMAIL_HOSTNAME" \
   --upload-file - \
@@ -174,10 +155,7 @@ EOF
 
 # Check that the user can get the most recent message sent to the server
 curl --url "pop3s://localhost:$POP_PORT/1" \
-  --verbose \
-  --insecure \
-  --fail \
-  --no-progress-meter \
+  "${CURL_OPTS[@]}" \
   --user user:pass \
   | tee test/pop_get_message \
   | grep "Bottom text"
