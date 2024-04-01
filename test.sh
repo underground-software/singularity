@@ -62,7 +62,7 @@ fi
 
 CURL_OPTS=( \
 --verbose \
---insecure \
+--cacert ssl/fullchain.pem \
 --fail \
 --no-progress-meter \
 )
