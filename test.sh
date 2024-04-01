@@ -15,11 +15,9 @@ require curl
 require flake8
 require chcon
 require podman
-require shellcheck
 
 # Check for shell script style compliance with shellcheck
-shellcheck test.sh
-shellcheck orbit/test-style.sh
+./script-lint.sh
 
 # Check python style compliance with flake8
 pushd orbit
