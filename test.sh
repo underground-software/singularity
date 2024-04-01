@@ -14,7 +14,6 @@ require() { command -v "$1" > /dev/null || { echo "error: $1 command required ye
 require curl
 require flake8
 require chcon
-require podman
 
 # Check for shell script style compliance with shellcheck
 ./script-lint.sh
