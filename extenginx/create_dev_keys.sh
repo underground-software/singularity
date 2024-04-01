@@ -1,5 +1,5 @@
 #!/bin/sh
-set -uexo pipefail
+set -uex
 
 mkdir -p ssl
 test -f ssl/ssl-dhparams.pem || openssl genpkey -genparam -algorithm DH -out ssl/ssl-dhparams.pem -pkeyopt dh_paramgen_prime_len:2048
