@@ -7,5 +7,6 @@ set -ex
 
 shellcheck script-lint.sh
 shellcheck test.sh
+shellcheck extenginx/create_dev_keys.sh
 shellcheck orbit/test-style.sh
 shellcheck orbit/warpdrive.sh
