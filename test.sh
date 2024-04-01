@@ -34,9 +34,11 @@ pushd orbit
 ./test-style.sh
 popd
 
-# Reset the tests and mail directories
-sudo rm -rf test email/logs/* email/mail/*
+# Create test dir if it does not exist yet
 mkdir -p test
+
+# Reset the tests and mail directories
+sudo rm -f test/* email/logs/* email/mail/*
 
 DEVEL=${DEVEL:-""}
 STAGING=${STAGING:-""}
