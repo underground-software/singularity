@@ -17,6 +17,15 @@ require chcon
 require podman
 require shellcheck
 
+# Check for shell script style compliance with shellcheck
+shellcheck test.sh
+shellcheck orbit/test-style.sh
+
+# Check python style compliance with flake8
+pushd orbit
+./test-style.sh
+popd
+
 # Reset the tests and mail directories
 sudo rm -rf test email/logs/* email/mail/*
 mkdir -p test
@@ -166,13 +175,3 @@ orbit/warpdrive.sh \
   -u user -w \
   | tee test/delete_user \
   | grep "user"
-
-# Check for shell script style compliance with shellcheck
-shellcheck test.sh
-shellcheck orbit/test-style.sh
-
-# Check python style compliance with flake8
-pushd orbit
-./test-style.sh
-popd
-
