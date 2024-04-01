@@ -167,7 +167,7 @@ orbit/warpdrive.sh \
   | tee test/delete_user \
   | grep "user"
 
-# Check for shell script styyle compliance with shellcheck
+# Check for shell script style compliance with shellcheck
 shellcheck test.sh
 shellcheck orbit/test-style.sh
 
