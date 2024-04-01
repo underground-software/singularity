@@ -150,7 +150,7 @@ Bottom text$CR
 EOF
 ) | tee test/smtp_send_email \
   | diff <(printf "") /dev/stdin
-  
+
 # Check that the user can get the most recent message sent to the server
 curl --url "pop3s://localhost:$POP_PORT/1" \
   --verbose \
