@@ -1,8 +1,9 @@
 #!/bin/bash
 
-scan() { echo "[SCAN] ${1}" ; flake8 "${1}" || exit 1 ; }
 
-scan radius.py
-scan config.py
-scan db.py
-scan hyperspace.py
+set -ex
+
+flake8 radius.py
+flake8 config.py
+flake8 db.py
+flake8 hyperspace.py
