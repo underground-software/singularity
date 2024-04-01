@@ -25,8 +25,6 @@ popd
 sudo rm -rf test email/logs/* email/mail/*
 mkdir -p test
 
-# TODO: login returns 401 so we don't set --fail on the curl command
-
 DEVEL=${DEVEL:-""}
 STAGING=${STAGING:-""}
 PORT=${PORT:-443}
@@ -61,6 +59,7 @@ curl --url "https://localhost:$PORT/register" \
 curl --url "https://localhost:$PORT/login" \
   --verbose \
   --insecure \
+  --fail \
   --no-progress-meter \
   --data "username=user&password=pass" \
   | tee test/login_fail_no_user \
@@ -106,6 +105,7 @@ curl --url "https://localhost:$PORT/register" \
 curl --url "https://localhost:$PORT/login" \
   --verbose \
   --insecure \
+  --fail \
   --no-progress-meter \
   --data "username=user&password=invalid" \
   | tee test/login_fail_invalid \
