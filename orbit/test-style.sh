@@ -1,5 +1,7 @@
 #!/bin/sh
 
+require() { command -v "$1" > /dev/null || { echo "error: $1 command required yet absent" ; exit 1 ; } ; }
+require flake8
 
 set -ex
 
