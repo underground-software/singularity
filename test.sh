@@ -13,7 +13,6 @@ set -exuo pipefail
 require() { command -v "$1" > /dev/null || { echo "error: $1 command required yet absent" ; exit 1 ; } ; }
 require curl
 require flake8
-require chcon
 
 # Check for shell script style compliance with shellcheck
 ./script-lint.sh
@@ -26,9 +25,6 @@ popd
 # Reset the tests and mail directories
 sudo rm -rf test email/logs/* email/mail/*
 mkdir -p test
-
-# This is a temporary workaround until we properly implement volumes
-chcon -R -t container_file_t email
 
 # TODO: login returns 401 so we don't set --fail on the curl command
 
