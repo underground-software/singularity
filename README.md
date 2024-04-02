@@ -23,7 +23,7 @@ in the container-compose spec that are not yet in upstream podman-compose.
 
 0. Get the podman-compose depdencies. Here are two options.
 
-    0. Set up a python virtual environment.
+    1. Set up a python virtual environment.
 
         - Create a new venv.
 
@@ -40,7 +40,7 @@ in the container-compose spec that are not yet in upstream podman-compose.
 
         - If you install depenencies this way, make sure the venv is active (via `source kdlp-venv/bin/activate`) whenever you use our `podman-compose.py` script
 
-    0. Get the dependencies from you system package manager:
+    1. Get the dependencies from you system package manager:
         - Install the podman-compose packaged by your distribution.
         - It should install the appropriate python dependencies as global python packages.
         - NOTE: Running `podman-compose` in your terminal will invoke
