@@ -102,3 +102,17 @@ Section 2: Singularity Setup
     ```
     podman-compose down
     ```
+
+Section 3: Development Configuration for Live Editiing
+--
+
+By default, your edits to the web content in the repo are not reflected on the live website until you rebuild the container.
+However, you can setup your local environment to enable immediate live editing of the website.
+
+If you set the following environment variable and rebuild the containers, they support live editing.
+
+```sh
+export COMPOSE_FILE="container-compose.yml:container-compose-dev.yml"
+```
+
+For security reasons, be sure to `unset COMPOSE_FILE` before production deployment.
