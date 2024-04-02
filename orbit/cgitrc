@@ -2,7 +2,7 @@
 css=/style.css
 
 # Allow http transport git clone
-enable-http-clone=1
+enable-http-clone=0
 
 # Enable caching of up to 1000 output entries
 cache-size=0
