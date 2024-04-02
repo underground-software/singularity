@@ -116,3 +116,34 @@ export COMPOSE_FILE="container-compose.yml:container-compose-dev.yml"
 ```
 
 For security reasons, be sure to `unset COMPOSE_FILE` before production deployment.
+
+Section 4: Production Deployment
+--
+
+To publish an instance of singularity on the internet, you must configure the hostname.
+
+```sh
+export SINGULARITY_HOSTNAME=singularity.example.com
+```
+
+You may want to remove the "(in development)" label from the footer of the website.
+
+```sh
+export SINGUALRITY_DEPLOYMENT_STATUS=""
+```
+You can alternativelty set this to whatever text you'd like, e.g. "(in staging)".
+
+For the simple case of a single instance deployment,
+you can run `sudo ./dev_sockets.sh &` to directly map
+the TCP ports on your host to this singulariy instance's unix sockets.
+
+Alternatively, you could configure an existing reverse proxy on the host such as `nginx` to proxy requests from the host to this container.
+
+You should obtain and deploy real SSL certificates.
+The details of obtaining these certs are beyond the scope of these instructions.
+We use
+[letsencrypt's certbot](https://certbot.eff.org/).
+
+To install these certicates into an instance of singularity,
+run `podman cp <host_files...> singularity_nginx_1:/etc/ssl/nginx`
+followed by `podman exec singularity_nginx_1 nginx -s reload`.
