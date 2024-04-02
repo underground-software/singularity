@@ -1,5 +1,5 @@
 import config
-from peewee import Model, IntegerField, CharField, SqliteDatabase, FieldAccessor  # noqa 501
+from peewee import Model, IntegerField, CharField, SqliteDatabase, FieldAccessor  # NOQA: E501
 from typing import Optional, Self
 
 DB = SqliteDatabase(config.database)
