@@ -1,56 +1,104 @@
 # singularity
 
-We have crossed the event horizon
+The singularity at the center of the KDLP infrastructure black hole.
 
-## Recommended Setup Instructions
+Section 1: Podman Setup 
+--
 
-0. Make sure you have `podman`, `python3`, `pip`, and `git` installed on your host machine
-1. Clone the singularity repo
-```
-git clone https://github.com/underground-software/singularity.git
-```
-2. Clone the kdlp podman-compose repo
-```
-git clone https://github.com/underground-software/podman-compose.git
-```
-3. Set up a python virtual environment
-- Whenever you use `podman-compose.py`, make sure you use the `kdlp-venv` you set up! (run the `source` command listed below)
-```
-python3 -m venv kdlp-venv
-source kdlp-venv/bin/activate
-```
-4. `cd` into podman-compose and switch to the kdlp-devel branch (we use our own podman-compose fork)
-```
-cd podman-compose
-git checkout origin/devel-kdlp
-```
-5. Install podman-compose's requirements
-```
-pip install -r requirements.txt
-```
-6. Go into `singularity`, make the `email` directory and its subdirectories
-```
-cd ../singularity
-mkdir -p email/{logs,mail}
-```
-7. Run the ssl setup script found in extenginx
-- Make sure you run it from within the singularity directory!
-- If you get the error `extenginx/create_dev_keys.sh: 2: set: Illegal_option -o pipefail`, edit the `create_dev_keys.sh` script and comment out the line `set -uexo pipefail`
-```
-extenginx/create_dev_keys.sh
-```
-8. Compose using the kdlp podman-compose branch and the container-compose-dev.yml file
-```
-../podman-compose/podman_compose.py -f container-compose-dev.yml build
-../podman-compose/podman_compose.py -f container-compose-dev.yml up
-```
-9. Access your local version of kdlp.underground.software
-- open web browser
-- go to https://localhost:1443
-- accept the warning your browser probably gives you about the security certificate
+0. Make sure you have `podman`, `python3`, `pip`, `socat`, and `git` installed on your host machine.
 
-You should now have a working, local version of the kdlp site!
-To compose down, use
-```
-../podman-compose/podman_compose.py -f container-compose-dev.yml down
-```
+0. Clone the KDLP podman-compose repo.
+We maintain a fork of podman compose with fixes and support for features
+in the container-compose spec that are not yet in upstream podman-compose.
+
+    ```sh
+    git clone https://github.com/underground-software/podman-compose.git
+    ```
+
+0. Checkout our branch with the fixes.
+
+    ```sh
+    git checkout origin/devel-kdlp
+    ```
+
+0. Get the podman-compose depdencies. Here are two options.
+
+    1. Set up a python virtual environment.
+
+        - Create a new venv.
+
+        ```sh
+        python3 -m venv kdlp-venv
+        source kdlp-venv/bin/activate
+        ```
+
+        - Install podman-compose's requirements.
+
+        ```sh
+        pip install -r requirements.txt
+        ```
+
+        - If you install depenencies this way, make sure the venv is active (via `source kdlp-venv/bin/activate`) whenever you use our `podman-compose.py` script
+
+    1. Get the dependencies from you system package manager:
+        - Install the podman-compose packaged by your distribution.
+        - It should install the appropriate python dependencies as global python packages.
+        - NOTE: Running `podman-compose` in your terminal will invoke
+        the unpatched version installed by your system package manager
+        which is not compatible with singularity.
+        You must invoke our patched `podman_compose.py` script directly
+        unless you create your own symlink or alias.
+
+### NOTE: From this point on, whenever we say `podman-compose`, treat this as an invocation of our patched version as described above.
+
+Section 2: Singularity Setup
+--
+
+0. Clone the singularity repo.
+
+    ```sh
+    git clone https://github.com/underground-software/singularity.git
+    ```
+
+0. Build the containers.
+
+    ```sh
+    podman-compose build
+    ```
+
+0. Launch singularity.
+
+    ```sh
+    podman-compose up
+    ```
+
+0. Open another terminal and run the tests. If you followed the directions, they should pass.
+
+    ```sh
+    ./test.sh
+    ```
+
+0. At this point, the application is listening on three unix sockets located in the `socks` ~~drawer~~ directory.
+
+    tl;dr run `sudo ./dev_sockets.sh &` to bind the services to the normal TCP ports.
+
+    The `./dev_sockets.sh` script will spawn three instances of [`socat`](https://linux.die.net/man/1/socat).
+    Each instance proxies requests on a TCP port to a corresponding unix socket.
+    When run without privileges, it will listen on ports above the default threshold of 1024
+    (as configured in `/proc/sys/net/ipv4/ip_unprivileged_port_start`),
+    i.e. `1443` for https, `1465` for smtps, and `1995` for pop3s.
+    This is suitable for local testing however you must take care
+    to specify the port and protocol in any URLs that access these services,
+    e.g. `https://localhost:1443` to access the local website deployment in your browser.
+
+    When run with privileges, `socat` will bind to the normal, privileged ports for each service,
+    i.e. `443` for https, `465` for smtps, and `995` for pop3s
+    [as specifed by the IANA](https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.txt).
+            
+    ### NOTE: Singularity uses self-signed certificates by default. Accept any warning you see about the security certificate.
+
+0. Terminate the singularity containers when you are finished.
+
+    ```
+    podman-compose down
+    ```
