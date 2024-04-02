@@ -144,6 +144,7 @@ The details of obtaining these certs are beyond the scope of these instructions.
 We use
 [letsencrypt's certbot](https://certbot.eff.org/).
 
-To install these certicates into an instance of singularity,
-run `podman cp <host_files...> singularity_nginx_1:/etc/ssl/nginx`
+To install your real certificates into an instance of singularity,
+create a tarball containing the approriate `fullchain.pem` and `privkey.pem`,
+and then run `podman volume import singularity_ssl-certs /path/to/tarball`
 followed by `podman exec singularity_nginx_1 nginx -s reload`.
