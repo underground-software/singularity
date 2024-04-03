@@ -1,0 +1,28 @@
+server_name: "${MATRIX_HOSTNAME}"
+pid_file: /tmp/homeserver.pid
+listeners:
+  - port: 8008
+    type: http
+    x_forwarded: true
+    resources:
+      - names:
+        - client
+        - federation
+        compress: false
+database:
+  name: sqlite3
+  args:
+    database: /var/synapse/homeserver.db
+log_config: "/etc/synapse/homeserver.log.config"
+max_upload_size: 100M
+media_store_path: /var/synapse/media_store
+report_stats: true
+signing_key_path: "/var/synapse/${MATRIX_HOSTNAME}.signing.key"
+federation_domain_whitelist:
+  - underground.software # TODO also harden at firewall level
+trusted_key_servers: []
+modules:
+  - module: orbit_auth.OrbitAuthProvider
+    config: {}
+
+# vim:ft=yaml

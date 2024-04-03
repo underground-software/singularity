@@ -31,6 +31,7 @@ services:
       - orbit
       - smtp
       - pop
+      - submatrix
   orbit:
     build:
       context: orbit
@@ -84,11 +85,29 @@ services:
       - smtp
     networks:
       - pop
+  submatrix:
+    build:
+      context: submatrix
+      dockerfile: Containerfile
+      args:
+        MATRIX_HOSTNAME: ${SINGULARITY_HOSTNAME}
+    volumes:
+      - type: volume
+        source: submatrix-data
+        target: /var/synapse
+        read_only: false
+    depends_on:
+      - orbit 
+    networks:
+      - submatrix
+      - orbit
 networks:
   orbit:
   smtp:
   pop:
+  submatrix:
 volumes:
   ssl-certs:
   email:
   orbit-db:
+  submatrix-data:
