@@ -45,6 +45,10 @@ services:
       args:
         orbit_version_info: "singularity ${SINGULARITY_VERSION} ${SINGULARITY_DEPLOYMENT_STATUS} https://github.com/underground-software/singularity"
     volumes:
+      - type: bind
+        source: ./socks
+        target: /run/socks
+        read_only: false
       - type: volume
         source: orbit-db
         target: /var/lib/orbit
