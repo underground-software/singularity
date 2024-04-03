@@ -51,6 +51,10 @@ COPY --from=build /var/git /var/git
 
 COPY cgitrc /etc/cgitrc
 
+RUN chown -R 100:100 /orbit /radius-venv /var/orbit /var/git
+
+USER 100:100
+
 EXPOSE 9098
 
 CMD /bin/sh -c "source /radius-venv/bin/activate && uwsgi /orbit/radius.ini"
