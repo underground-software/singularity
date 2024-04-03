@@ -1,0 +1,20 @@
+FROM alpine:latest as submatrix
+
+RUN apk add synapse envsubst py3-curl
+
+COPY homeserver.yaml.template /etc/synapse/homeserver.yaml.template
+
+COPY homeserver.log.config /etc/synapse/homeserver.log.config
+
+COPY orbit_auth.py /usr/lib/python3.11/site-packages/orbit_auth.py
+
+ARG MATRIX_HOSTNAME=localhost
+
+RUN envsubst '$MATRIX_HOSTNAME' < /etc/synapse/homeserver.yaml.template > /etc/synapse/homeserver.yaml
+
+VOLUME /var/synapse
+
+USER 100:100
+
+CMD /usr/bin/synapse_homeserver -c /etc/synapse/homeserver.yaml
+

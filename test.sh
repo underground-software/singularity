@@ -28,6 +28,7 @@ DOCKER=${DOCKER:-podman}
 require() { command -v "$1" > /dev/null || { echo "error: $1 command required yet absent" ; exit 1 ; } ; }
 require curl
 require jq
+require flake8
 require "${DOCKER}"
 
 # Check for shell script style compliance with shellcheck
@@ -37,6 +38,8 @@ require "${DOCKER}"
 pushd orbit
 ./test-style.sh
 popd
+
+flake8 submatrix/orbit_auth.py
 
 # Create test dir if it does not exist yet
 mkdir -p test
@@ -223,3 +226,34 @@ curl --url "pop3s://$SINGULARITY_HOSTNAME/1" \
   --user user:pass \
   | tee test/pop_get_message \
   | grep "Bottom text"
+
+# If you get a 429 error from one of the matrix tests, restart the server and try again
+# Synapse has rate-limiting behavior for login requests indicated by this 429 HTTP code
+
+# Check that the user can login to matrix with their orbit ID
+curl --url "https://$SINGULARITY_HOSTNAME/_matrix/client/r0/login" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --header "Content-Type: application/json" \
+  --data "{
+        \"type\": \"m.login.password\",
+        \"user\": \"@user:$SINGULARITY_HOSTNAME\",
+        \"password\": \"pass\"
+      }" \
+  | tee test/matrix_login_success \
+  | grep "access_token"
+
+# Check that the user cannot login to matrix with an invalid orbit ID
+curl --url "https://$SINGULARITY_HOSTNAME/_matrix/client/r0/login" \
+  --unix-socket ./socks/https.sock \
+  --verbose \
+  --cacert test/ca_cert.pem \
+  --no-progress-meter \
+  --header "Content-Type: application/json" \
+  --data "{
+        \"type\": \"m.login.password\",
+        \"user\": \"@user:$SINGULARITY_HOSTNAME\",
+        \"password\": \"ssap\"
+      }" \
+  | tee test/matrix_login_invalid \
+  | grep '{"errcode":"M_FORBIDDEN","error":"Invalid username or password"}'
