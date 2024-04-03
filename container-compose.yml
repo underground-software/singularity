@@ -17,7 +17,8 @@ services:
         source: ./socks
         target: /run/nginx/socks
         read_only: false
-        selinux: z
+        bind:
+          selinux: z
       - type: volume
         source: ssl-certs
         target: /etc/ssl/nginx
