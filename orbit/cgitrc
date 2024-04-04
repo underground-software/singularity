@@ -36,4 +36,4 @@ mimetype.svg=image/svg+xml
 
 virtual-root=/cgit
 
-scan-path=/var/git
+include=/etc/cgit/cgitrepos
