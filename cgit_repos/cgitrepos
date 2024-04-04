@@ -1,1 +1,5 @@
 enable-index-owner=0
+
+repo.url=Singularity
+repo.path=/var/git/singularity
+repo.desc=Repository containing all KDLP content and infrastructure.
