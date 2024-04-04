@@ -8,7 +8,7 @@ CREATE TABLE users (
 CREATE TABLE sessions (
         token string PRIMARY KEY,
         username string UNIQUE NOT NULL,
-        expiry string NOT NULL);
+        expiry real NOT NULL);
 CREATE TABLE newusers (
 	registration_id integer primary key,
 	student_id string UNIQUE NOT NULL,
