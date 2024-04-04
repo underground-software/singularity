@@ -2,16 +2,16 @@ PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE users (
 	id integer primary key,
-	username string UNIQUE NOT NULL,
-	pwdhash string NOT NULL,
-	student_id string UNIQUE);
+	username text UNIQUE NOT NULL,
+	pwdhash text NOT NULL,
+	student_id text UNIQUE);
 CREATE TABLE sessions (
-        token string PRIMARY KEY,
-        username string UNIQUE NOT NULL,
+        token text PRIMARY KEY,
+        username text UNIQUE NOT NULL,
         expiry real NOT NULL);
 CREATE TABLE newusers (
 	registration_id integer primary key,
-	student_id string UNIQUE NOT NULL,
-	username string UNIQUE NOT NULL,
-	password string NOT NULL);
+	student_id text UNIQUE NOT NULL,
+	username text UNIQUE NOT NULL,
+	password text NOT NULL);
 COMMIT;
