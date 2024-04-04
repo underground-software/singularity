@@ -38,6 +38,7 @@ services:
       additional_contexts:
         - orbit_singularity_git_dir=./.git
         - orbit_docs_source=./kdlp.underground.software
+        - orbit_repos_source=./cgit_repos
       target: orbit
       args:
         orbit_version_info: "singularity ${SINGULARITY_VERSION} ${SINGULARITY_DEPLOYMENT_STATUS} https://github.com/underground-software/singularity"
