@@ -474,6 +474,8 @@ def handle_register(rocket):
 
 
 def handle_cgit(rocket):
+    if not rocket.session:
+        return rocket.raw_respond(HTTPStatus.UNAUTHORIZED)
     cgit_env = os.environ.copy()
     cgit_env['PATH_INFO'] = rocket.path_info.removeprefix('/cgit')
     cgit_env['QUERY_STRING'] = rocket.env.get('QUERY_STRING', '')
