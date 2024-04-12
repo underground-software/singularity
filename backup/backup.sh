@@ -7,11 +7,11 @@ set -eux
 
 TMPDIR="$(mktemp -d)"
 
-pushd "${TMPDIR}" > /dev/null
+cd "${TMPDIR}"
 for v in $VOLUMES; do
 	podman volume export "${v}" > "${v}.tar"
 done
 tar -cz .
-popd > /dev/null
+cd "${OLDPWD}"
 
 rm -r "${TMPDIR}"
