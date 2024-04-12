@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eux
 
 # Output gzipped tar of all volumes to stdout
 

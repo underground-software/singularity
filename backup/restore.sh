@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eux
 
 # Restore all volumes from gzipped tar from stdin
 
