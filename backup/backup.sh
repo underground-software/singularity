@@ -5,9 +5,13 @@ set -eux
 
 . ./volumes_list
 
-pushd "$(mktemp -d)" > /dev/null
+TMPDIR="$(mktemp -d)"
+
+pushd "${TMPDIR}" > /dev/null
 for v in $VOLUMES; do
 	podman volume export ${v} > ${v}.tar
 done
 tar -cz .
 popd > /dev/null
+
+rm -r "${TMPDIR}"
