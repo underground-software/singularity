@@ -2,12 +2,7 @@
 
 # Output gzipped tar of all volumes to stdout
 
-VOLUMES='
-singularity_email
-singularity_orbit-db
-singularity_ssl-certs
-singularity_submatrix-data
-'
+. ./volumes_list
 
 pushd "$(mktemp -d)" > /dev/null
 for v in $VOLUMES; do
