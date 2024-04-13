@@ -1,8 +1,11 @@
 #!/bin/sh
 set -eux
 
+cd "$(dirname "$0")"
+
 # Output gzipped tar of all volumes to stdout
 
+# shellcheck disable=SC1091
 . ./volumes_list
 
 TMPDIR="$(mktemp -d)"
