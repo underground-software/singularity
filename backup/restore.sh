@@ -1,8 +1,11 @@
 #!/bin/sh
 set -eux
 
+cd "$(dirname "$0")"
+
 # Restore all volumes from gzipped tar from stdin
 
+# shellcheck disable=SC1091
 . ./volumes_list
 
 TMPDIR="$(mktemp -d)"
