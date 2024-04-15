@@ -18,7 +18,7 @@ in the container-compose spec that are not yet in upstream podman-compose.
 0. Checkout our branch with the fixes.
 
     ```sh
-    git checkout origin/devel-kdlp
+    git checkout origin/kdlp
     ```
 
 0. Get the podman-compose depdencies. Here are two options.
