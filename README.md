@@ -12,13 +12,7 @@ We maintain a fork of podman compose with fixes and support for features
 in the container-compose spec that are not yet in upstream podman-compose.
 
     ```sh
-    git clone https://github.com/underground-software/podman-compose.git
-    ```
-
-0. Checkout our branch with the fixes.
-
-    ```sh
-    git checkout origin/kdlp
+    git clone --single-branch --branch=kdlp https://github.com/underground-software/podman-compose.git
     ```
 
 0. Get the podman-compose depdencies. Here are two options.
