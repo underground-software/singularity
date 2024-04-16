@@ -14,7 +14,7 @@
  * the timesamps must be monotonically increasing
  */
 
-int main (int argc, char **argv)
+int main (int, char **argv)
 {
 	int timerfd;
 	if (0 > (timerfd = timerfd_create(CLOCK_REALTIME, TFD_CLOEXEC)))
