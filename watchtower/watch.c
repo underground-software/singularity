@@ -13,7 +13,7 @@
  * argv must contain pairs of paths to directories and paths to executables delimited by spaces
  */
 
-int main (int argc, char **argv)
+int main (int, char **argv)
 {
 	int inotifyfd;
 	if (0 > (inotifyfd = inotify_init1(IN_CLOEXEC)))
