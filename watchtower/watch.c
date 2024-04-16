@@ -2,7 +2,7 @@
 #include <limits.h>
 #include <inttypes.h>
 #include <sys/wait.h>
-#include <sys/timerfd.h>
+#include <sys/inotify.h>
 #include <time.h>
 #include <err.h>
 #include <unistd.h>
