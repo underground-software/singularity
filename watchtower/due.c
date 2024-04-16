@@ -1,13 +1,9 @@
-#include <signal.h>
-#include <limits.h>
 #include <inttypes.h>
 #include <sys/wait.h>
 #include <sys/timerfd.h>
 #include <time.h>
 #include <err.h>
 #include <unistd.h>
-#include <errno.h>
-#include <stdio.h>
 
 /*
  * argv must contain pairs of timestamps and paths to executables delimited by spaces

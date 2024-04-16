@@ -1,12 +1,9 @@
-
 #include <limits.h>
 #include <inttypes.h>
 #include <sys/wait.h>
 #include <sys/inotify.h>
-#include <time.h>
 #include <err.h>
 #include <unistd.h>
-#include <errno.h>
 #include <stdio.h>
 
 /*
