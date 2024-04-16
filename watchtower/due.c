@@ -39,7 +39,7 @@ int main (int argc, char **argv)
 		// block until the time in the past
 		for (time_t now = time(NULL); now < timestamp; now = time(NULL)) {
 			if (0 > timerfd_settime(timerfd, TFD_TIMER_ABSTIME | TFD_TIMER_CANCEL_ON_SET,
-					&(struct itimerspec){.it_value.tv_sec = (time_t)timestamp }, NULL))
+					&(struct itimerspec){.it_value.tv_sec = timestamp }, NULL))
 				err(1, "timerfd_settime");
 
 			// block until timer expires or clock jumps weirdly
