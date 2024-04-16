@@ -1,8 +1,8 @@
-#include <inttypes.h>
-#include <sys/wait.h>
-#include <sys/timerfd.h>
-#include <time.h>
 #include <err.h>
+#include <inttypes.h>
+#include <sys/timerfd.h>
+#include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 /*

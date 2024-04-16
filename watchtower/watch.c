@@ -1,10 +1,10 @@
-#include <limits.h>
-#include <inttypes.h>
-#include <sys/wait.h>
-#include <sys/inotify.h>
 #include <err.h>
-#include <unistd.h>
+#include <inttypes.h>
+#include <limits.h>
 #include <stdio.h>
+#include <sys/inotify.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 /*
  * argv must contain pairs of paths to directories and paths to executables delimited by spaces
