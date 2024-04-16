@@ -19,8 +19,6 @@ int main (int argc, char **argv)
 	if (0 > (inotifyfd = inotify_init1(IN_CLOEXEC)))
 		err(1, "inotify_init1");
 
-	FILE * inotify_file = fdopen(inotifyfd, "r");
-
 	// skip the program name
 	++argv;
 
@@ -29,21 +27,22 @@ int main (int argc, char **argv)
 		argv_iter[0] = (intptr_t)inotify_add_watch(inotifyfd, dir, IN_CREATED);
 	}
 
+	FILE * inotify_file = fdopen(inotifyfd, "r");
+
+
 	for (;;) {
-		struct inotify_event ev;
-		if (1 != fread(&ev, sizeof ev, 1, inotify_file))
+		uint8_t _Alignas(struct inotify_event) event_buf[sizeof(struct inotify_event) + NAME_MAX + 1];
+		struct inotify_event *event = (struct inotify_event *)event_buf;
+
+		// read one inotify event header
+		if (1 != fread(event, sizeof *event, 1, inotify_file))
 			err(1, "fread");
 
-		char buf[256];
-
-		if (ev.len > sizeof buf)
-			err(1, "directory name too long");
-
-		fread(buf, sizeof (char), ev.len, inotify_file);
-
+		// read the path corresponding to this event
+		if (event->len != fread(event->name, sizeof(char), (size_t)event->len, inotify_file))
+			err(1, "fread");
 
 		for (char *dir, *exe, **argv_iter = argv; (dir = argv_iter[0]) && (exe = argv_iter[1]); argv_iter += 2) {
-			//
 			// run the program as a child process and wait for it to finish
 			pid_t pid = fork();
 			if (0 > pid)
