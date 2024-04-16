@@ -29,13 +29,13 @@ int main (int argc, char **argv)
 		// parse and validate the timestamp
 		char * endptr;
 		intmax_t parsed_timestamp = strtoimax(timestr, &endptr, 10);
-		
+
 		// if the downcasted value of parsed_timestamp differs from the original, we lost information in
 		// the cast and the value is too big for a time_t
 		if (endptr == timestr || *endptr != '\0' || parsed_timestamp != (intmax_t)(time_t)parsed_timestamp)
 			errx(1, "failed to parse argv entry \"%s\"", timestr);
 		time_t timestamp = (time_t)parsed_timestamp;
-		
+
 		// block until the time in the past
 		for (time_t now = time(NULL); now < timestamp; now = time(NULL)) {
 			if (0 > timerfd_settime(timerfd, TFD_TIMER_ABSTIME | TFD_TIMER_CANCEL_ON_SET,
