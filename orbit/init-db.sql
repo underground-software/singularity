@@ -10,7 +10,6 @@ CREATE TABLE sessions (
         username text UNIQUE NOT NULL,
         expiry real NOT NULL) STRICT;
 CREATE TABLE newusers (
-	registration_id integer primary key,
 	student_id text UNIQUE NOT NULL,
 	username text UNIQUE NOT NULL,
 	password text NOT NULL) STRICT;
