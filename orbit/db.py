@@ -138,21 +138,6 @@ VALUES (?,?,?);
 def reg_ins(tpl): return _set(REG_INS, tpl)
 
 
-REG_GETBY_STUID = """
-SELECT registration_id, username, password
-FROM newusers
-WHERE student_id = ?;
-""".strip()
-def reg_getby_stuid(sid): return _get(REG_GETBY_STUID, sid)
-
-
-REG_DELBY_REGID = """
-DELETE FROM newusers
-WHERE registration_id = ?;
-""".strip()
-def reg_delby_regid(rid): return _set(REG_DELBY_REGID, rid)
-
-
 REG_GETDEL_BY_STUID = """
 DELETE FROM newusers
 WHERE student_id = ?
