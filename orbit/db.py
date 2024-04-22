@@ -151,3 +151,11 @@ DELETE FROM newusers
 WHERE registration_id = ?;
 """.strip()
 def reg_delby_regid(rid): return _set(REG_DELBY_REGID, rid)
+
+
+REG_GETDEL_BY_STUID = """
+DELETE FROM newusers
+WHERE student_id = ?
+RETURNING username, password;
+"""
+def reg_get_and_del_by_stuid(sid): return _set(REG_GETDEL_BY_STUID, sid)
