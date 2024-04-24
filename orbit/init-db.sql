@@ -1,7 +1,6 @@
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
 CREATE TABLE users (
-	id integer primary key,
 	username text UNIQUE NOT NULL,
 	pwdhash text NOT NULL,
 	student_id text UNIQUE) STRICT;
