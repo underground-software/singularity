@@ -30,7 +30,6 @@ def nou(u):
 
 
 USR_FMT = """
-Orbit ID        : {}
 Username        : {}
 Hashed Password : {}
 Student ID      : {}
