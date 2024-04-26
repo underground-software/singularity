@@ -29,19 +29,13 @@ def nou(u):
     errx(f'no such user "{u}". Bye.')
 
 
-USR_FMT = """
-Username        : {}
-Hashed Password : {}
-Student ID      : {}
-""".strip()
-
-
 def do_query_username(args):
     need(args, u=True)
-    u = db.usr_getby_username(args.username)[0]
-    if u is None:
+    if not (user := db.User.get_or_none(db.User.username == args.username)):
         nou(args.username)
-    print(USR_FMT.format(*u))
+    print(f'Username        : {user.username}\n'
+          f'Hashed Password : {user.pwdhash}\n'
+          f'Student ID      : {user.student_id}')
 
 
 def do_validate_token(args):
@@ -75,35 +69,34 @@ def do_create_session(args):
 
 def do_validate_creds(args):
     need(args, u=True, p=True)
-    u, p = args.username, args.password
-    pwdhash = db.usr_pwdhashfor_username(u)[0]
-    if pwdhash is None:
-        nou(u)
-    pwdhash = pwdhash[0]
-
-    if bcrypt.checkpw(bytes(p, "UTF-8"), bytes(pwdhash, "UTF-8")):
-        print('credentials(username: {}, password:{})'.format(u, p))
-    else:
+    if not (user := db.User.get_or_none(db.User.username == args.username)):
+        nou(args.username)
+    if not bcrypt.checkpw(args.password.encode('utf-8'),
+                          user.pwdhash.encode('utf-8')):
         print('null')
+        return
+    print(f'credentials(username: {args.username}, password:{args.password})')
 
 
 def do_change_password(args):
     need(args, u=True, p=True)
-    u, _ = args.username, args.password
-    if db.usr_getby_username(u)[0]:
-        db.usr_setpwdhash_username((do_bcrypt_hash(args, get=True), u))
-        do_validate_creds(args)
-    else:
-        nou(u)
+    new_hash = do_bcrypt_hash(args, get=True)
+    query = (db.User
+             .update({db.User.pwdhash: new_hash})
+             .where(db.User.username == args.username))
+    if query.execute() < 1:
+        nou(args.username)
+    print(f'credentials(username: {args.username}, password:{args.password})')
 
 
 def do_delete_user(args):
     need(args, u=True)
-    deleted = db.usr_delby_username(args.username)[0]
-    if deleted:
-        print(deleted[0])
-    else:
-        print('null')
+    query = (db.User
+             .delete()
+             .where(db.User.username == args.username))
+    if query.execute() < 1:
+        nou(args.username)
+    print(args.username)
 
 
 def do_bcrypt_hash(args, get=False):
@@ -118,20 +111,23 @@ def do_bcrypt_hash(args, get=False):
 
 def do_newuser(args):
     need(args, u=True, p=True)
-    if db.usr_getby_username(args.username)[0]:
-        errx(f'cannot create duplicate user "{args.username}"')
-    else:
-        db.usr_ins((args.username, do_bcrypt_hash(args, get=True),
-                    args.studentid or 0))
-    if args.studentid:
-        db.Registration.create(username=args.username, password=args.password,
-                               student_id=args.studentid)
-    do_validate_creds(args)
+    new_hash = do_bcrypt_hash(args, get=True)
+    try:
+        db.User.create(username=args.username, pwdhash=new_hash,
+                       student_id=args.studentid)
+        if args.studentid:
+            db.Registration.create(username=args.username,
+                                   password=args.password,
+                                   student_id=args.studentid)
+        do_validate_creds(args)
+    except db.peewee.IntegrityError as e:
+        errx(f'cannot create user with duplicate field: "{e}"')
 
 
 def do_roster(args):
-    r = db.usr_get()
-    print(r)
+    print('Users:')
+    for u in db.User.select():
+        print(f'{u.username}, {u.pwdhash}, {u.student_id}')
 
 
 def do_list_sessions(args):
