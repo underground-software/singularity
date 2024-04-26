@@ -119,20 +119,3 @@ FROM users
 WHERE username = ?;
 """.strip()
 def usr_getby_username(usn): return _get(USR_GETBY_USERNAME, usn)
-
-
-# registration table inferface
-
-REG_INS = """
-INSERT INTO newusers (username, password, student_id)
-VALUES (?,?,?);
-""".strip()
-def reg_ins(tpl): return _set(REG_INS, tpl)
-
-
-REG_GETDEL_BY_STUID = """
-DELETE FROM newusers
-WHERE student_id = ?
-RETURNING username, password;
-"""
-def reg_get_and_del_by_stuid(sid): return _set(REG_GETDEL_BY_STUID, sid)
