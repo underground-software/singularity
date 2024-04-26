@@ -105,10 +105,12 @@ class Session:
             self.username = username
             self.token = self.mk_hash(username)
             self.expiry = datetime.utcnow() + timedelta(minutes=min_per_ses)
-
-            if db.ses_getby_username(username):
-                db.ses_delby_username(username)
-            db.ses_ins((self.token, self.username, self.expiry_ts()))
+            # creates a new session if one does not exist
+            (db.Session
+             .replace(username=self.username,
+                      token=self.token,
+                      expiry=self.expiry_ts())
+             .execute())
 
         # try to load active session from database using user token
         else:
@@ -117,17 +119,16 @@ class Session:
                 cok.load(raw)
                 res = cok.get('auth', cookies.Morsel()).value
 
-                if (ses_found := db.ses_getby_token(res)[0]):
-                    self.token = ses_found[0]
-                    self.username = ses_found[1]
-                    self.expiry = datetime.fromtimestamp(ses_found[2])
+                if (ses_found := db.Session.get_or_none(db.Session.token == res)):  # NOQA: E501
+                    self.token = ses_found.token
+                    self.username = ses_found.username
+                    self.expiry = datetime.fromtimestamp(ses_found.expiry)
 
     def end(self):
-        res = db.ses_delby_token(self.token)
+        db.Session.delete().where(db.Session.token == self.token).execute()
         self.token = None
         self.username = None
         self.expiry = None
-        return res
 
     def valid(self):
         if not self.expired():
