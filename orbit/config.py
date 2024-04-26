@@ -8,5 +8,3 @@ database = '/var/orbit/orbit.db'
 
 # duration of authentication token validity period
 minutes_each_session_token_is_valid = 180
-
-sql_verbose = False
