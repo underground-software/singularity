@@ -47,18 +47,22 @@ def do_query_username(args):
 def do_validate_token(args):
     need(args, t=True)
 
-    ses = db.ses_getby_token(args.token)[0]
+    ses = db.Session.get_or_none(db.Session.token == args.token)
     if ses:
-        print(ses[1])
+        print(ses.username)
     else:
         print('null')
 
 
 def do_drop_session(args):
     need(args, u=True)
-    dropped = db.ses_delby_username(args.username)[0]
-    if dropped:
-        print(dropped[0])
+    query = (db.Session
+             .delete()
+             .where(db.Session.username == args.username)
+             .returning(db.Session))
+
+    if ses := next(iter(query.execute()), None):
+        print(ses.username)
     else:
         print('null')
 
@@ -129,19 +133,11 @@ def do_roster(args):
     print(r)
 
 
-SES_FMT = """
-{} until {}: {}
-""".strip()
-
-
 def do_list_sessions(args):
-    raw_list = db.ses_get()
-    if raw_list[0] is None:
-        print("(no sessions)")
-    else:
-        print('\n'.join([SES_FMT.format(session[1],
-                                        datetime.fromtimestamp(session[2]),
-                                        session[0]) for session in raw_list]))
+    print('Sessions:')
+    for s in db.Session.select():
+        expiry = datetime.fromtimestamp(s.expiry)
+        print(f'{s.username} until {expiry}: {s.token}')
 
 
 def hyperspace_main(raw_args):
