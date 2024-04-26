@@ -124,7 +124,8 @@ def do_newuser(args):
         db.usr_ins((args.username, do_bcrypt_hash(args, get=True),
                     args.studentid or 0))
     if args.studentid:
-        db.reg_ins((args.username, args.password, args.studentid))
+        db.Registration.create(username=args.username, password=args.password,
+                               student_id=args.studentid)
     do_validate_creds(args)
 
 
