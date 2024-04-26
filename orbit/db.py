@@ -16,26 +16,17 @@ class User(BaseModel):
     pwdhash = peewee.TextField()
     student_id = peewee.TextField(unique=True, null=True)
 
-    class Meta:
-        table_name = 'users'
-
 
 class Session(BaseModel):
     token = peewee.TextField(primary_key=True)
     username = peewee.TextField(unique=True)
     expiry = peewee.FloatField()
 
-    class Meta:
-        table_name = 'sessions'
-
 
 class Registration(BaseModel):
     student_id = peewee.TextField(unique=True)
     username = peewee.TextField(unique=True)
     password = peewee.TextField()
-
-    class Meta:
-        table_name = 'newusers'
 
 
 if __name__ == '__main__':
