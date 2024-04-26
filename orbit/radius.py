@@ -52,9 +52,9 @@ def mk_table(row_list, indentation_level=0):
 
 
 def check_credentials(username, password):
-    if not (pwdhash := db.usr_pwdhashfor_username(username)[0]):
+    if not (user := db.User.get_or_none(db.User.username == username)):
         return False
-    return bcrypt.checkpw(encode(password), encode(pwdhash[0]))
+    return bcrypt.checkpw(encode(password), encode(user.pwdhash))
 
 
 # === user session handling ===
