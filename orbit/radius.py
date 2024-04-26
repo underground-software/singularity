@@ -51,6 +51,12 @@ def mk_table(row_list, indentation_level=0):
     return output
 
 
+def check_credentials(username, password):
+    if not (pwdhash := db.usr_pwdhashfor_username(username)[0]):
+        return False
+    return bcrypt.checkpw(encode(password), encode(pwdhash[0]))
+
+
 # === user session handling ===
 
 class Session:
@@ -281,8 +287,7 @@ class Rocket:
         if self.method == "POST":
             username = self.body_args_query('username')
             password = self.body_args_query('password')
-            if (pwdhash := db.usr_pwdhashfor_username(username)[0]) and \
-                    bcrypt.checkpw(encode(password), encode(pwdhash[0])):
+            if (check_credentials(username, password)):
                 new_ses = Session(username=username)
             if new_ses:
                 self._session = new_ses
@@ -411,8 +416,7 @@ def handle_mail_auth(rocket):
             or method != 'plain':
         return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
 
-    if (pwdhash := db.usr_pwdhashfor_username(username)[0]) is None \
-            or not bcrypt.checkpw(encode(password), encode(pwdhash[0])):
+    if not check_credentials(username, password):
         return rocket.raw_respond(HTTPStatus.UNAUTHORIZED)
 
     return rocket.raw_respond(HTTPStatus.OK)
