@@ -3,7 +3,6 @@ FROM alpine:3.19 AS build
 RUN apk update && apk upgrade && apk add \
 	python3-dev \
 	py3-pip \
-	sqlite \
 	build-base \
 	libffi-dev \
 	envsubst \
@@ -19,7 +18,8 @@ COPY . /orbit
 WORKDIR /orbit
 
 RUN mkdir -p /var/orbit/ && \
-	sqlite3 /var/orbit/orbit.db ".read init-db.sql" && \
+	source /radius-venv/bin/activate && \
+	./db.py \
 	:
 
 ARG orbit_version_info
