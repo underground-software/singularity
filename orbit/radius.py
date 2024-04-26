@@ -462,14 +462,17 @@ def handle_register(rocket):
     if not (student_id := rocket.body_args_query('student_id')):
         rocket.msg('you must provide a student id')
         return form_respond()
-    if not (registration_data := db.reg_get_and_del_by_stuid(student_id)[0]):
+    query = (db.Registration
+             .delete()
+             .where(db.Registration.student_id == student_id)
+             .returning(db.Registration))
+    if not (registration := next(iter(query.execute()), None)):
         rocket.msg('no such student')
         return form_respond()
-    (username, password) = registration_data
     rocket.msg('welcome to the classroom')
     return rocket.respond((register_response % {
-        'username': username,
-        'password': password,
+        'username': registration.username,
+        'password': registration.password,
     }))
 
 
