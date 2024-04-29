@@ -70,6 +70,14 @@ curl --url "https://$SINGULARITY_HOSTNAME/login" \
 # Check that we can create a user
 orbit/warpdrive.sh -u user -i 1234 -n
 
+# Check that login fails after user creation but before registration
+curl --url "https://$SINGULARITY_HOSTNAME/login" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --data "username=user&password=pass" \
+  | tee test/login_fail_no_reg \
+  | grep "msg = authentication failure"
+
 # Check that registration fails with incorrect student id
 curl --url "https://$SINGULARITY_HOSTNAME/register" \
   --unix-socket ./socks/https.sock \
