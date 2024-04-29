@@ -249,3 +249,6 @@ curl --url "https://$SINGULARITY_HOSTNAME/_matrix/client/r0/login" \
       }" \
   | tee test/matrix_login_invalid \
   | grep '{"errcode":"M_FORBIDDEN","error":"Invalid username or password"}'
+
+# Check that we can withdraw a student
+orbit/warpdrive.sh -u user -w
