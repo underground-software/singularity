@@ -322,6 +322,19 @@ curl --url "https://$SINGULARITY_HOSTNAME/login" \
   | tee test/delete_session_login_fail \
   | grep "msg = welcome, please login"
 
+# We expect that these commands will fail so putting ! in front makes
+# succeeding an error and failing a success as far as set -e is concerned
+
+# Verify that we cannot create a student with duplicate name
+(! orbit/warpdrive.sh -u user -i 12345 -n 2>&1 \
+  | tee test/create_duplicate_username \
+  | grep "cannot create user with duplicate field")
+
+# Verify that we cannot create a student with duplicate id
+(! orbit/warpdrive.sh -u foo -i 1234 -n 2>&1 \
+  | tee test/create_duplicate_id \
+  | grep "cannot create user with duplicate field")
+
 # Check that we can withdraw a student
 orbit/warpdrive.sh -u user -w
 
