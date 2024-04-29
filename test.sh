@@ -342,3 +342,18 @@ orbit/warpdrive.sh -u user -w
 orbit/warpdrive.sh -r \
   | tee test/roster_withdrawn_empty \
   | diff /dev/stdin <(echo "Users:")
+
+# Verify that we cannot delete a user a second time
+(! orbit/warpdrive.sh -u foo -w 2>&1 \
+  | tee test/withdrawl_nou \
+  | grep "no such user")
+
+# Verify that we cannot reset password of nonexistent user
+(! orbit/warpdrive.sh -u foo -c 2>&1 \
+  | tee test/clear_nou \
+  | grep "no such user")
+
+# Verify that we cannot force log out a user with no sessions
+(! orbit/warpdrive.sh -u foo -d 2>&1 \
+  | tee test/logout_nou \
+  | grep "No sessions belonging to that user found")
