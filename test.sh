@@ -281,6 +281,35 @@ curl --url "https://$SINGULARITY_HOSTNAME/_matrix/client/r0/login" \
   | tee test/matrix_login_invalid \
   | grep '{"errcode":"M_FORBIDDEN","error":"Invalid username or password"}'
 
+# Check that we can reset a student's password
+orbit/warpdrive.sh -u user -c
+
+# Check that login fails with their old creds after their password is cleared
+curl --url "https://$SINGULARITY_HOSTNAME/login" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --data "username=user&password=${REGISTER_PASS}" \
+  | tee test/clear_login_fail \
+  | grep "msg = authentication failure"
+
+# Check that re-registration succeeds
+curl --url "https://$SINGULARITY_HOSTNAME/register" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --data "student_id=1234" \
+  | tee test/clear_reregister \
+  | grep "msg = welcome to the classroom"
+
+REREGISTER_PASS="$(sed -nr 's/.*Password: ([^<]*).*/\1/p' < test/clear_reregister | tr -d '\n')"
+
+# Check that login succeeds with new credentials
+curl --url "https://$SINGULARITY_HOSTNAME/login" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --data "username=user&password=${REREGISTER_PASS}" \
+  | tee test/clear_login_success \
+  | grep "msg = user authenticated by password"
+
 # Check that we can withdraw a student
 orbit/warpdrive.sh -u user -w
 
