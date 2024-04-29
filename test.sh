@@ -116,9 +116,35 @@ curl --url "https://$SINGULARITY_HOSTNAME/login" \
 curl --url "https://$SINGULARITY_HOSTNAME/login" \
   --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
+  --cookie-jar test/login_cookies \
   --data "username=user&password=${REGISTER_PASS}" \
   | tee test/login_success \
   | grep "msg = user authenticated by password"
+
+# Check that login page recognizes cookie
+curl --url "https://$SINGULARITY_HOSTNAME/login" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --cookie test/login_cookies \
+  | tee test/login_cookie \
+  | grep "msg = user authenticated by token"
+
+# Check that logout works
+curl --url "https://$SINGULARITY_HOSTNAME/logout" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --location \
+  --cookie test/login_cookies \
+  | tee test/logout \
+  | grep "msg = welcome, please login"
+
+# Verify that cookie is no longer valid
+curl --url "https://$SINGULARITY_HOSTNAME/login" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --cookie test/login_cookies \
+  | tee test/login_stale_cookie \
+  | grep "msg = welcome, please login"
 
 # Check that the user can get the empty list of email on the server
 curl --url "pop3s://$SINGULARITY_HOSTNAME" \
