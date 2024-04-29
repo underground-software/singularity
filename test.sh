@@ -51,6 +51,11 @@ CURL_OPTS=( \
 --no-progress-meter \
 )
 
+# Check that list of users (roster) is empty
+orbit/warpdrive.sh -r \
+  | tee test/roster_empty \
+  | diff /dev/stdin <(echo "Users:")
+
 # Check that registration fails before user creation
 curl --url "https://$SINGULARITY_HOSTNAME/register" \
   --unix-socket ./socks/https.sock \
@@ -69,6 +74,11 @@ curl --url "https://$SINGULARITY_HOSTNAME/login" \
 
 # Check that we can create a user
 orbit/warpdrive.sh -u user -i 1234 -n
+
+# Check that list of users has new user
+orbit/warpdrive.sh -r \
+  | tee test/roster_after_creation \
+  | diff /dev/stdin <(printf "Users:\nuser, None, 1234\n")
 
 # Check that login fails after user creation but before registration
 curl --url "https://$SINGULARITY_HOSTNAME/login" \
@@ -95,6 +105,12 @@ curl --url "https://$SINGULARITY_HOSTNAME/register" \
   | grep "msg = welcome to the classroom"
 
 REGISTER_PASS="$(sed -nr 's/.*Password: ([^<]*).*/\1/p' < test/register_success | tr -d '\n')"
+
+# Check that list of users has updated password hash
+# (bcrypt hash will contain a $, but obviously `None` will not)
+orbit/warpdrive.sh -r \
+  | tee test/roster_after_registration \
+  | grep "user, .*\$.*, 1234"
 
 # Check that registration fails when student id is used for a second time
 curl --url "https://$SINGULARITY_HOSTNAME/register" \
@@ -267,3 +283,8 @@ curl --url "https://$SINGULARITY_HOSTNAME/_matrix/client/r0/login" \
 
 # Check that we can withdraw a student
 orbit/warpdrive.sh -u user -w
+
+# Check that list of users (roster) is empty after withdrawal
+orbit/warpdrive.sh -r \
+  | tee test/roster_withdrawn_empty \
+  | diff /dev/stdin <(echo "Users:")
