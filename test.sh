@@ -112,6 +112,11 @@ curl --url "https://$SINGULARITY_HOSTNAME/login" \
   | tee test/login_fail_invalid \
   | grep "msg = authentication failure"
 
+# Check that list of sessions is empty
+orbit/warpdrive.sh -l \
+  | tee test/sessions_empty \
+  | diff /dev/stdin <(echo "Sessions:")
+
 # Check that login succeeds when credentials are valid
 curl --url "https://$SINGULARITY_HOSTNAME/login" \
   --unix-socket ./socks/https.sock \
@@ -120,6 +125,11 @@ curl --url "https://$SINGULARITY_HOSTNAME/login" \
   --data "username=user&password=${REGISTER_PASS}" \
   | tee test/login_success \
   | grep "msg = user authenticated by password"
+
+# Check that list of sessions contains new session
+orbit/warpdrive.sh -l \
+  | tee test/sessions_logged_in \
+  | grep "user"
 
 # Check that login page recognizes cookie
 curl --url "https://$SINGULARITY_HOSTNAME/login" \
@@ -137,6 +147,11 @@ curl --url "https://$SINGULARITY_HOSTNAME/logout" \
   --cookie test/login_cookies \
   | tee test/logout \
   | grep "msg = welcome, please login"
+
+# Check that list of sessions is empty after logging out
+orbit/warpdrive.sh -l \
+  | tee test/sessions_logged_out_empty \
+  | diff /dev/stdin <(echo "Sessions:")
 
 # Verify that cookie is no longer valid
 curl --url "https://$SINGULARITY_HOSTNAME/login" \
