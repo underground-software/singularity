@@ -306,9 +306,21 @@ REREGISTER_PASS="$(sed -nr 's/.*Password: ([^<]*).*/\1/p' < test/clear_reregiste
 curl --url "https://$SINGULARITY_HOSTNAME/login" \
   --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
+  --cookie-jar test/new_login_cookies \
   --data "username=user&password=${REREGISTER_PASS}" \
   | tee test/clear_login_success \
   | grep "msg = user authenticated by password"
+
+# Force log out user
+orbit/warpdrive.sh -u user -d
+
+# Verify that cookie is no longer valid after force logout
+curl --url "https://$SINGULARITY_HOSTNAME/login" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --cookie test/new_login_cookies \
+  | tee test/delete_session_login_fail \
+  | grep "msg = welcome, please login"
 
 # Check that we can withdraw a student
 orbit/warpdrive.sh -u user -w
