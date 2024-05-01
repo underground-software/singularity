@@ -80,7 +80,7 @@ def do_validate_creds(args):
 
 def do_change_password(args):
     need(args, u=True, p=True)
-    new_hash = do_bcrypt_hash(args, get=True)
+    new_hash = do_bcrypt_hash(args)
     query = (db.User
              .update({db.User.pwdhash: new_hash})
              .where(db.User.username == args.username))
@@ -99,19 +99,15 @@ def do_delete_user(args):
     print(args.username)
 
 
-def do_bcrypt_hash(args, get=False):
+def do_bcrypt_hash(args):
     need(args, p=True)
-    res = str(bcrypt.hashpw(bytes(args.password, "UTF-8"),
-                            bcrypt.gensalt()), "UTF-8")
-    if get:
-        return res
-    else:
-        print(res)
+    return bcrypt.hashpw(args.password.encode('utf-8'),
+                         bcrypt.gensalt()).decode('utf-8')
 
 
 def do_newuser(args):
     need(args, u=True, p=True)
-    new_hash = do_bcrypt_hash(args, get=True)
+    new_hash = do_bcrypt_hash(args)
     try:
         db.User.create(username=args.username, pwdhash=new_hash,
                        student_id=args.studentid)
@@ -176,7 +172,7 @@ def hyperspace_main(raw_args):
                          dest='do', const=do_delete_user)
     actions.add_argument('-b', '--bcrypthash', action='store_const',
                          help='Generate bcrypt hash from supplied password',
-                         dest='do', const=do_bcrypt_hash)
+                         dest='do', const=lambda args: print(do_bcrypt_hash(args)))  # NOQA: E501
     actions.add_argument('-l', '--listsessions', action='store_const',
                          help='List of all known sessions (some could be invalid)',  # NOQA: E501
                          dest='do', const=do_list_sessions)
