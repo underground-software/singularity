@@ -445,13 +445,6 @@ form_register = """
 """.strip()
 
 
-register_response = """
-<h1>Save these credentials, you will not be able to access them again</h1><br>
-<h3>Username: %(username)s</h1><br>
-<h3>Password: %(password)s</h1><br>
-""".strip()
-
-
 def handle_register(rocket):
     def form_respond():
         return rocket.respond(form_register)
@@ -468,10 +461,10 @@ def handle_register(rocket):
         rocket.msg('no such student')
         return form_respond()
     rocket.msg('welcome to the classroom')
-    return rocket.respond((register_response % {
-        'username': registration.username,
-        'password': registration.password,
-    }))
+    return rocket.respond(f'''
+    <h1>Save these credentials, you will not be able to access them again</h1><br>
+    <h3>Username: {registration.username}</h3><br>
+    <h3>Password: {registration.password}</h3><br>''')
 
 
 def handle_cgit(rocket):
