@@ -170,9 +170,6 @@ def hyperspace_main(raw_args):
     actions.add_argument('-w', '--withdrawuser', action='store_const',
                          help='Delete ("withdraw") the supplied username',
                          dest='do', const=do_delete_user)
-    actions.add_argument('-b', '--bcrypthash', action='store_const',
-                         help='Generate bcrypt hash from supplied password',
-                         dest='do', const=lambda args: print(do_bcrypt_hash(args)))  # NOQA: E501
     actions.add_argument('-l', '--listsessions', action='store_const',
                          help='List of all known sessions (some could be invalid)',  # NOQA: E501
                          dest='do', const=do_list_sessions)
