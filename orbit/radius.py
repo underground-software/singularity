@@ -436,18 +436,15 @@ def handle_dashboard(rocket):
     return handle_stub(rocket, ['dashboard in development, check back later'])
 
 
-form_register = """
+def handle_register(rocket):
+    def form_respond():
+        return rocket.respond('''
     <form id="register" method="post" action="/register">
         <label for="student_id">Student ID:</label>
         <input name="student_id" type="text" id="student_id" /><br />
         <button type="submit">Submit</button>
-    </form>
-""".strip()
+    </form>''')
 
-
-def handle_register(rocket):
-    def form_respond():
-        return rocket.respond(form_register)
     if rocket.method != 'POST':
         return form_respond()
     if not (student_id := rocket.body_args_query('student_id')):
