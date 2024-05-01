@@ -142,8 +142,6 @@ def hyperspace_main(raw_args):
     parser.add_argument('-p', '--password', help='Password to operate with')
     parser.add_argument('-i', '--studentid', help='Student ID to operate with')
     parser.add_argument('-t', '--token', help='Token to operate with')
-    parser.add_argument('-e', '--exercise',
-                        help='Assignment/Exercise to operate with')
 
     actions = parser.add_mutually_exclusive_group()
     actions.add_argument('-r', '--roster', action='store_const',
