@@ -104,9 +104,6 @@ def hyperspace_main(raw_args):
     actions.add_argument('-n', '--newuser', action='store_const',
                          help='Create a new user from supplied credentials',
                          dest='do', const=do_newuser)
-    actions.add_argument('-d', '--dropsession', action='store_const',
-                         help='Drop any existing valid session for supplied username',  # NOQA: E501
-                         dest='do', const=do_drop_session)
     actions.add_argument('-m', '--mutatepassword', action='store_const',
                          help='Change password for supplied username to supplied password',  # NOQA: E501
                          dest='do', const=do_change_password)
@@ -116,6 +113,9 @@ def hyperspace_main(raw_args):
     actions.add_argument('-l', '--listsessions', action='store_const',
                          help='List of all known sessions (some could be invalid)',  # NOQA: E501
                          dest='do', const=do_list_sessions)
+    actions.add_argument('-d', '--dropsession', action='store_const',
+                         help='Drop any existing valid session for supplied username',  # NOQA: E501
+                         dest='do', const=do_drop_session)
 
     args = parser.parse_args(raw_args)
     if (args.do):
