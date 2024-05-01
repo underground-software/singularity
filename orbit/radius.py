@@ -332,10 +332,16 @@ form_welcome_template = """
             <input class="logout" type="button" onclick="location.href='/logout';" value="Logout" />
         </form>
     </div>
-""".strip()
+""".strip()  # NOQA: 501
 
-form_login = """
-    <form id="login" method="post" action="/login%(target_redir)s">
+
+def login_form(target_location=None):
+    if target_location is not None:
+        target_redir = f'?target={target_location}'
+    else:
+        target_redir = ''
+    return f'''
+    <form id="login" method="post" action="/login{target_redir}">
         <label for="username">Username:<br /></label>
         <input name="username" type="text" id="username" />
     <br />
@@ -344,8 +350,7 @@ form_login = """
     <br />
         <button type="submit">Submit</button>
     </form>
-    <h3>Need an account? Register <a href="/register">here</a></h3><br>
-""".strip()
+    <h3>Need an account? Register <a href="/register">here</a></h3><br>'''
 
 
 def cookie_info_table(session):
@@ -374,12 +379,11 @@ def handle_login(rocket):
             rocket.headers += [('Location', target)]
             return rocket.raw_respond(HTTPStatus.SEE_OTHER)
         elif target:
-            return rocket.respond(form_login % ({'target_redir':
-                                                 f'?target={target}'}))
+            return rocket.respond(login_form(target_location=target))
         elif welcome:
             return rocket.respond(mk_form_welcome(rocket.session))
         else:
-            return rocket.respond(form_login % ({'target_redir': ''}))
+            return rocket.respond(login_form())
 
     if rocket.session:
         rocket.msg(f'{rocket.username} authenticated by token')
