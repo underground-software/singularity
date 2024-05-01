@@ -5,8 +5,8 @@ RUN apk update && apk upgrade && apk add \
 	envsubst \
 	;
 
-COPY . /orbit
-WORKDIR /orbit
+COPY . /usr/local/share/orbit
+WORKDIR /usr/local/share/orbit
 
 RUN mkdir -p /var/orbit/ && \
 	./db.py \
@@ -30,9 +30,9 @@ RUN apk update && apk upgrade && apk add \
 	cgit \
 	;
 
-WORKDIR /orbit
+WORKDIR /usr/local/share/orbit
 
-COPY --from=build /orbit /orbit
+COPY --from=build /usr/local/share/orbit /usr/local/share/orbit
 COPY --from=orbit_docs_source . ./docs
 COPY --from=build /var/orbit /var/orbit
 COPY --from=orbit_singularity_git_dir . /var/git/singularity
