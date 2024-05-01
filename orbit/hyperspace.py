@@ -16,13 +16,11 @@ def errx(msg):
     exit(1)
 
 
-def need(a, u=False, p=False, t=False):
+def need(a, u=False, p=False):
     if u and a.username is None:
         errx("Need username. Bye.")
     if p and a.password is None:
         errx("Need password. Bye.")
-    if t and a.token is None:
-        errx("Need token. Bye.")
 
 
 def nou(u):
@@ -36,16 +34,6 @@ def do_query_username(args):
     print(f'Username        : {user.username}\n'
           f'Hashed Password : {user.pwdhash}\n'
           f'Student ID      : {user.student_id}')
-
-
-def do_validate_token(args):
-    need(args, t=True)
-
-    ses = db.Session.get_or_none(db.Session.token == args.token)
-    if ses:
-        print(ses.username)
-    else:
-        print('null')
 
 
 def do_drop_session(args):
@@ -141,7 +129,6 @@ def hyperspace_main(raw_args):
     parser.add_argument('-u', '--username', help='Username to operate with')
     parser.add_argument('-p', '--password', help='Password to operate with')
     parser.add_argument('-i', '--studentid', help='Student ID to operate with')
-    parser.add_argument('-t', '--token', help='Token to operate with')
 
     actions = parser.add_mutually_exclusive_group()
     actions.add_argument('-r', '--roster', action='store_const',
@@ -150,9 +137,6 @@ def hyperspace_main(raw_args):
     actions.add_argument('-n', '--newuser', action='store_const',
                          help='Create a new user from supplied credentials',
                          dest='do', const=do_newuser)
-    actions.add_argument('-s', '--session', action='store_const',
-                         help='Check valitity of supplied token',
-                         dest='do', const=do_validate_token)
     actions.add_argument('-d', '--dropsession', action='store_const',
                          help='Drop any existing valid session for supplied username',  # NOQA: E501
                          dest='do', const=do_drop_session)
