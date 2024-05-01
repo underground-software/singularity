@@ -49,7 +49,7 @@ COPY --from=build /etc/cgit /etc/cgit
 
 COPY cgitrc /etc/cgitrc
 
-RUN chown -R 100:100 /orbit /var/orbit /var/git
+RUN chown -R 100:100 /var/orbit
 
 USER 100:100
 
