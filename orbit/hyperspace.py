@@ -27,15 +27,6 @@ def nou(u):
     errx(f'no such user "{u}". Bye.')
 
 
-def do_query_username(args):
-    need(args, u=True)
-    if not (user := db.User.get_or_none(db.User.username == args.username)):
-        nou(args.username)
-    print(f'Username        : {user.username}\n'
-          f'Hashed Password : {user.pwdhash}\n'
-          f'Student ID      : {user.student_id}')
-
-
 def do_drop_session(args):
     need(args, u=True)
     query = (db.Session
@@ -155,9 +146,6 @@ def hyperspace_main(raw_args):
     actions.add_argument('-l', '--listsessions', action='store_const',
                          help='List of all known sessions (some could be invalid)',  # NOQA: E501
                          dest='do', const=do_list_sessions)
-    actions.add_argument('-q', '--queryuser', action='store_const',
-                         help='Get information about supplied username if valid',  # NOQA: E501
-                         dest='do', const=do_query_username)
 
     args = parser.parse_args(raw_args)
     if (args.do):
