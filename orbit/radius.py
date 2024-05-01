@@ -3,13 +3,13 @@
 # it's all one things now
 
 import bcrypt
-import hashlib
 import html
 import markdown
 import os
 import re
 import subprocess
 import sys
+import secrets
 from http import HTTPStatus, cookies
 from datetime import datetime, timedelta
 from urllib.parse import parse_qs, urlparse
@@ -141,8 +141,7 @@ class Session:
             return self.token
 
     def mk_hash(self, username):
-        hash_input = username + str(datetime.now())
-        return hashlib.sha256(encode(hash_input)).hexdigest()
+        return secrets.token_hex()
 
     def expired(self):
         if (expiry := self.expiry) is None or datetime.utcnow() > expiry:
