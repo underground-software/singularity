@@ -30,13 +30,10 @@ def do_drop_session(args):
     need(args, u=True)
     query = (db.Session
              .delete()
-             .where(db.Session.username == args.username)
-             .returning(db.Session))
+             .where(db.Session.username == args.username))
 
-    if ses := next(iter(query.execute()), None):
-        print(ses.username)
-    else:
-        print('null')
+    if query.execute() < 1:
+        errx('No session belonging to that user found')
 
 
 def do_change_password(args):
@@ -47,7 +44,6 @@ def do_change_password(args):
              .where(db.User.username == args.username))
     if query.execute() < 1:
         nou(args.username)
-    print(f'credentials(username: {args.username}, password:{args.password})')
 
 
 def do_delete_user(args):
@@ -57,7 +53,6 @@ def do_delete_user(args):
              .where(db.User.username == args.username))
     if query.execute() < 1:
         nou(args.username)
-    print(args.username)
 
 
 def do_bcrypt_hash(args):

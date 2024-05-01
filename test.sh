@@ -146,15 +146,9 @@ curl --url "https://$SINGULARITY_HOSTNAME/login" \
   | grep "msg = authentication failure"
 
 # Check that we can create a user
-orbit/warpdrive.sh \
-  -u user -p pass -i 1234 -n \
-  | tee test/create_user \
-  | grep "credentials(username: user, password:pass)"
+orbit/warpdrive.sh -u user -p pass -i 1234 -n
 
-add_cleanup "orbit/warpdrive.sh \
-  -u user -w \
-  | tee test/delete_user \
-  | grep 'user'"
+add_cleanup "orbit/warpdrive.sh -u user -w"
 
 # Check that registration fails with incorrect student id
 curl --url "https://$SINGULARITY_HOSTNAME/register" \
