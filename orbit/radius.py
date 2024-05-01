@@ -27,10 +27,6 @@ with open(config.doc_header) as header:
 # === utilities ===
 
 
-def encode(dat): return bytes(dat, "UTF-8")
-def decode(dat): return str(dat, "UTF-8")
-
-
 def mk_table(row_list, indentation_level=0):
     # Create <th> elements in first row, and <td> elements afterwards
     first_row = True
@@ -54,7 +50,7 @@ def mk_table(row_list, indentation_level=0):
 def check_credentials(username, password):
     if not (user := db.User.get_or_none(db.User.username == username)):
         return False
-    return bcrypt.checkpw(encode(password), encode(user.pwdhash))
+    return bcrypt.checkpw(password.encode(), user.pwdhash.encode())
 
 
 # === user session handling ===
@@ -275,7 +271,7 @@ class Rocket:
 
     def body_args_query(self, key):
         return html.escape(
-            decode(self.body_args.get(encode(key), [b''])[0]))
+            self.body_args.get(key.encode(), [b''])[0].decode())
 
     def queries_query(self, key):
         return self.queries.get(key, [''])[0]
@@ -319,7 +315,7 @@ class Rocket:
     def respond(self, response_document):
         self.headers += [('Content-Type', 'text/html')]
         response_document = self.format_html(response_document)
-        return self.raw_respond(HTTPStatus.OK, encode(response_document))
+        return self.raw_respond(HTTPStatus.OK, response_document.encode())
 
 
 form_welcome_template = """
