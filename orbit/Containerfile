@@ -40,6 +40,8 @@ RUN apk update && apk upgrade && apk add \
 	cgit \
 	;
 
+WORKDIR /orbit
+
 COPY --from=build /orbit /orbit
 COPY --from=build /var/orbit /var/orbit
 COPY --from=build /var/git /var/git
@@ -53,4 +55,4 @@ USER 100:100
 
 EXPOSE 9098
 
-CMD uwsgi --plugin python3,http /orbit/radius.ini
+CMD uwsgi --plugin python3,http ./radius.ini
