@@ -12,7 +12,4 @@ require "${DOCKER}"
 
 CONTAINER=${CONTAINER:-singularity_orbit_1}
 
-cat <<EOF | $DOCKER exec -i "$CONTAINER" /bin/sh
-. /radius-venv/bin/activate
-/orbit/hyperspace.py $@
-EOF
+$DOCKER exec -i "$CONTAINER" /orbit/hyperspace.py "$@"

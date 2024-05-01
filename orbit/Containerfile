@@ -1,24 +1,14 @@
 FROM alpine:3.19 AS build
 
 RUN apk update && apk upgrade && apk add \
-	python3-dev \
-	py3-pip \
-	build-base \
-	libffi-dev \
+	py3-peewee \
 	envsubst \
 	;
-
-COPY requirements.txt /requirements.txt
-RUN python3 -m venv /radius-venv && \
-	source /radius-venv/bin/activate && \
-	pip install -r requirements.txt && \
-	:
 
 COPY . /orbit
 WORKDIR /orbit
 
 RUN mkdir -p /var/orbit/ && \
-	source /radius-venv/bin/activate && \
 	./db.py \
 	:
 
@@ -42,22 +32,25 @@ COPY --from=orbit_repos_source . /etc/cgit
 FROM alpine:3.19 AS orbit
 
 RUN apk update && apk upgrade && apk add \
-	python3 \
+	py3-bcrypt \
+	py3-peewee \
+	py3-markdown \
+	uwsgi-python3 \
+	uwsgi-http \
 	cgit \
 	;
 
 COPY --from=build /orbit /orbit
-COPY --from=build /radius-venv /radius-venv
 COPY --from=build /var/orbit /var/orbit
 COPY --from=build /var/git /var/git
 COPY --from=build /etc/cgit /etc/cgit
 
 COPY cgitrc /etc/cgitrc
 
-RUN chown -R 100:100 /orbit /radius-venv /var/orbit /var/git
+RUN chown -R 100:100 /orbit /var/orbit /var/git
 
 USER 100:100
 
 EXPOSE 9098
 
-CMD /bin/sh -c "source /radius-venv/bin/activate && uwsgi /orbit/radius.ini"
+CMD uwsgi --plugin python3,http /orbit/radius.ini
