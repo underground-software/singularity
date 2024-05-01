@@ -121,7 +121,7 @@ def hyperspace_main(raw_args):
     if (args.do):
         args.do(args)
     else:
-        print("Nothing to do. Tip: -h")
+        parser.print_help()
 
 
 if __name__ == "__main__":
