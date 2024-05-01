@@ -328,15 +328,11 @@ form_welcome_template = """
          </div>
     </div>
     <div class="logout_buttons">
-    {}
+        <form id="logout">
+            <input class="logout" type="button" onclick="location.href='/logout';" value="Logout" />
+        </form>
     </div>
 """.strip()
-
-form_welcome_buttons = """
-    <form id="logout">
-        <input class="logout" type="button" onclick="location.href='/logout';" value="Logout" />
-    </form>
-""".strip()  # NOQA: E501
 
 form_login = """
     <form id="login" method="post" action="/login%(target_redir)s">
@@ -362,8 +358,7 @@ def cookie_info_table(session):
 
 
 def mk_form_welcome(session):
-    return form_welcome_template.format(cookie_info_table(session),
-                                        form_welcome_buttons)
+    return form_welcome_template.format(cookie_info_table(session))
 
 
 def handle_login(rocket):
