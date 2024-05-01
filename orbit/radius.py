@@ -141,12 +141,6 @@ class Session:
 
         return [('Set-Cookie', cookie_val)]
 
-    def __repr__(self):
-        return f'Session({self.token},{self.username},{self.expiry})'
-
-    def __str__(self):
-        return repr(self)
-
 
 class Rocket:
     """
@@ -200,16 +194,6 @@ class Rocket:
         # HTTP response headers specified by list of string pairs
         self.headers = []
         self.body_args = self.read_body_args_wsgi()
-
-    def __repr__(self):
-        return (
-            f'Rocket({self.method},{self.path_info},{self.queries},'
-            f'{str(self.headers)},{self._msg},{str(self.session)},'
-            f'{self.body_args})'
-        )
-
-    def __str__(self):
-        return repr(self)
 
     def msg(self, msg):
         self._msg = msg
