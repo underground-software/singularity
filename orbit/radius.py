@@ -27,26 +27,6 @@ with open(config.doc_header) as header:
 # === utilities ===
 
 
-def mk_table(row_list, indentation_level=0):
-    # Create <th> elements in first row, and <td> elements afterwards
-    first_row = True
-    def indenter(adjustment): return '\t' * (indentation_level + adjustment)
-
-    output = f'{indenter(0)}<table>'
-    for row in row_list:
-        output += f'{indenter(1)}<tr>'
-        for column in row:
-            if first_row:
-                output += f'{indenter(2)}<th>{column}</th>'
-                first_row = False
-            else:
-                output += f'{indenter(2)}<td>{column}</td>'
-        output += f'{indenter(1)}</tr>'
-    output += f'{indenter(0)}</table>'
-
-    return output
-
-
 def check_credentials(username, password):
     if not (user := db.User.get_or_none(db.User.username == username)):
         return False
@@ -318,10 +298,16 @@ class Rocket:
         return self.raw_respond(HTTPStatus.OK, response_document.encode())
 
 
-form_welcome_template = """
+def mk_form_welcome(session):
+    return f'''
     <div class="logout_info">
         <div class="logout_left">
-        {}
+            <table>
+                <tr><th>Cookie Key</th><th>Value</th></tr>
+                <tr><td>Token</td><td>{session.token}</td></tr>
+                <tr><td>User</td><td>{session.username}</td></tr>
+                <tr><td>Expiry</td><td>{session.expiry_fmt()}</td></tr>
+            </table>
         </div>
         <div class="logout_right">
             <h5> Welcome!</h5>
@@ -331,8 +317,7 @@ form_welcome_template = """
         <form id="logout">
             <input class="logout" type="button" onclick="location.href='/logout';" value="Logout" />
         </form>
-    </div>
-""".strip()  # NOQA: 501
+    </div>'''
 
 
 def login_form(target_location=None):
@@ -351,19 +336,6 @@ def login_form(target_location=None):
         <button type="submit">Submit</button>
     </form>
     <h3>Need an account? Register <a href="/register">here</a></h3><br>'''
-
-
-def cookie_info_table(session):
-    return mk_table([
-        ('Cookie Key', 'Value'),
-        ('Token', session.token),
-        ('User', session.username),
-        ('Expiry', session.expiry_fmt()),
-        ('Remaining Validity', str(session.expiry - datetime.utcnow()))])
-
-
-def mk_form_welcome(session):
-    return form_welcome_template.format(cookie_info_table(session))
 
 
 def handle_login(rocket):
