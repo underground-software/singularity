@@ -55,4 +55,4 @@ USER 100:100
 
 EXPOSE 9098
 
-CMD uwsgi --plugin python3,http ./radius.ini
+CMD ["uwsgi", "--plugin", "python,http", "./radius.ini"]
