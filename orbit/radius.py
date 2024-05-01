@@ -223,16 +223,6 @@ class Rocket:
         if session := self.session:
             return session.username
 
-    @property
-    def token(self):
-        if session := self.session:
-            return session.token
-
-    @property
-    def expiry(self):
-        if session := self.session:
-            return session.expiry
-
     def body_args_query(self, key):
         return html.escape(
             self.body_args.get(key.encode(), [b''])[0].decode())
