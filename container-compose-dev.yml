@@ -17,5 +17,5 @@ services:
     volumes:
       - type: bind
         source: ./kdlp.underground.software
-        target: /orbit/docs
+        target: /usr/local/share/orbit/docs
         read_only: true
