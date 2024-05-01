@@ -8,7 +8,6 @@ from datetime import datetime
 
 # internal imports
 import config
-from radius import Session
 
 
 def errx(msg):
@@ -38,12 +37,6 @@ def do_drop_session(args):
         print(ses.username)
     else:
         print('null')
-
-
-def do_create_session(args):
-    need(args, u=True)
-    ses = Session(username=args.username)
-    print(ses.token)
 
 
 def do_validate_creds(args):
@@ -131,9 +124,6 @@ def hyperspace_main(raw_args):
     actions.add_argument('-d', '--dropsession', action='store_const',
                          help='Drop any existing valid session for supplied username',  # NOQA: E501
                          dest='do', const=do_drop_session)
-    actions.add_argument('-c', '--createsession', action='store_const',
-                         help='Create session for supplied username',
-                         dest='do', const=do_create_session)
     actions.add_argument('-v', '--validatecreds', action='store_const',
                          help='Create session for supplied username',
                          dest='do', const=do_validate_creds)
