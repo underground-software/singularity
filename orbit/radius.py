@@ -492,7 +492,7 @@ def handle_cgit(rocket):
                             env=cgit_env)
     so, se = proc.communicate()
     try:
-        outstring = str(so, 'UTF-8')
+        outstring = so.decode()
         begin = outstring.index('\n\n')
         return rocket.respond(outstring[begin+2:])
     except (UnicodeDecodeError, ValueError) as ex:
