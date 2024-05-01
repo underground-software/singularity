@@ -39,17 +39,6 @@ def do_drop_session(args):
         print('null')
 
 
-def do_validate_creds(args):
-    need(args, u=True, p=True)
-    if not (user := db.User.get_or_none(db.User.username == args.username)):
-        nou(args.username)
-    if not bcrypt.checkpw(args.password.encode('utf-8'),
-                          user.pwdhash.encode('utf-8')):
-        print('null')
-        return
-    print(f'credentials(username: {args.username}, password:{args.password})')
-
-
 def do_change_password(args):
     need(args, u=True, p=True)
     new_hash = do_bcrypt_hash(args)
@@ -87,7 +76,6 @@ def do_newuser(args):
             db.Registration.create(username=args.username,
                                    password=args.password,
                                    student_id=args.studentid)
-        do_validate_creds(args)
     except db.peewee.IntegrityError as e:
         errx(f'cannot create user with duplicate field: "{e}"')
 
@@ -124,9 +112,6 @@ def hyperspace_main(raw_args):
     actions.add_argument('-d', '--dropsession', action='store_const',
                          help='Drop any existing valid session for supplied username',  # NOQA: E501
                          dest='do', const=do_drop_session)
-    actions.add_argument('-v', '--validatecreds', action='store_const',
-                         help='Create session for supplied username',
-                         dest='do', const=do_validate_creds)
     actions.add_argument('-m', '--mutatepassword', action='store_const',
                          help='Change password for supplied username to supplied password',  # NOQA: E501
                          dest='do', const=do_change_password)
