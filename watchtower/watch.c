@@ -6,13 +6,29 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+static int inotifyfd;
+
+static struct inotify_event *get_event(void)
+{
+	static char read_buff[1024 * 10], *next = NULL, *end = NULL;
+	if (next >= end) {
+		ssize_t ret = read(inotifyfd, read_buff, sizeof read_buff);
+		if (ret < 0)
+			return NULL;
+		end = read_buff + ret;
+		next = read_buff;
+	}
+	struct inotify_event *evt = (void *)next;
+	next += sizeof(*evt) + evt->len;
+	return evt;
+}
+
 /*
  * argv must contain pairs of paths to directories and paths to executables delimited by spaces
  */
 
 int main (int, char **argv)
 {
-	int inotifyfd;
 	if (0 > (inotifyfd = inotify_init1(IN_CLOEXEC)))
 		err(1, "inotify_init1");
 
@@ -32,20 +48,11 @@ int main (int, char **argv)
 	if(last_watch_desc == -1)
 		errx(1, "no directories provided");
 
-	FILE * inotify_file = fdopen(inotifyfd, "r");
-
 
 	for (;;) {
-		uint8_t _Alignas(struct inotify_event) event_buf[sizeof(struct inotify_event) + NAME_MAX + 1];
-		struct inotify_event *event = (struct inotify_event *)event_buf;
-
-		// read one inotify event header
-		if (1 != fread(event, sizeof *event, 1, inotify_file))
-			err(1, "fread");
-
-		// read the path corresponding to this event
-		if (event->len != fread(event->name, sizeof(char), (size_t)event->len, inotify_file))
-			err(1, "fread");
+		struct inotify_event *event = get_event();
+		if (!event)
+			err(1, "get event");
 
 		//argv has been incremented to point to the end of the array instead of the beginning
 		char **argv_pair = &argv[2 * (event->wd - last_watch_desc)];
