@@ -65,12 +65,14 @@ def do_bcrypt_hash(args):
 
 
 def do_newuser(args):
-    need(args, u=True, p=True)
-    new_hash = do_bcrypt_hash(args)
+    need(args, u=True)
+    new_hash = None
+    if args.password is not None:
+        new_hash = do_bcrypt_hash(args)
     try:
         db.User.create(username=args.username, pwdhash=new_hash,
                        student_id=args.studentid)
-        if args.studentid:
+        if args.studentid and new_hash:
             db.Registration.create(username=args.username,
                                    password=args.password,
                                    student_id=args.studentid)
