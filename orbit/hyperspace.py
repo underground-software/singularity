@@ -81,10 +81,6 @@ def do_newuser(args):
     try:
         db.User.create(username=args.username, pwdhash=new_hash,
                        student_id=args.studentid)
-        if args.studentid and new_hash:
-            db.Registration.create(username=args.username,
-                                   password=args.password,
-                                   student_id=args.studentid)
     except db.peewee.IntegrityError as e:
         errx(f'cannot create user with duplicate field: "{e}"')
 
