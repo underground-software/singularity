@@ -7,3 +7,6 @@ database = '/var/orbit/orbit.db'
 
 # duration of authentication token validity period
 minutes_each_session_token_is_valid = 180
+
+# length in bytes of amount of random data used to generate passwords
+num_bytes_entropy_for_pw = 24
