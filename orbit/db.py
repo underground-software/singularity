@@ -23,11 +23,5 @@ class Session(BaseModel):
     expiry = peewee.FloatField()
 
 
-class Registration(BaseModel):
-    student_id = peewee.TextField(unique=True)
-    username = peewee.TextField(unique=True)
-    password = peewee.TextField()
-
-
 if __name__ == '__main__':
     DB.create_tables(BaseModel.__subclasses__())

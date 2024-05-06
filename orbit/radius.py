@@ -385,13 +385,6 @@ def handle_dashboard(rocket):
 
 
 def find_creds_for_registration(student_id):
-    query = (db.Registration
-             .delete()
-             .where(db.Registration.student_id == student_id)
-             .returning(db.Registration))
-    if registration := next(iter(query.execute()), None):
-        return (registration.username, registration.password)
-
     password = secrets.token_urlsafe(nbytes=config.num_bytes_entropy_for_pw)
     salt = bcrypt.gensalt()
     pwdhash = bcrypt.hashpw(password.encode(), salt).decode()
