@@ -49,6 +49,15 @@ def do_change_password(args):
         nou(args.username)
 
 
+def do_reset_password(args):
+    need(args, u=True)
+    query = (db.User
+             .update({db.User.pwdhash: None})
+             .where(db.User.username == args.username))
+    if query.execute() < 1:
+        nou(args.username)
+
+
 def do_delete_user(args):
     need(args, u=True)
     query = (db.User
@@ -112,6 +121,9 @@ def hyperspace_main(raw_args):
     actions.add_argument('-m', '--mutatepassword', action='store_const',
                          help='Change password for supplied username to supplied password',  # NOQA: E501
                          dest='do', const=do_change_password)
+    actions.add_argument('-c', '--clearpassword', action='store_const',
+                         help='clear password for supplied username so they canot login',  # NOQA: E501
+                         dest='do', const=do_reset_password)
     actions.add_argument('-w', '--withdrawuser', action='store_const',
                          help='Delete ("withdraw") the supplied username',
                          dest='do', const=do_delete_user)
