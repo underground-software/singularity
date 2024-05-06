@@ -594,18 +594,6 @@ static void handle_rcpt(enum state *state)
 			dprintf(CURR_EMAIL_FD, "To: <%.*s@" HOSTNAME ">\r\n", (int)recipient_size, recipient);
 			dprintf(CURR_SESSION_FD, "%.*s ", (int)recipient_size, recipient);
 			*state = RCPT;
-			int assignment_log_fd = openat(base_dir_fd, recipient,
-				O_CLOEXEC | O_DIRECTORY | O_PATH);
-			if(0 > assignment_log_fd)
-				REPLY("250 OK")
-			if(0 > fstat(assignment_log_fd, &statbuf))
-				warn("Unable to stat assignment_log_fd");
-			if(base_dev != statbuf.st_dev)
-				warnx("Logs directory should be stored on the same physical device as the base dir");
-			if(0 > dup3(assignment_log_fd, CURR_SESSION_DIR_FD, O_CLOEXEC))
-				warn("Unable to dup assignment_log_fd into CURR_SESSION_DIR_FD");
-			if(0 > fchown(CURR_EMAIL_FD, statbuf.st_uid, statbuf.st_gid))
-				warn("Unable to chown email to assignment group");
 			REPLY("250 OK")
 		}
 		dprintf(CURR_EMAIL_FD, " , <%.*s@" HOSTNAME ">\r\n", (int)recipient_size, recipient);
