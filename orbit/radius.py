@@ -384,6 +384,16 @@ def handle_dashboard(rocket):
     return handle_stub(rocket, ['dashboard in development, check back later'])
 
 
+def find_creds_for_registration(student_id):
+    query = (db.Registration
+             .delete()
+             .where(db.Registration.student_id == student_id)
+             .returning(db.Registration))
+    if registration := next(iter(query.execute()), None):
+        return (registration.username, registration.password)
+    return None
+
+
 def handle_register(rocket):
     def form_respond():
         return rocket.respond('''
@@ -398,18 +408,15 @@ def handle_register(rocket):
     if not (student_id := rocket.body_args_query('student_id')):
         rocket.msg('you must provide a student id')
         return form_respond()
-    query = (db.Registration
-             .delete()
-             .where(db.Registration.student_id == student_id)
-             .returning(db.Registration))
-    if not (registration := next(iter(query.execute()), None)):
+    if not (creds := find_creds_for_registration(student_id)):
         rocket.msg('no such student')
         return form_respond()
+    username, password = creds
     rocket.msg('welcome to the classroom')
     return rocket.respond(f'''
     <h1>Save these credentials, you will not be able to access them again</h1><br>
-    <h3>Username: {registration.username}</h3><br>
-    <h3>Password: {registration.password}</h3><br>''')
+    <h3>Username: {username}</h3><br>
+    <h3>Password: {password}</h3><br>''')
 
 
 def handle_cgit(rocket):
