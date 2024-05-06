@@ -30,4 +30,4 @@ USER 100:100
 
 ARG LISTEN_PORT=465
 EXPOSE ${LISTEN_PORT}
-ENTRYPOINT ["/usr/local/bin/tcp_server", "/usr/local/bin/smtp", "smtp", "/mnt/email_data"]
+ENTRYPOINT ["/usr/local/bin/tcp_server", "/usr/local/bin/smtp", "smtp", "/mnt/email_data/mail", "/mnt/email_data/logs"]

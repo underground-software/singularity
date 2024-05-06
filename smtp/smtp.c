@@ -395,7 +395,7 @@ static char *now(void)
 #define CURR_EMAIL_FD 10
 #define CURR_SESSION_FD 11
 
-static int base_dir_fd, mail_dir_fd, log_dir_fd;
+static int mail_dir_fd, log_dir_fd;
 static char line_buff[LINE_LIMIT + 1];
 static size_t line_size;
 static char from_address[LINE_LIMIT + 1];
@@ -406,8 +406,6 @@ static char message_id[256];
 static size_t message_id_size;
 static char recipient[256];
 static size_t recipient_size;
-static struct stat statbuf;
-static dev_t base_dev;
 
 static void close_log_session(void)
 {
@@ -526,7 +524,7 @@ static void handle_mail(enum state *state)
 		if(!case_insensitive_expect(line_size, line_buff, from_address_size, from_address))
 			REPLY("550 Not authorized to send mail as that user")
 		{
-			int fd = openat(base_dir_fd, ".", O_TMPFILE | O_RDWR, 0640);
+			int fd = openat(mail_dir_fd, ".", O_TMPFILE | O_RDWR, 0640);
 			if(0 > fd)
 				REPLY("451 Unable allocate descriptor to store message")
 			//if the fd number we got happens to already be CURR_EMAIL_FD, we don't need to do anything
@@ -766,28 +764,17 @@ int main(int argc, char **argv)
 		errx(1, "File descriptor needed for current email (number " STRINGIZE(CURR_EMAIL_FD) ") is already in use");
 	if(0 <= fcntl(CURR_SESSION_FD, F_GETFD) || errno != EBADF)
 		errx(1, "File descriptor needed for current session log (number " STRINGIZE(CURR_SESSION_FD) ") is already in use");
-	if(argc != 2)
-		errx(1, "Usage: %s <output directory>", argv[0]);
-	base_dir_fd = openat(AT_FDCWD, argv[1], O_CLOEXEC | O_DIRECTORY | O_PATH);
-	if(0 > base_dir_fd)
-		err(1, "Unable to open output directory %s", argv[1]);
-	if(0 > fstat(base_dir_fd, &statbuf))
-		err(1, "Unable to stat base_dir_fd");
-	base_dev = statbuf.st_dev;
-	mail_dir_fd = openat(base_dir_fd, "mail", O_CLOEXEC | O_DIRECTORY | O_PATH);
+
+	if(argc != 3)
+		errx(1, "Usage: %s <mail directory> <log directory>", argv[0]);
+
+	mail_dir_fd = openat(AT_FDCWD, argv[1], O_CLOEXEC | O_DIRECTORY | O_PATH);
 	if(0 > mail_dir_fd)
 		err(1, "Unable to open mail directory");
-	if(0 > fstat(mail_dir_fd, &statbuf))
-		err(1, "Unable to stat mail_dir_fd");
-	if(base_dev != statbuf.st_dev)
-		errx(1, "Mail directory should be stored on the same physical device as the base dir");
-	log_dir_fd = openat(base_dir_fd, "logs", O_CLOEXEC | O_DIRECTORY | O_PATH);
+
+	log_dir_fd = openat(AT_FDCWD, argv[2], O_CLOEXEC | O_DIRECTORY | O_PATH);
 	if(0 > log_dir_fd)
 		err(1, "Unable to open logs directory");
-	if(0 > fstat(log_dir_fd, &statbuf))
-		err(1, "Unable to stat log_dir_fd");
-	if(base_dev != statbuf.st_dev)
-		errx(1, "Logs directory should be stored on the same physical device as the base dir");
 
 	SEND("220 SMTP server ready");
 	for(enum state state = START; state != QUIT;)
