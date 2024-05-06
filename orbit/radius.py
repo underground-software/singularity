@@ -391,6 +391,19 @@ def find_creds_for_registration(student_id):
              .returning(db.Registration))
     if registration := next(iter(query.execute()), None):
         return (registration.username, registration.password)
+
+    password = secrets.token_urlsafe(nbytes=config.num_bytes_entropy_for_pw)
+    salt = bcrypt.gensalt()
+    pwdhash = bcrypt.hashpw(password.encode(), salt).decode()
+
+    query = (db.User
+             .update({db.User.pwdhash: pwdhash})
+             .where((db.User.student_id == student_id) &
+                    db.User.pwdhash.is_null())
+             .returning(db.User))
+    if (user := next(iter(query.execute()), None)):
+        return user.username, password
+
     return None
 
 
