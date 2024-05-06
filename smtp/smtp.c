@@ -592,6 +592,7 @@ static void handle_rcpt(enum state *state)
 		if(*state < RCPT) //first recipient (only ever one iteration)
 		{
 			dprintf(CURR_EMAIL_FD, "To: <%.*s@" HOSTNAME ">\r\n", (int)recipient_size, recipient);
+			dprintf(CURR_SESSION_FD, "%.*s ", (int)recipient_size, recipient);
 			*state = RCPT;
 			int assignment_log_fd = openat(base_dir_fd, recipient,
 				O_CLOEXEC | O_DIRECTORY | O_PATH);
