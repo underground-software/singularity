@@ -394,7 +394,6 @@ static char *now(void)
 
 #define CURR_EMAIL_FD 10
 #define CURR_SESSION_FD 11
-#define CURR_SESSION_DIR_FD 12
 
 static int base_dir_fd, mail_dir_fd, log_dir_fd;
 static char line_buff[LINE_LIMIT + 1];
@@ -418,9 +417,9 @@ static void close_log_session(void)
 	if((-(size_t)1) == unique_string(sizeof filename, filename))
 		errx(1, "Unable to generate unique filename");
 #ifdef LINKAT_NOT_BROKEN
-	if(0 > linkat(CURR_SESSION_FD, "", CURR_SESSION_DIR_FD, filename, AT_EMPTY_PATH))
+	if(0 > linkat(CURR_SESSION_FD, "", log_dir_fd, filename, AT_EMPTY_PATH))
 #else
-	if(0 > linkat(AT_FDCWD, "/proc/self/fd/" STRINGIZE(CURR_SESSION_FD), CURR_SESSION_DIR_FD, filename, AT_SYMLINK_FOLLOW))
+	if(0 > linkat(AT_FDCWD, "/proc/self/fd/" STRINGIZE(CURR_SESSION_FD), log_dir_fd, filename, AT_SYMLINK_FOLLOW))
 #endif
 		warn("Unable to link existing session into filesystem");
 	close(CURR_SESSION_FD);
@@ -428,9 +427,7 @@ static void close_log_session(void)
 
 static void open_log_session(void)
 {
-	if(0 > dup3(log_dir_fd, CURR_SESSION_DIR_FD, O_CLOEXEC))
-		warn("Unable to duplicate log_dir_fd into CURR_SESSION_DIR_FD");
-	int fd = openat(base_dir_fd, ".", O_TMPFILE | O_RDWR, 0640);
+	int fd = openat(log_dir_fd, ".", O_TMPFILE | O_RDWR, 0640);
 	if(0 > fd)
 		warn("Unable allocate descriptor to store log");
 	if(CURR_SESSION_FD != fd)
@@ -769,8 +766,6 @@ int main(int argc, char **argv)
 		errx(1, "File descriptor needed for current email (number " STRINGIZE(CURR_EMAIL_FD) ") is already in use");
 	if(0 <= fcntl(CURR_SESSION_FD, F_GETFD) || errno != EBADF)
 		errx(1, "File descriptor needed for current session log (number " STRINGIZE(CURR_SESSION_FD) ") is already in use");
-	if(0 <= fcntl(CURR_SESSION_DIR_FD, F_GETFD) || errno != EBADF)
-		errx(1, "File descriptor needed for session output directory (number " STRINGIZE(CURR_SESSION_DIR_FD) ") is already in use");
 	if(argc != 2)
 		errx(1, "Usage: %s <output directory>", argv[0]);
 	base_dir_fd = openat(AT_FDCWD, argv[1], O_CLOEXEC | O_DIRECTORY | O_PATH);
