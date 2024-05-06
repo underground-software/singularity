@@ -30,6 +30,8 @@ with open(config.doc_header) as header:
 def check_credentials(username, password):
     if not (user := db.User.get_or_none(db.User.username == username)):
         return False
+    if not user.pwdhash:
+        return False
     return bcrypt.checkpw(password.encode(), user.pwdhash.encode())
 
 
