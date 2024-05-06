@@ -146,7 +146,7 @@ curl --url "https://$SINGULARITY_HOSTNAME/login" \
   | grep "msg = authentication failure"
 
 # Check that we can create a user
-orbit/warpdrive.sh -u user -p pass -i 1234 -n
+orbit/warpdrive.sh -u user -i 1234 -n
 
 add_cleanup "orbit/warpdrive.sh -u user -w"
 
@@ -165,6 +165,8 @@ curl --url "https://$SINGULARITY_HOSTNAME/register" \
   --data "student_id=1234" \
   | tee test/register_success \
   | grep "msg = welcome to the classroom"
+
+REGISTER_PASS="$(sed -nr 's/.*Password: ([^<]*).*/\1/p' < test/register_success | tr -d '\n')"
 
 # Check that registration fails when student id is used for a second time
 curl --url "https://$SINGULARITY_HOSTNAME/register" \
@@ -186,7 +188,7 @@ curl --url "https://$SINGULARITY_HOSTNAME/login" \
 curl --url "https://$SINGULARITY_HOSTNAME/login" \
   --unix-socket ./socks/https.sock \
   "${CURL_OPTS[@]}" \
-  --data "username=user&password=pass" \
+  --data "username=user&password=${REGISTER_PASS}" \
   | tee test/login_success \
   | grep "msg = user authenticated by password"
 
@@ -194,7 +196,7 @@ curl --url "https://$SINGULARITY_HOSTNAME/login" \
 curl --url "pop3s://$SINGULARITY_HOSTNAME" \
   --unix-socket ./socks/pop3s.sock \
   "${CURL_OPTS[@]}" \
-  --user user:pass \
+  --user "user:${REGISTER_PASS}" \
   | tee test/pop_get_empty \
   | diff <(printf '\r\n') /dev/stdin
 
@@ -207,7 +209,7 @@ curl --url "smtps://$SINGULARITY_HOSTNAME" \
   --mail-from "user@$SINGULARITY_HOSTNAME" \
   --mail-rcpt "other@$SINGULARITY_HOSTNAME" \
   --upload-file - \
-  --user 'user:pass' <<EOF
+  --user "user:${REGISTER_PASS}" <<EOF
 Subject: Message Subject$CR
 $CR
 To whom it may concern,$CR
@@ -224,7 +226,7 @@ add_cleanup nuke_mail
 curl --url "pop3s://$SINGULARITY_HOSTNAME/1" \
   --unix-socket ./socks/pop3s.sock \
   "${CURL_OPTS[@]}" \
-  --user user:pass \
+  --user "user:${REGISTER_PASS}" \
   | tee test/pop_get_message \
   | grep "Bottom text"
 
@@ -239,7 +241,7 @@ curl --url "https://$SINGULARITY_HOSTNAME/_matrix/client/r0/login" \
   --data "{
         \"type\": \"m.login.password\",
         \"user\": \"@user:$SINGULARITY_HOSTNAME\",
-        \"password\": \"pass\"
+        \"password\": \"${REGISTER_PASS}\"
       }" \
   | tee test/matrix_login_success \
   | grep "access_token"
