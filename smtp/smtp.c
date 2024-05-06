@@ -770,11 +770,11 @@ int main(int argc, char **argv)
 
 	mail_dir_fd = openat(AT_FDCWD, argv[1], O_CLOEXEC | O_DIRECTORY | O_PATH);
 	if(0 > mail_dir_fd)
-		err(1, "Unable to open mail directory");
+		err(1, "Unable to open mail directory: %s", argv[1]);
 
 	log_dir_fd = openat(AT_FDCWD, argv[2], O_CLOEXEC | O_DIRECTORY | O_PATH);
 	if(0 > log_dir_fd)
-		err(1, "Unable to open logs directory");
+		err(1, "Unable to open logs directory: %s", argv[2]);
 
 	SEND("220 SMTP server ready");
 	for(enum state state = START; state != QUIT;)
