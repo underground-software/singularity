@@ -8,7 +8,7 @@ services:
         target: /etc/nginx/include.d
         read_only: true
       - type: bind
-        source: ./kdlp.underground.software
+        source: ./docs
         target: /var/www/html
         read_only: true
   orbit:
@@ -16,6 +16,6 @@ services:
       - label:disable
     volumes:
       - type: bind
-        source: ./kdlp.underground.software
+        source: ./docs
         target: /usr/local/share/orbit/docs
         read_only: true
