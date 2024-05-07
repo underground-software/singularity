@@ -452,6 +452,19 @@ def handle_cgit(rocket):
         return rocket.raw_respond(HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
+def handle_error(rocket):
+    error_num_str = rocket.queries_query('num')
+    try:
+        error_num = int(error_num_str)
+        error = HTTPStatus(error_num)
+    except ValueError as e:
+        print(f'invalid query passed to handle error {e}', file=sys.stderr)
+        return rocket.raw_respond(HTTPStatus.INTERNAL_SERVER_ERROR)
+    error_description = (f'<h1>HTTP ERROR {error.value}: '
+                         f'{error.name.upper().replace("_", " ")}</h1>')
+    return rocket.respond(error_description)
+
+
 def handle_md(rocket, md_path):
     with open(md_path, 'r', newline='') as f:
         content = markdown.markdown(f.read(),
@@ -491,5 +504,7 @@ def application(env, SR):
         return handle_dashboard(rocket)
     elif re.match("^/cgit", rocket.path_info):
         return handle_cgit(rocket)
+    elif re.match("^/error", rocket.path_info):
+        return handle_error(rocket)
     else:
         return handle_try_md(rocket)
