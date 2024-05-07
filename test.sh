@@ -51,10 +51,59 @@ CURL_OPTS=( \
 --no-progress-meter \
 )
 
+# Check basic markdown functionality
+curl --url "https://$SINGULARITY_HOSTNAME/index.md" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  | tee test/markdown_index \
+  | grep '<h3>TL;DR:</h3>'
+
+# Check invalid markdown page
+curl --url "https://$SINGULARITY_HOSTNAME/not_real_index.md" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --no-fail \
+  | tee test/markdown_nonexistant \
+  | grep '<h1>HTTP ERROR 404: NOT FOUND</h1>'
+
+# Check innapropriate method
+curl --url "https://$SINGULARITY_HOSTNAME/index.md" \
+  --unix-socket ./socks/https.sock \
+  --request DELETE \
+  "${CURL_OPTS[@]}" \
+  --no-fail \
+  | tee test/method_innapropriate \
+  | grep '<h1>HTTP ERROR 405: METHOD NOT ALLOWED</h1>'
+
+# Check post to get only path
+curl --url "https://$SINGULARITY_HOSTNAME/index.md" \
+  --unix-socket ./socks/https.sock \
+  --data "foo=bar" \
+  "${CURL_OPTS[@]}" \
+  --no-fail \
+  | tee test/method_post_to_get_only \
+  | grep '<h1>HTTP ERROR 405: METHOD NOT ALLOWED</h1>'
+
 # Check that list of users (roster) is empty
 orbit/warpdrive.sh -r \
   | tee test/roster_empty \
   | diff /dev/stdin <(echo "Users:")
+
+# Check that registration form can be accessed
+curl --url "https://$SINGULARITY_HOSTNAME/register" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  | tee test/register_fail_no_user \
+  | grep "Student ID:"
+
+# Check that submitting form without student id fails
+curl --url "https://$SINGULARITY_HOSTNAME/register" \
+  --unix-socket ./socks/https.sock \
+  --data \
+  "${CURL_OPTS[@]}" \
+  | tee test/register_fail_no_user \
+  | grep "msg = you must provide a student id"
+
 
 # Check that registration fails before user creation
 curl --url "https://$SINGULARITY_HOSTNAME/register" \
@@ -154,6 +203,69 @@ curl --url "https://$SINGULARITY_HOSTNAME/login" \
   --cookie test/login_cookies \
   | tee test/login_cookie \
   | grep "msg = user authenticated by token"
+
+# Check that logged in only pages work
+curl --url "https://$SINGULARITY_HOSTNAME/cgit" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --cookie test/login_cookies \
+  | tee test/logged_in_cgit \
+  | grep "Kernel Development Learning Pipeline Git Repositories"
+
+# Check that login target redirect works
+curl --url "https://$SINGULARITY_HOSTNAME/login?target=/cgit" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --cookie test/login_cookies \
+  --location \
+  | tee test/logged_in_cgit \
+  | grep "Kernel Development Learning Pipeline Git Repositories"
+
+# Check that login target blocks other hosts
+curl --url "https://$SINGULARITY_HOSTNAME/login?target=https://example.com" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --cookie test/login_cookies \
+  --location \
+  --no-fail \
+  | tee test/login_block_csrf \
+  | grep "<h1>HTTP ERROR 400: BAD REQUEST</h1>"
+
+# Verify that cgit plain view block works
+curl --url "https://$SINGULARITY_HOSTNAME/cgit/Singularity/plain" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --cookie test/login_cookies \
+  --no-fail \
+  | tee test/cgit_plain_block \
+  | grep '<h1>HTTP ERROR 404: NOT FOUND</h1>'
+
+
+
+
+# Check that accessing logged in only pages without cookie redirects to login
+curl --url "https://$SINGULARITY_HOSTNAME/dashboard" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --cookie test/login_cookies \
+  | tee test/logged_in_dashboard \
+  | grep "dashboard in development, check back later"
+
+curl --url "https://$SINGULARITY_HOSTNAME/cgit" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --location \
+  | tee test/unlogged_in_cgit \
+  | grep "msg = welcome, please login"
+
+
+curl --url "https://$SINGULARITY_HOSTNAME/dashboard" \
+  --unix-socket ./socks/https.sock \
+  "${CURL_OPTS[@]}" \
+  --location \
+  | tee test/unlogged_in_dashboard \
+  | grep "msg = welcome, please login"
+
 
 # Check that logout works
 curl --url "https://$SINGULARITY_HOSTNAME/logout" \
@@ -357,3 +469,11 @@ orbit/warpdrive.sh -r \
 (! orbit/warpdrive.sh -u foo -d 2>&1 \
   | tee test/logout_nou \
   | grep "No sessions belonging to that user found")
+
+orbit/warpdrive.sh \
+  | tee test/warpdrive_usage \
+  | grep 'usage:'
+
+(! orbit/warpdrive.sh -n ) 2>&1 \
+  | tee test/warpdrive_missing_args \
+  | grep 'Need username and student id. Bye.'

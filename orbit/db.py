@@ -24,4 +24,4 @@ class Session(BaseModel):
 
 
 if __name__ == '__main__':
-    DB.create_tables(BaseModel.__subclasses__())
+    DB.create_tables(BaseModel.__subclasses__())  # pragma: no cover

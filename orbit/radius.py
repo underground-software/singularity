@@ -357,7 +357,7 @@ def handle_mail_auth(rocket):
     if not username or not password \
             or protocol not in ('smtp', 'pop3') \
             or method != 'plain':
-        return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
+        return rocket.raw_respond(HTTPStatus.BAD_REQUEST)  # pragma: no cover
 
     if not check_credentials(username, password):
         return rocket.raw_respond(HTTPStatus.UNAUTHORIZED)
@@ -464,7 +464,7 @@ def handle_cgit(rocket):
         outstring = so.decode()
         begin = outstring.index('\n\n')
         return rocket.respond(outstring[begin+2:])
-    except (UnicodeDecodeError, ValueError) as ex:
+    except (UnicodeDecodeError, ValueError) as ex:  # pragma: no cover
         print(f'cgit: Error {type(ex)} at path_info "{cgit_env["PATH_INFO"]}"'
               f' and query string "{cgit_env["QUERY_STRING"]}"',
               file=sys.stderr)

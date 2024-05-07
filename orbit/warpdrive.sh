@@ -12,4 +12,4 @@ require "${DOCKER}"
 
 CONTAINER=${CONTAINER:-singularity_orbit_1}
 
-$DOCKER exec -i "$CONTAINER" ./hyperspace.py "$@"
+$DOCKER exec -i "$CONTAINER" ./coverage_wrapper.sh "$@"

@@ -17,6 +17,7 @@ RUN test -n "$orbit_version_info" || (echo 'version info is not set' && false) &
 FROM alpine:3.19 AS orbit
 
 RUN apk update && apk upgrade && apk add \
+	py3-coverage \
 	py3-bcrypt \
 	py3-peewee \
 	py3-markdown \
