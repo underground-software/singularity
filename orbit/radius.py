@@ -17,6 +17,7 @@ from urllib.parse import parse_qs, urlparse
 # === internal imports & constants ===
 import config
 import db
+import denis.db
 
 sec_per_min = 60
 min_per_ses = config.minutes_each_session_token_is_valid
@@ -381,7 +382,25 @@ def handle_stub(rocket, more=[]):
 def handle_dashboard(rocket):
     if not rocket.session:
         return rocket.raw_respond(HTTPStatus.UNAUTHORIZED)
-    return handle_stub(rocket, ['dashboard in development, check back later'])
+
+    submissions = (denis.db.Submission.select()
+                   .where(denis.db.Submission.user == rocket.session.username)
+                   .order_by(- denis.db.Submission.timestamp))
+
+    def submission_fields(sub):
+        return (datetime.fromtimestamp(sub.timestamp).isoformat(),
+                sub.assignment, sub.submission_id, sub.status)
+
+    # Split data from Submission table into values for HTML table
+    table_data = [[f'<td>{val}</td>' for val in submission_fields(sub)]
+                  for sub in submissions]
+    table_content = '</tr>\n<tr>'.join(''.join(row) for row in table_data)
+
+    return rocket.respond(f"""<table>
+<tr><th>Timestamp</th><th>Assignment</th><th>Submission ID</th><th>Status</th></tr>
+<tr>{table_content}</tr>
+</table>
+""")
 
 
 def find_creds_for_registration(student_id):
