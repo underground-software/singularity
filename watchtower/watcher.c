@@ -2,6 +2,7 @@
 #include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/inotify.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -25,6 +26,10 @@ static struct inotify_event *get_event(void)
 
 int main(int argc, char **argv)
 {
+	// we need to explicitly handle sigterm because when running as PID 1 inside
+	// a container all signals without handlers (except SIG{KILL,STP}) are ignored
+	signal(SIGTERM, _Exit);
+
 	if (0 > (inotifyfd = inotify_init1(IN_CLOEXEC)))
 		err(1, "inotify_init1");
 
