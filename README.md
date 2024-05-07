@@ -54,6 +54,11 @@ Section 2: Singularity Setup
     git clone https://github.com/underground-software/singularity.git
     ```
 
+0. Create an empty `docs` folder
+    ```sh
+    mkdir docs
+    ```
+
 0. Build the containers.
 
     ```sh
@@ -97,7 +102,14 @@ Section 2: Singularity Setup
     podman-compose down
     ```
 
-Section 3: Development Configuration for Live Editiing
+Section 3: Adding web content
+
+By default no static web content is included with the repo. It goes in the docs folder.
+Markdown files with the `.md` extension will be converted to html automatically.
+Other static content will be served as is. You can edit `index.md` in docs to set the
+homepage that shows up when you visit the website without specifying a path.
+
+Section 4: Development Configuration for Live Editiing
 --
 
 By default, your edits to the web content in the repo are not reflected on the live website until you rebuild the container.
@@ -111,7 +123,7 @@ export COMPOSE_FILE="container-compose.yml:container-compose-dev.yml"
 
 For security reasons, be sure to `unset COMPOSE_FILE` before production deployment.
 
-Section 4: Production Deployment
+Section 5: Production Deployment
 --
 
 To publish an instance of singularity on the internet, you must configure the hostname.
