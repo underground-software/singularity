@@ -101,13 +101,32 @@ services:
     networks:
       - submatrix
       - orbit
+  denis:
+    build:
+      context: denis
+      dockerfile: Containerfile
+      additional_contexts:
+        - watchtower_source=./watchtower
+    volumes:
+      - type: volume
+        source: email
+        target: /mnt/email_data
+        read_only: true
+      - type: volume
+        source: grades-db
+        target: /var/lib/denis
+        read_only: false
+    networks:
+      - denis
 networks:
   orbit:
   smtp:
   pop:
   submatrix:
+  denis:
 volumes:
   ssl-certs:
   email:
   orbit-db:
+  grades-db:
   submatrix-data:
