@@ -40,6 +40,7 @@ services:
         - orbit_singularity_git_dir=./.git
         - orbit_docs_source=./docs
         - orbit_repos_source=./cgit_repos
+        - denis_source=./denis
       target: orbit
       args:
         orbit_version_info: "singularity ${SINGULARITY_VERSION} ${SINGULARITY_DEPLOYMENT_STATUS} https://github.com/underground-software/singularity"
@@ -48,6 +49,10 @@ services:
         source: orbit-db
         target: /var/orbit
         read_only: false
+      - type: volume
+        source: grades-db
+        target: /var/lib/denis
+        read_only: true
     networks:
       - orbit
   smtp:
