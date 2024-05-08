@@ -25,12 +25,14 @@ int main (int, char **argv)
 		// parse and validate the timestamp
 		char * endptr;
 		intmax_t parsed_timestamp = strtoimax(timestr, &endptr, 10);
+		if (endptr == timestr || *endptr != '\0')
+			errx(1, "failed to parse timestamp \"%s\"", timestr);
 
-		// if the downcasted value of parsed_timestamp differs from the original, we lost information in
-		// the cast and the value is too big for a time_t
-		if (endptr == timestr || *endptr != '\0' || parsed_timestamp != (intmax_t)(time_t)parsed_timestamp)
-			errx(1, "failed to parse argv entry \"%s\"", timestr);
 		time_t timestamp = (time_t)parsed_timestamp;
+		// if the downcasted value of timestamp differs from parsed_timestamp when cast back
+		// to an intmax_t we lost information in the cast and the value is too big for a time_t
+		if (parsed_timestamp != timestamp)
+			errx(1, "provided value \"%s\" is outside the valid range for time_t", timestr);
 
 		// block until the time in the past
 		for (time_t now = time(NULL); now < timestamp; now = time(NULL)) {
