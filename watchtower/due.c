@@ -36,17 +36,7 @@ int main(int argc, char **argv)
 		read(timerfd, &(uint64_t){}, sizeof (uint64_t));
 	}
 
-	// run the program as a child process and wait for it to finish
-	pid_t pid = fork();
-	if (0 > pid)
-		err(1, "fork failed");
-	if (!pid && 0 > execl(exe, exe, (char *)NULL))
-		err(1, "failed to exec '%s'", exe);
-	int childret;
-	if (waitpid(pid, &childret, 0) == -1)
-		err(1, "waitpid failed");
-	if (!WIFEXITED(childret) || WEXITSTATUS(childret))
-		warnx("child (%s) exited abnormally with status=%d", exe, childret);
-
-	return 0;
+	// exec the program
+	execl(exe, exe, (char *)NULL);
+	err(1, "failed to exec '%s'", exe);
 }
