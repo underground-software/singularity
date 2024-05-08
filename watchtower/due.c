@@ -1,4 +1,5 @@
 #include <err.h>
+#include <errno.h>
 #include <inttypes.h>
 #include <sys/timerfd.h>
 #include <sys/wait.h>
@@ -16,9 +17,14 @@ int main(int argc, char **argv)
 	char *timestr = argv[1], *exe = argv[2], *endptr;
 
 	// parse and validate the timestamp
+	errno = 0;
 	intmax_t parsed_timestamp = strtoimax(timestr, &endptr, 10);
 	if (endptr == timestr || *endptr != '\0')
 		errx(1, "failed to parse timestamp \"%s\"", timestr);
+
+	// how to properly check for a range error with a strtoXXX function
+	if ((parsed_timestamp == INTMAX_MAX || parsed_timestamp == INTMAX_MIN) && errno == ERANGE)
+		errx(1, "provided value \"%s\" is outside the valid range for time_t", timestr);
 
 	time_t timestamp = (time_t)parsed_timestamp;
 	// if the downcasted value of timestamp differs from parsed_timestamp when cast back
