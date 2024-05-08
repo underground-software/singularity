@@ -36,20 +36,19 @@ int main(int argc, char **argv)
 	if (0 > watch_desc)
 		err(1, "failed to create watch for directory: '%s'", dir);
 
+	//avoid needing to reap children
+	signal(SIGCHLD, SIG_IGN);
 	for (;;) {
 		struct inotify_event *event = get_event();
 		if (!event)
 			err(1, "get event");
 
-		pid_t pid = fork();
-		if (0 > pid)
+		switch (fork()) {
+		case -1:
 			err(1, "fork failed");
-		if (!pid && 0 > execl(exe, exe, dir, event->name, (char *)NULL))
-			err(1, "failed to exec '%s'", exe);
-		int childret;
-		if (waitpid(pid, &childret, 0) == -1)
-			err(1, "waitpid failed");
-		if (!WIFEXITED(childret) || WEXITSTATUS(childret))
-			warnx("child (%s) exited abnormally with status=%d", exe, childret);
+		case 0:
+			execl(exe, exe, dir, event->name, (char *)NULL);
+			err(1, "failed to exec \"%s\"", exe);
+		}
 	}
 }
