@@ -12,6 +12,7 @@ FROM alpine:3.19 AS denis
 
 RUN apk add \
 	py3-peewee \
+	py3-gitpython \
 	;
 
 
