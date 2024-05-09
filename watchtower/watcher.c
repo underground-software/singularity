@@ -49,6 +49,8 @@ int main(int argc, char **argv)
 		case 0:
 			execl(exe, exe, dir, event->name, (char *)NULL);
 			err(1, "failed to exec \"%s\"", exe);
+		default:
+			break;
 		}
 	}
 }
