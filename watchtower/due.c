@@ -35,11 +35,11 @@ int main(int argc, char **argv)
 	// block until the time in the past
 	while (time(NULL) < timestamp) {
 		if (0 > timerfd_settime(timerfd, TFD_TIMER_ABSTIME | TFD_TIMER_CANCEL_ON_SET,
-				&(struct itimerspec){.it_value.tv_sec = timestamp }, NULL))
+					&(struct itimerspec){ .it_value.tv_sec = timestamp }, NULL))
 			err(1, "timerfd_settime");
 
 		// block until timer expires or clock jumps weirdly
-		read(timerfd, &(uint64_t){}, sizeof (uint64_t));
+		read(timerfd, &(uint64_t){}, sizeof(uint64_t));
 	}
 
 	// exec the program
