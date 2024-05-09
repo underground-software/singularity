@@ -12,8 +12,8 @@ int main(int argc, char **argv)
 	if (0 > (timerfd = timerfd_create(CLOCK_REALTIME, TFD_CLOEXEC)))
 		err(1, "timerfd_create");
 
-	if (argc != 3)
-		errx(1, "Usage: %s timestamp script", argv[0]);
+	if (argc < 3)
+		errx(1, "Usage: %s timestamp script ...args", argv[0]);
 	char *timestr = argv[1], *exe = argv[2], *endptr;
 
 	// parse and validate the timestamp
@@ -43,6 +43,6 @@ int main(int argc, char **argv)
 	}
 
 	// exec the program
-	execl(exe, exe, (char *)NULL);
+	execv(exe, argv + 2);
 	err(1, "failed to exec '%s'", exe);
 }
