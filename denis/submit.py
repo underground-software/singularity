@@ -13,6 +13,8 @@ ASSIGNMENT_LIST = ["introductions",
 
 MAIL_DIR_ABSPATH = "/mnt/email_data/mail"
 
+REMOTE_URL = "http://host.containers.internal:3366/cgi-bin/git-receive-pack/grading.git"  # NOQA: E501
+
 
 def try_or_false(do, exc):
     try:
@@ -90,6 +92,10 @@ def main(argv):
         else:
             sub.status = 'patchset applies'
         sub.save()
+
+        repo.create_tag(logfile)
+        repo.create_remote("origin", REMOTE_URL)
+        repo.git.push("origin", tags=True)
 
 
 if __name__ == "__main__":
