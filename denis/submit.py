@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
+import collections
 import db
 from pathlib import Path
 import sys
 import git
 import tempfile
+import time
 
 ASSIGNMENT_LIST = ["introductions",
                    "exercise0", "exercise1", "exercise2",
@@ -25,6 +27,14 @@ def try_or_false(do, exc):
         return False
 
 
+Email = collections.namedtuple('Email', ['rcpt', 'msg_id'])
+
+
+def email_from_log_line(line):
+    recipient, message_id = line.split()
+    return Email(rcpt=recipient, msg_id=message_id)
+
+
 # We assume inputs are correct as a precondition
 # Otherwise we simply crash
 def main(argv):
@@ -32,29 +42,41 @@ def main(argv):
     with open(Path(logdir) / logfile) as log:
         header, *email_lines = log.readlines()
     timestamp, user = header.split()
-    emails = [line.split() for line in email_lines]
-    recpts = {email[0] for email in emails}
-    email_files = [email[1] for email in emails]
 
-    if len(recpts) != 1:
-        return
-    (to,) = recpts
+    emails = [email_from_log_line(line) for line in email_lines]
 
-    if to not in ASSIGNMENT_LIST:
+    # no emails in session, just logged in and didn't send anything
+    if not emails:
+        return 0
+
+    cover_letter, *patches = emails
+
+    # if the 'cover letter' is not addressed to
+    # an assignment inbox, this email session
+    # isn't a patchset at all
+    if cover_letter.rcpt not in ASSIGNMENT_LIST:
         # TODO process peer review
         return 0
 
-    # At this point, we know this is an assignment submission
-    sub = db.Submission.create(submission_id=logfile, assignment=to,
-                               timestamp=timestamp, user=user, status="new")
+    sub = db.Submission(submission_id=logfile, assignment=cover_letter.rcpt,
+                        timestamp=timestamp, user=user, status='new')
 
-    if len(email_files) < 2:
-        sub.status = "no cover letter"
+    # only one email
+    if not patches:
+        # only one patch, but addressed to an
+        # assignment inbox. This cannot be valid.
+        sub.status = 'no patches or no cover letter'
         sub.save()
         return 0
 
-    coverletter_file, *patch_files = email_files
-    # TODO process cover letter
+    mis_addressed_patches = [str(i+1) for i, patch in enumerate(patches)
+                             if patch.rcpt != cover_letter.rcpt]
+
+    if mis_addressed_patches:
+        sub.status = (f'patch(es) {",".join(mis_addressed_patches)} '
+                      f'not addressed to {cover_letter.rcpt}')
+        sub.save()
+        return 0
 
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.init(repo_path)
@@ -63,8 +85,8 @@ def main(argv):
                        "user.email=daemon@denis.d"]
         git_am_args = ["git", *author_args, "am"]
         whitespace_errors = []
-        for i, patch_file in enumerate(patch_files):
-            patch_abspath = str(maildir / patch_file)
+        for i, patch in enumerate(patches):
+            patch_abspath = str(maildir / patch.msg_id)
 
             # Try and apply and fail if there are whitespace errors
             def do_git_am(extra_args=[]):
@@ -83,12 +105,13 @@ def main(argv):
                 continue
 
             # If we still fail, the patch does not apply
-            sub.status = f'patch #{i+1} failed to apply'
+            sub.status = f'patch {i+1} failed to apply'
             sub.save()
             return 0
 
         if whitespace_errors:
-            sub.status = f'whitespace error patche(s) {",".join(whitespace_errors)}'  # NOQA: E501
+            sub.status = ('whitespace error patch(es) '
+                          f'{",".join(whitespace_errors)}')
         else:
             sub.status = 'patchset applies'
         sub.save()
