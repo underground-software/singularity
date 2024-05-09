@@ -24,11 +24,24 @@ static struct inotify_event *get_event(void)
 	return evt;
 }
 
-int main(int argc, char **argv)
+static void setup_signal_handler(void)
 {
+	struct sigaction child_act;
+	if(0 > sigaction(SIGCHLD, NULL, &child_act))
+		err(1, "failed to get default signal action for SIGCHLD (this is a bug)");
+	child_act.sa_flags |= SA_NOCLDWAIT; //avoid needing to reap children processes
+	if(0 > sigaction(SIGCHLD, &child_act, NULL))
+		err(1, "failed to set signal action for SIGCHLD (this is a bug)");
 	// we need to explicitly handle sigterm because when running as PID 1 inside
 	// a container all signals without handlers (except SIG{KILL,STP}) are ignored
-	signal(SIGTERM, _Exit);
+	if(SIG_ERR == signal(SIGTERM, _Exit))
+		err(1, "failed to set handler for SIGTERM (this is a bug)");
+}
+
+
+int main(int argc, char **argv)
+{
+	setup_signal_handler();
 
 	if (0 > (inotifyfd = inotify_init1(IN_CLOEXEC)))
 		err(1, "inotify_init1");
@@ -41,8 +54,6 @@ int main(int argc, char **argv)
 	if (0 > watch_desc)
 		err(1, "failed to create watch for directory: '%s'", dir);
 
-	//avoid needing to reap children
-	signal(SIGCHLD, SIG_IGN);
 	for (;;) {
 		struct inotify_event *event = get_event();
 		if (!event)
