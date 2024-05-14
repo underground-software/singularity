@@ -399,6 +399,9 @@ static char *now(void)
 
 #define CURR_EMAIL_FD 10
 #define CURR_SESSION_FD 11
+static char message_id[256];
+static char session_id[256];
+
 
 static int mail_dir_fd, log_dir_fd;
 static char line_buff[LINE_LIMIT + 1];
@@ -407,7 +410,6 @@ static char from_address[LINE_LIMIT + 1];
 static size_t from_address_size;
 static char username[256];
 static size_t username_size;
-static char message_id[256];
 static char recipient[256];
 static size_t recipient_size;
 
@@ -415,12 +417,10 @@ static void close_log_session(void)
 {
 	if(0 > fdatasync(CURR_SESSION_FD))
 		warn("Unable to sync session log to disk");
-	char filename[256];
-	generate_smtp_id(sizeof filename, filename);
 #ifdef LINKAT_NOT_BROKEN
-	if(0 > linkat(CURR_SESSION_FD, "", log_dir_fd, filename, AT_EMPTY_PATH))
+	if(0 > linkat(CURR_SESSION_FD, "", log_dir_fd, session_id, AT_EMPTY_PATH))
 #else
-	if(0 > linkat(AT_FDCWD, "/proc/self/fd/" STRINGIZE(CURR_SESSION_FD), log_dir_fd, filename, AT_SYMLINK_FOLLOW))
+	if(0 > linkat(AT_FDCWD, "/proc/self/fd/" STRINGIZE(CURR_SESSION_FD), log_dir_fd, session_id, AT_SYMLINK_FOLLOW))
 #endif
 		warn("Unable to link existing session into filesystem");
 	close(CURR_SESSION_FD);
@@ -428,6 +428,8 @@ static void close_log_session(void)
 
 static void open_log_session(void)
 {
+	//generate unique session id that will be used as the filename of the log session on disk
+	generate_smtp_id(sizeof session_id, session_id);
 	int fd = openat(log_dir_fd, ".", O_TMPFILE | O_RDWR, 0640);
 	if(0 > fd)
 		warn("Unable allocate descriptor to store log");
