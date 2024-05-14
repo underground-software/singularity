@@ -370,6 +370,8 @@ static bool validate_and_case_fold_email_address(size_t size, char *buff)
 
 static void unique_string(size_t size, char *buf)
 {
+	_Static_assert(sizeof(time_t) <= sizeof(uint64_t), "uint64_t is not big enough to hold time_t values");
+	_Static_assert(sizeof(pid_t) <= sizeof(uint32_t), "uint32_t is not big enough to hold pid_t values");
 	static uint64_t sequence_counter = 0;
 	uint64_t sequence_num = sequence_counter++;
 	uint64_t timestamp = (uint64_t)time(NULL);
