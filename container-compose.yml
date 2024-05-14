@@ -47,7 +47,7 @@ services:
     volumes:
       - type: volume
         source: orbit-db
-        target: /var/orbit
+        target: /var/lib/orbit
         read_only: false
       - type: volume
         source: grades-db

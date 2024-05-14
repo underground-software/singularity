@@ -33,13 +33,13 @@ COPY --from=denis_source . ./denis
 COPY --from=orbit_singularity_git_dir . /var/git/singularity
 COPY --from=orbit_repos_source . /etc/cgit
 
-RUN mkdir -p /var/orbit/ && \
+RUN mkdir -p /var/lib/orbit/ && \
 	./db.py \
 	:
 
 COPY cgitrc /etc/cgitrc
 
-RUN chown -R 100:100 /var/orbit
+RUN chown -R 100:100 /var/lib/orbit
 
 USER 100:100
 
