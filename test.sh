@@ -58,7 +58,7 @@ SINGULARITY_HOSTNAME=${SINGULARITY_HOSTNAME:-"${HOSTNAME_FROM_DOTENV}"}
 ${DOCKER} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem test/ca_cert.pem
 
 nuke_mail() {
-	${DOCKER} run --rm -v singularity_email:/mnt alpine:3.19 sh -c 'rm -f /mnt/mail/* /mnt/logs/*'
+	${DOCKER} run --rm -v singularity_email:/var/lib/email alpine:3.19 sh -c 'rm -f /var/lib/email/mail/* /var/lib/email/logs/*'
 }
 
 # Save original contents of mail volume

@@ -28,8 +28,8 @@ RUN chown -R 100:100 /var/lib/denis
 
 COPY --from=build /watchtower/watcher /usr/local/bin/watcher
 
-VOLUME /mnt/email_data/
+VOLUME /var/lib/email/
 
 USER 100:100
 
-ENTRYPOINT ["/usr/local/bin/watcher", "/mnt/email_data/logs", "submit.py"]
+ENTRYPOINT ["/usr/local/bin/watcher", "/var/lib/email/logs", "submit.py"]

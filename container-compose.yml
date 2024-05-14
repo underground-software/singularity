@@ -68,7 +68,7 @@ services:
     volumes:
       - type: volume
         source: email
-        target: /mnt/email_data
+        target: /var/lib/email
         read_only: false
     networks:
       - smtp
@@ -84,7 +84,7 @@ services:
     volumes:
       - type: volume
         source: email
-        target: /mnt/email_data
+        target: /var/lib/email
         read_only: true
     depends_on:
       - smtp
@@ -115,7 +115,7 @@ services:
     volumes:
       - type: volume
         source: email
-        target: /mnt/email_data
+        target: /var/lib/email
         read_only: true
       - type: volume
         source: grades-db

@@ -12,12 +12,10 @@ COPY . /pop
 
 RUN make -C /pop CC='clang -static'
 
-RUN mkdir -p /mnt/mail
-
 FROM scratch as pop
 
-COPY --from=build /mnt/mail /mnt/mail
-VOLUME /mnt/mail
+VOLUME /var/lib/email
+
 COPY --from=build /tcp_server/tcp_server /usr/local/bin/tcp_server
 COPY --from=build /pop/pop3 /usr/local/bin/pop3
 
@@ -25,4 +23,4 @@ USER 100:100
 
 ARG LISTEN_PORT=995
 EXPOSE ${LISTEN_PORT}
-ENTRYPOINT ["/usr/local/bin/tcp_server", "/usr/local/bin/pop3", "pop3", "/mnt/email_data/mail"]
+ENTRYPOINT ["/usr/local/bin/tcp_server", "/usr/local/bin/pop3", "pop3", "/var/lib/email/mail"]

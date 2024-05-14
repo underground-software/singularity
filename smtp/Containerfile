@@ -15,14 +15,14 @@ RUN test -n "$hostname" || (echo 'hostname is not set' && false)
 
 RUN make -C /smtp CC='clang -static' SRVNAME=$hostname
 
-RUN mkdir -p /mnt/email_data/mail /mnt/email_data/logs && \
-	chown -R 100:100 /mnt/email_data && \
+RUN mkdir -p /var/lib/email/mail /var/lib/email/logs && \
+	chown -R 100:100 /var/lib/email && \
 	:
 
 FROM scratch as smtp
 
-COPY --from=build /mnt /mnt
-VOLUME /mnt/email_data/
+COPY --from=build /var/lib/email /var/lib/email
+VOLUME /var/lib/email/
 COPY --from=build /tcp_server/tcp_server /usr/local/bin/tcp_server
 COPY --from=build /smtp/smtp /usr/local/bin/smtp
 
@@ -30,4 +30,4 @@ USER 100:100
 
 ARG LISTEN_PORT=465
 EXPOSE ${LISTEN_PORT}
-ENTRYPOINT ["/usr/local/bin/tcp_server", "/usr/local/bin/smtp", "smtp", "/mnt/email_data/mail", "/mnt/email_data/logs"]
+ENTRYPOINT ["/usr/local/bin/tcp_server", "/usr/local/bin/smtp", "smtp", "/var/lib/email/mail", "/var/lib/email/logs"]

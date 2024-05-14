@@ -13,7 +13,7 @@ ASSIGNMENT_LIST = ["introductions",
                    "programming0", "programming1", "programming2",
                    "final0", "final1"]
 
-MAIL_DIR_ABSPATH = "/mnt/email_data/mail"
+MAIL_DIR_ABSPATH = "/var/lib/email/mail"
 
 REMOTE_URL = "http://host.containers.internal:3366/cgi-bin/git-receive-pack/grading.git"  # NOQA: E501
 
