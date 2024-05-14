@@ -516,6 +516,10 @@ static void handle_mail(enum state *state)
 	switch(*state)
 	{
 	case LOGIN:
+		message_id_size = unique_string(sizeof message_id, message_id);
+		//this should be impossible
+		if(-(size_t)1 == message_id_size)
+			bail("not enough space for message_id");
 		from_address_size = (size_t)snprintf(from_address, sizeof from_address,
 			" from:<%.*s@" HOSTNAME ">", (int)username_size, username);
 		//this should be impossible
@@ -536,7 +540,6 @@ static void handle_mail(enum state *state)
 					REPLY("451 Unable allocate descriptor to store message")
 			}
 		}
-		message_id_size = unique_string(sizeof message_id, message_id);
 		dprintf(CURR_EMAIL_FD,
 			"Received: by " HOSTNAME " ; %s\r\n"
 			"Message-ID: <%.*s@" HOSTNAME ">\r\nFrom: <%.*s@" HOSTNAME ">\r\n",
