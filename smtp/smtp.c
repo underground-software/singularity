@@ -373,9 +373,16 @@ static void generate_smtp_id(size_t size, char *buf)
 	_Static_assert(sizeof(time_t) <= sizeof(uint64_t), "uint64_t is not big enough to hold time_t values");
 	_Static_assert(sizeof(pid_t) <= sizeof(uint32_t), "uint32_t is not big enough to hold pid_t values");
 	static uint32_t sequence_counter = 0;
+	static uint32_t pid = 0;
+	static uint64_t timestamp = 0;
+	//one time initialization of values that uniquely identify this process
+	if(!pid)
+	{
+		pid = (uint32_t)getpid();
+		timestamp = (uint64_t)time(NULL);
+	}
+
 	uint32_t sequence_num = sequence_counter++;
-	uint64_t timestamp = (uint64_t)time(NULL);
-	uint32_t pid = (uint32_t)getpid();
 	if(!sequence_counter)
 		bail("sequence counter wrapped around. Too many ids used");
 	int ret = snprintf(buf, size, "%016" SCNx64 "%08" SCNx32 "%08" SCNx32,
