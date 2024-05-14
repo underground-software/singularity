@@ -368,11 +368,12 @@ static bool validate_and_case_fold_email_address(size_t size, char *buff)
 	return true;
 }
 
-static void generate_smtp_id(size_t size, char *buf)
+static void generate_smtp_id(size_t size, char *buf, bool new_session)
 {
 	_Static_assert(sizeof(time_t) <= sizeof(uint64_t), "uint64_t is not big enough to hold time_t values");
 	_Static_assert(sizeof(pid_t) <= sizeof(uint32_t), "uint32_t is not big enough to hold pid_t values");
-	static uint32_t sequence_counter = 0;
+	static uint16_t session_counter = 0;
+	static uint16_t id_counter = 0;
 	static uint32_t pid = 0;
 	static uint64_t timestamp = 0;
 	//one time initialization of values that uniquely identify this process
@@ -381,12 +382,19 @@ static void generate_smtp_id(size_t size, char *buf)
 		pid = (uint32_t)getpid();
 		timestamp = (uint64_t)time(NULL);
 	}
-
-	uint32_t sequence_num = sequence_counter++;
-	if(!sequence_counter)
-		bail("sequence counter wrapped around. Too many ids used");
-	int ret = snprintf(buf, size, "%016" SCNx64 "%08" SCNx32 "%08" SCNx32,
-		timestamp, pid, sequence_num);
+	if(new_session)
+	{
+		if(!++session_counter)
+			bail("session counter wrapped around");
+		id_counter = 0;
+	}
+	if(!++id_counter)
+		bail("id counter wrapped around");
+	//minus 1 to make them zero indexed
+	uint16_t session_num = session_counter - 1;
+	uint16_t id_num = id_counter - 1;
+	int ret = snprintf(buf, size, "%016" SCNx64 "%08" SCNx32 "%04" SCNx16 "%04" SCNx16,
+		timestamp, pid, session_num, id_num);
 	if(ret < 0)
 		bail("snprintf failed mysteriously");
 	if(size <= (size_t)ret)
@@ -436,7 +444,7 @@ static void close_log_session(void)
 static void open_log_session(void)
 {
 	//generate unique session id that will be used as the filename of the log session on disk
-	generate_smtp_id(sizeof session_id, session_id);
+	generate_smtp_id(sizeof session_id, session_id, true);
 	int fd = openat(log_dir_fd, ".", O_TMPFILE | O_RDWR, 0640);
 	if(0 > fd)
 		warn("Unable allocate descriptor to store log");
@@ -528,7 +536,7 @@ static void handle_mail(enum state *state)
 	switch(*state)
 	{
 	case LOGIN:
-		generate_smtp_id(sizeof message_id, message_id);
+		generate_smtp_id(sizeof message_id, message_id, false);
 		from_address_size = (size_t)snprintf(from_address, sizeof from_address,
 			" from:<%.*s@" HOSTNAME ">", (int)username_size, username);
 		//this should be impossible
