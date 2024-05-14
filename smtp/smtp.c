@@ -372,11 +372,11 @@ static void unique_string(size_t size, char *buf)
 {
 	_Static_assert(sizeof(time_t) <= sizeof(uint64_t), "uint64_t is not big enough to hold time_t values");
 	_Static_assert(sizeof(pid_t) <= sizeof(uint32_t), "uint32_t is not big enough to hold pid_t values");
-	static uint64_t sequence_counter = 0;
-	uint64_t sequence_num = sequence_counter++;
+	static uint32_t sequence_counter = 0;
+	uint32_t sequence_num = sequence_counter++;
 	uint64_t timestamp = (uint64_t)time(NULL);
 	uint32_t pid = (uint32_t)getpid();
-	int ret = snprintf(buf, size, "%" PRIu32 ".%" PRIu64 ".%" PRIu64,
+	int ret = snprintf(buf, size, "%" PRIu32 ".%" PRIu64 ".%" PRIu32,
 		pid, timestamp, sequence_num);
 	if(ret < 0)
 		bail("snprintf failed mysteriously");
