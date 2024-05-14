@@ -376,7 +376,7 @@ static void unique_string(size_t size, char *buf)
 	uint32_t sequence_num = sequence_counter++;
 	uint64_t timestamp = (uint64_t)time(NULL);
 	uint32_t pid = (uint32_t)getpid();
-	int ret = snprintf(buf, size, "%" SCNu64 ".%" SCNu32 ".%" SCNu32,
+	int ret = snprintf(buf, size, "%016" SCNx64 "%08" SCNx32 "%08" SCNx32,
 		timestamp, pid, sequence_num);
 	if(ret < 0)
 		bail("snprintf failed mysteriously");
