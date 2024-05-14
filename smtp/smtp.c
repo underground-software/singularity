@@ -376,6 +376,8 @@ static void unique_string(size_t size, char *buf)
 	uint32_t sequence_num = sequence_counter++;
 	uint64_t timestamp = (uint64_t)time(NULL);
 	uint32_t pid = (uint32_t)getpid();
+	if(!sequence_counter)
+		bail("sequence counter wrapped around. Too many ids used");
 	int ret = snprintf(buf, size, "%016" SCNx64 "%08" SCNx32 "%08" SCNx32,
 		timestamp, pid, sequence_num);
 	if(ret < 0)
