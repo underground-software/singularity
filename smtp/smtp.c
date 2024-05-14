@@ -403,7 +403,6 @@ static size_t from_address_size;
 static char username[256];
 static size_t username_size;
 static char message_id[256];
-static size_t message_id_size;
 static char recipient[256];
 static size_t recipient_size;
 
@@ -516,9 +515,8 @@ static void handle_mail(enum state *state)
 	switch(*state)
 	{
 	case LOGIN:
-		message_id_size = unique_string(sizeof message_id, message_id);
 		//this should be impossible
-		if(-(size_t)1 == message_id_size)
+		if(-(size_t)1 == unique_string(sizeof message_id, message_id))
 			bail("not enough space for message_id");
 		from_address_size = (size_t)snprintf(from_address, sizeof from_address,
 			" from:<%.*s@" HOSTNAME ">", (int)username_size, username);
@@ -542,8 +540,8 @@ static void handle_mail(enum state *state)
 		}
 		dprintf(CURR_EMAIL_FD,
 			"Received: by " HOSTNAME " ; %s\r\n"
-			"Message-ID: <%.*s@" HOSTNAME ">\r\nFrom: <%.*s@" HOSTNAME ">\r\n",
-			now(), (int)message_id_size, message_id, (int)username_size, username);
+			"Message-ID: <%s@" HOSTNAME ">\r\nFrom: <%.*s@" HOSTNAME ">\r\n",
+			now(), message_id, (int)username_size, username);
 		*state = MAIL;
 		REPLY("250 OK")
 	case GREET:
