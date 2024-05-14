@@ -537,7 +537,6 @@ static void handle_mail(enum state *state)
 			}
 		}
 		message_id_size = unique_string(sizeof message_id, message_id);
-		message_id[message_id_size] = '\0';
 		dprintf(CURR_EMAIL_FD,
 			"Received: by " HOSTNAME " ; %s\r\n"
 			"Message-ID: <%.*s@" HOSTNAME ">\r\nFrom: <%.*s@" HOSTNAME ">\r\n",
