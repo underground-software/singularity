@@ -1,16 +1,11 @@
 FROM alpine:3.19 AS build
 
 RUN apk update && apk upgrade && apk add \
-	py3-peewee \
 	envsubst \
 	;
 
 COPY . /usr/local/share/orbit
 WORKDIR /usr/local/share/orbit
-
-RUN mkdir -p /var/orbit/ && \
-	./db.py \
-	:
 
 ARG orbit_version_info
 RUN test -n "$orbit_version_info" || (echo 'version info is not set' && false) && \
@@ -35,9 +30,12 @@ WORKDIR /usr/local/share/orbit
 COPY --from=build /usr/local/share/orbit /usr/local/share/orbit
 COPY --from=orbit_docs_source . ./docs
 COPY --from=denis_source . ./denis
-COPY --from=build /var/orbit /var/orbit
 COPY --from=orbit_singularity_git_dir . /var/git/singularity
 COPY --from=orbit_repos_source . /etc/cgit
+
+RUN mkdir -p /var/orbit/ && \
+	./db.py \
+	:
 
 COPY cgitrc /etc/cgitrc
 
