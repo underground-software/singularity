@@ -16,10 +16,7 @@ root-title=Kernel Development Learning Pipeline Git Repositories
 # Set a subheading for the repository index page
 root-desc=Explore the class git repositories here!
 
-# Include some more info about this site on the index page
-# FIXME do we want a readme or not?
-#root-readme=/mnt/telomerase/cano.py/index.html
-
+# Allow cgit to use git config to set repo-specific settings
 enable-git-config=1
 
 ##
