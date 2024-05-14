@@ -368,17 +368,18 @@ static bool validate_and_case_fold_email_address(size_t size, char *buff)
 	return true;
 }
 
-static size_t unique_string(size_t size, char *buf)
+static void unique_string(size_t size, char *buf)
 {
 	static uint64_t sequence_counter = 0;
 	uint64_t sequence_num = sequence_counter++;
 	uint64_t timestamp = (uint64_t)time(NULL);
 	uint64_t pid = (uint64_t)getpid();
-	size_t ret = (size_t)snprintf(buf, size, "%" PRIu64 ".%" PRIu64 ".%" PRIu64,
+	int ret = snprintf(buf, size, "%" PRIu64 ".%" PRIu64 ".%" PRIu64,
 		pid, timestamp, sequence_num);
-	if(ret >= size)
-		return -(size_t)1;
-	return ret;
+	if(ret < 0)
+		bail("snprintf failed mysteriously");
+	if(size <= (size_t)ret)
+		bail("not enough space to store unique string");
 }
 
 static char *now(void)
@@ -411,8 +412,7 @@ static void close_log_session(void)
 	if(0 > fdatasync(CURR_SESSION_FD))
 		warn("Unable to sync session log to disk");
 	char filename[256];
-	if((-(size_t)1) == unique_string(sizeof filename, filename))
-		errx(1, "Unable to generate unique filename");
+	unique_string(sizeof filename, filename);
 #ifdef LINKAT_NOT_BROKEN
 	if(0 > linkat(CURR_SESSION_FD, "", log_dir_fd, filename, AT_EMPTY_PATH))
 #else
@@ -515,9 +515,7 @@ static void handle_mail(enum state *state)
 	switch(*state)
 	{
 	case LOGIN:
-		//this should be impossible
-		if(-(size_t)1 == unique_string(sizeof message_id, message_id))
-			bail("not enough space for message_id");
+		unique_string(sizeof message_id, message_id);
 		from_address_size = (size_t)snprintf(from_address, sizeof from_address,
 			" from:<%.*s@" HOSTNAME ">", (int)username_size, username);
 		//this should be impossible
