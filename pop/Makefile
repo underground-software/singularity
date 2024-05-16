@@ -10,7 +10,8 @@ endif
 
 all: pop3
 
-pop3: pop3.c
-	$(CC) $(CFLAGS) -o $@ $^
+pop3: pop3.c types.h
+	$(CC) $(CFLAGS) -o $@ $<
+
 clean:
 	-rm pop3
