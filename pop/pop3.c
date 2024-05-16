@@ -151,47 +151,34 @@ struct email
 };
 _Static_assert(sizeof(struct email) == 64, "size of struct email should be 64");
 
-static int mail_dir_fd;
 static struct email *maildrop;
 static size_t num_emails;
 
-static void load_emails(char *mail_directory)
+static void load_emails(void)
 {
-	mail_dir_fd = openat(AT_FDCWD, mail_directory, O_CLOEXEC | O_DIRECTORY | O_RDONLY);
-	if(0 > mail_dir_fd)
-		err(1, "Unable to open mail directory %s", mail_directory);
-	int opendir_fd = dup(mail_dir_fd);
-	if(0 > opendir_fd)
-		err(1, "unable to dup mail dir fd");
-	DIR *dir = fdopendir(opendir_fd);
+	DIR *dir = opendir(".");
 	if(!dir)
-		err(1, "Unable to open mail directory %s", mail_directory);
+		err(1, "Unable to open mail directory");
 	size_t capacity = 16;
 	maildrop = malloc(capacity * sizeof *maildrop);
 	errno = 0;
 	for(struct dirent *ptr = readdir(dir); NULL != ptr; errno = 0, ptr = readdir(dir))
 	{
-		if(ptr->d_name[0] == '.' && (ptr->d_name[1] == '\0' || (ptr->d_name[1] == '.' && ptr->d_name[2] == '\0'))) //skip . and ..
-			continue;
-		if(ptr->d_type != DT_REG)
-		{
-			warnx("skipping file %s because it is not a regular file", ptr->d_name);
-			continue;
-		}
-		if(0 > faccessat(mail_dir_fd, ptr->d_name, R_OK, AT_EACCESS | AT_SYMLINK_NOFOLLOW))
-		{
-			if(errno == EACCES) //skip files we cannot access for reading
-				continue;
-			err(1, "unable to check access permissions on file %s", ptr->d_name);
-		}
+		int fd = open(ptr->d_name, O_PATH | O_NOFOLLOW);
+		if(0 > fd)
+			err(1, "unable to open file \"%s\"", ptr->d_name);
 		struct stat statbuf;
-		if(0 > fstatat(mail_dir_fd, ptr->d_name, &statbuf, AT_SYMLINK_NOFOLLOW))
-			err(1, "unable to stat file %s", ptr->d_name);
+		if(0 > fstat(fd, &statbuf))
+			err(1, "unable to stat file \"%s\"", ptr->d_name);
+		//skip non regular files (e.g. symlinks, directories)
+		if(!S_ISREG(statbuf.st_mode))
+			continue;
 		struct email email =
 		{
 			.size = statbuf.st_size,
 			.active = true,
 		};
+		close(fd);
 		size_t size = strlen(ptr->d_name);
 		if(size >= sizeof email.name)
 			errx(1, "filename of email %s is too long", ptr->d_name);
@@ -238,7 +225,9 @@ int main(int argc, char **argv)
 
 	if(argc != 2)
 		errx(1, "Usage: %s <mail directory>", argv[0]);
-	load_emails(argv[1]);
+	if(chdir(argv[1]))
+		errx(1, "Unable to change directory to mail folder \"%s\"", argv[1]);
+	load_emails();
 	SEND("+OK POP3 server ready");
 	for(enum state state = START; state != QUIT;)
 	{
@@ -448,7 +437,7 @@ int main(int argc, char **argv)
 				size_t index = (size_t)arg - 1;
 				if(!maildrop[index].active)
 					REPLY("-ERR Invalid index")
-				int fd = openat(mail_dir_fd, maildrop[index].name, O_RDONLY);
+				int fd = open(maildrop[index].name, O_RDONLY);
 				if(0 > fd)
 					REPLY("-ERR internal server error")
 				SEND("+OK message follows");
@@ -481,7 +470,7 @@ int main(int argc, char **argv)
 				size_t index = (size_t)arg - 1;
 				if(!maildrop[index].active)
 					REPLY("-ERR Invalid index")
-				int fd = openat(mail_dir_fd, maildrop[index].name, O_RDONLY);
+				int fd = open(maildrop[index].name, O_RDONLY);
 				if(0 > fd)
 					REPLY("-ERR internal server error")
 				off_t top_limit;
