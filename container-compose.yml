@@ -121,6 +121,8 @@ services:
         source: grades-db
         target: /var/lib/denis
         read_only: false
+    depends_on:
+      - smtp
     networks:
       - denis
 networks:
