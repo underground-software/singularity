@@ -146,8 +146,9 @@ static bool check_credentials(size_t u_size, const char *username, size_t p_size
 struct email
 {
 	off_t size;
+	off_t top_limit;
 	bool active;
-	char name[64 - sizeof(off_t) - sizeof(bool)];
+	char name[64 - sizeof(off_t) - sizeof(off_t) - sizeof(bool)];
 };
 _Static_assert(sizeof(struct email) == 64, "size of struct email should be 64");
 
@@ -164,7 +165,7 @@ static void load_emails(void)
 	errno = 0;
 	for(struct dirent *ptr = readdir(dir); NULL != ptr; errno = 0, ptr = readdir(dir))
 	{
-		int fd = open(ptr->d_name, O_PATH | O_NOFOLLOW);
+		int fd = open(ptr->d_name, O_RDONLY | O_NOFOLLOW);
 		if(0 > fd)
 			err(1, "unable to open file \"%s\"", ptr->d_name);
 		struct stat statbuf;
@@ -178,6 +179,8 @@ static void load_emails(void)
 			.size = statbuf.st_size,
 			.active = true,
 		};
+		if(sizeof email.top_limit != fgetxattr(fd, "user.top_limit", &email.top_limit, sizeof email.top_limit))
+			err(1, "unable to read end of headers marker from email \"%s\"", ptr->d_name);
 		close(fd);
 		size_t size = strlen(ptr->d_name);
 		if(size >= sizeof email.name)
@@ -473,18 +476,15 @@ int main(int argc, char **argv)
 				int fd = open(maildrop[index].name, O_RDONLY);
 				if(0 > fd)
 					REPLY("-ERR internal server error")
-				off_t top_limit;
-				if(sizeof top_limit != fgetxattr(fd, "user.top_limit", &top_limit, sizeof top_limit))
-					REPLY("-ERR internal server error")
 				SEND("+OK message follows");
 				off_t offset = 0;
 				do
 				{
-					ssize_t ret = sendfile(STDOUT_FILENO, fd, &offset, (size_t)(top_limit - offset));
+					ssize_t ret = sendfile(STDOUT_FILENO, fd, &offset, (size_t)(maildrop[index].top_limit - offset));
 					if(0 > ret)
 						err(1, "unable to sendfile");
 				}
-				while(offset < top_limit);
+				while(offset < maildrop[index].top_limit);
 			}
 			REPLY(".")
 		default:
