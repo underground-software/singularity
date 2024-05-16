@@ -67,8 +67,12 @@ services:
         LISTEN_PORT: 1465
     volumes:
       - type: volume
-        source: email
-        target: /var/lib/email
+        source: email-mail
+        target: /var/lib/email/mail
+        read_only: false
+      - type: volume
+        source: email-logs
+        target: /var/lib/email/logs
         read_only: false
     networks:
       - smtp
@@ -83,8 +87,8 @@ services:
         LISTEN_PORT: 1995
     volumes:
       - type: volume
-        source: email
-        target: /var/lib/email
+        source: email-mail
+        target: /var/lib/email/mail
         read_only: true
     depends_on:
       - smtp
@@ -114,8 +118,12 @@ services:
         - watchtower_source=./watchtower
     volumes:
       - type: volume
-        source: email
-        target: /var/lib/email
+        source: email-mail
+        target: /var/lib/email/mail
+        read_only: true
+      - type: volume
+        source: email-logs
+        target: /var/lib/email/logs
         read_only: true
       - type: volume
         source: grades-db
@@ -133,7 +141,8 @@ networks:
   denis:
 volumes:
   ssl-certs:
-  email:
+  email-mail:
+  email-logs:
   orbit-db:
   grades-db:
   submatrix-data:

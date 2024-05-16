@@ -16,7 +16,7 @@ RUN test -n "$hostname" || (echo 'hostname is not set' && false)
 RUN make -C /smtp CC='clang -static' SRVNAME=$hostname
 
 RUN mkdir -p /var/lib/email/mail /var/lib/email/logs && \
-	chown -R 100:100 /var/lib/email && \
+	chown 100:100 /var/lib/email/mail /var/lib/email/logs && \
 	:
 
 FROM scratch as smtp
