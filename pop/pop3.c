@@ -17,6 +17,7 @@
 #include <uchar.h>
 #include <unistd.h>
 
+#include "types.h"
 
 #define SEND(STR) send(STR "\r\n", sizeof(STR "\r\n") - 1)
 static void send(const char *msg, size_t size)
@@ -142,15 +143,6 @@ static bool check_credentials(size_t u_size, const char *username, size_t p_size
 #endif
 	return true;
 }
-
-struct email
-{
-	off_t size;
-	off_t top_limit;
-	bool active;
-	char name[31];
-};
-_Static_assert(sizeof(struct email) == 48, "size of struct email should be 48");
 
 static struct email *maildrop;
 static size_t num_emails;
