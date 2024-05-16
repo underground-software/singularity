@@ -148,9 +148,9 @@ struct email
 	off_t size;
 	off_t top_limit;
 	bool active;
-	char name[64 - sizeof(off_t) - sizeof(off_t) - sizeof(bool)];
+	char name[31];
 };
-_Static_assert(sizeof(struct email) == 64, "size of struct email should be 64");
+_Static_assert(sizeof(struct email) == 48, "size of struct email should be 48");
 
 static struct email *maildrop;
 static size_t num_emails;
