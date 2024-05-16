@@ -3,4 +3,5 @@ singularity_email
 singularity_orbit-db
 singularity_ssl-certs
 singularity_submatrix-data
+singularity_grades-db
 '
