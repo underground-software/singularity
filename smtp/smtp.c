@@ -372,7 +372,7 @@ static void generate_smtp_id(size_t size, char *buf, bool new_session)
 {
 	_Static_assert(sizeof(time_t) <= sizeof(uint64_t), "uint64_t is not big enough to hold time_t values");
 	_Static_assert(sizeof(pid_t) <= sizeof(uint32_t), "uint32_t is not big enough to hold pid_t values");
-	static uint16_t session_counter = 0;
+	static uint8_t session_counter = 0;
 	static uint16_t id_counter = 0;
 	static uint32_t pid = 0;
 	static uint64_t timestamp = 0;
@@ -391,9 +391,9 @@ static void generate_smtp_id(size_t size, char *buf, bool new_session)
 	if(!++id_counter)
 		bail("id counter wrapped around");
 	//minus 1 to make them zero indexed
-	uint16_t session_num = session_counter - 1;
+	uint8_t session_num = session_counter - 1;
 	uint16_t id_num = id_counter - 1;
-	int ret = snprintf(buf, size, "%016" SCNx64 "%08" SCNx32 "%04" SCNx16 "%04" SCNx16,
+	int ret = snprintf(buf, size, "%016" SCNx64 "%08" SCNx32 "%02" SCNx8 "%04" SCNx16,
 		timestamp, pid, session_num, id_num);
 	if(ret < 0)
 		bail("snprintf failed mysteriously");
