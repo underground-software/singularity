@@ -102,7 +102,7 @@ services:
         target: /var/synapse
         read_only: false
     depends_on:
-      - orbit 
+      - orbit
     networks:
       - submatrix
       - orbit
