@@ -24,6 +24,7 @@ VOLUME /var/lib/email
 COPY --from=build /tcp_server/tcp_server /usr/local/bin/tcp_server
 COPY --from=build /pop/pop3 /usr/local/bin/pop3
 COPY --from=build /pop/init_journal /usr/local/bin/init_journal
+COPY --from=build /pop/restrict_access /usr/local/bin/restrict_access
 COPY --from=build /var/lib/email/ /var/lib/email/
 
 USER 100:100

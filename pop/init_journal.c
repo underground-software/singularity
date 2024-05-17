@@ -76,10 +76,32 @@ static void load_emails(int journal_fd, char *path)
 	closedir(dir);
 }
 
+static void replicate_xattrs(int targetfd, char *srcpath)
+{
+	//ought to be big enough for our purposes
+	static char buf[16348];
+	ssize_t ret = listxattr(srcpath, buf, sizeof buf);
+	if(0 > ret)
+		err(1, "unable to fetch xattrs from \"%s\"", srcpath);
+	char *end = buf + (size_t)ret;
+	for(char *ptr = buf; ptr < end; ptr += 1 + strnlen(buf, (size_t)(end - ptr)))
+	{
+		if(ptr[0] != 'u' || ptr[1] != 's' || ptr[2] != 'e' || ptr[3] != 'r' || ptr[4] != '.')
+			continue;
+		if(!strncmp(ptr, "user.data_end", (size_t)(end - ptr)))
+			continue;
+		off_t limit;
+		if(sizeof limit != getxattr(srcpath, ptr, &limit, sizeof limit))
+			err(1, "invalid attribute \"%s\"", ptr);
+		if(fsetxattr(targetfd, ptr, &limit, sizeof limit, 0))
+			err(1, "unable to set attr \"%s\"", ptr);
+	}
+}
+
 
 int main(int argc, char **argv)
 {
-	char *journal_file, *temp_file, *email_folder=NULL, *new_file;
+	char *journal_file=NULL, *temp_file, *email_folder=NULL, *new_file;
 	switch(argc)
 	{
 	case 2:
@@ -98,7 +120,10 @@ int main(int argc, char **argv)
 	if(0 > new_fd)
 		err(1, "Unable to create file \"%s\"", new_file);
 	if(email_folder)
+	{
 		load_emails(new_fd, email_folder);
+		replicate_xattrs(new_fd, journal_file);
+	}
 	off_t f_pos = lseek(new_fd, 0, SEEK_CUR);
 	if(fsetxattr(new_fd, "user.data_end", &f_pos, sizeof f_pos, 0))
 		err(1, "unable to write journal file size to journal file");

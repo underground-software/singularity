@@ -148,6 +148,12 @@ curl --url "pop3s://$SINGULARITY_HOSTNAME" \
   | tee test/pop_get_empty_no_update \
   | diff <(printf '\r\n') /dev/stdin
 
+# create a user that will have limited access to the inbox
+orbit/warpdrive.sh -u resu -p ssap -n
+
+# Limit `resu`'s access to the empty inbox
+${DOCKER} exec singularity_pop_1 /usr/local/bin/restrict_access /var/lib/email/journal/journal -d resu
+
 # Update list of email to include new message
 ${DOCKER} exec singularity_pop_1 /usr/local/bin/init_journal /var/lib/email/journal/journal /var/lib/email/journal/temp /var/lib/email/mail
 
@@ -157,6 +163,26 @@ curl --url "pop3s://$SINGULARITY_HOSTNAME/1" \
   "${CURL_OPTS[@]}" \
   --user "user:${REGISTER_PASS}" \
   | tee test/pop_get_message \
+  | grep "Bottom text"
+
+# Verify that no email shows up for `resu`
+curl --url "pop3s://$SINGULARITY_HOSTNAME" \
+  --unix-socket ./socks/pop3s.sock \
+  "${CURL_OPTS[@]}" \
+  --user "resu:ssap" \
+  | tee test/pop_get_empty_restricted \
+  | diff <(printf '\r\n') /dev/stdin
+
+
+# Remove limit on `resu`'s access to the inbox
+${DOCKER} exec singularity_pop_1 /usr/local/bin/restrict_access /var/lib/email/journal/journal -a resu
+
+# Check that `resu` can now get the most recent message sent to the server
+curl --url "pop3s://$SINGULARITY_HOSTNAME/1" \
+  --unix-socket ./socks/pop3s.sock \
+  "${CURL_OPTS[@]}" \
+  --user "resu:ssap" \
+  | tee test/pop_unrestricted_get_message \
   | grep "Bottom text"
 
 # If you get a 429 error from one of the matrix tests, restart the server and try again
