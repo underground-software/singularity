@@ -122,6 +122,29 @@ static bool read_line(char buf[static LINE_LIMIT + 1], size_t *outsize)
 	return false;
 }
 
+static bool validate_and_case_fold_username(size_t size, char *buff)
+{
+	for(size_t i = 0; i < size; ++i)
+	{
+		char c = buff[i];
+		if('A' <= c && c <= 'Z')
+		{
+			//case fold to lowercase equivalent
+			c |= 0x20;
+			buff[i] = c;
+			continue;
+		}
+		if('a' <= c && c <= 'z')
+			continue;
+		//no usernames starting with these characters
+		if(i > 0 && (('0' <= c && c <= '9') || c == '.' || c == '_' || c == '-'))
+			continue;
+		return false;
+	}
+	return true;
+}
+
+
 static bool check_credentials(size_t u_size, const char *username, size_t p_size, const char *password)
 {
 #ifdef CHECK_CREDS
@@ -244,6 +267,8 @@ int main(int argc, char **argv)
 					REPLY("-ERR parameter required for user command")
 				username_size = (size_t)(line_buff + line_size - ptr);
 				memcpy(username, ptr, username_size);
+				if(!validate_and_case_fold_username(username_size, username))
+					REPLY("-ERR invalid username")
 			}
 			state = USER;
 			REPLY("+OK got username")
