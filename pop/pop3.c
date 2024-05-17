@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <err.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -168,10 +169,24 @@ static bool check_credentials(size_t u_size, const char *username, size_t p_size
 static struct email *maildrop;
 static size_t num_emails;
 
-static void load_emails(int journal_fd)
+static void load_emails(int journal_fd, size_t username_size, char *username)
 {
-	off_t limit;
-	ssize_t ret = fgetxattr(journal_fd, "user.data_end", &limit, sizeof limit);
+	char username_attr_buf[LINE_LIMIT+64];
+	if(sizeof username_attr_buf <= (size_t)snprintf(username_attr_buf, sizeof username_attr_buf, "user.%.*s_limit", (int)username_size, username))
+		err(1, "username attr buffer is not big enough");
+	off_t limit=-1;
+	ssize_t ret=-1;
+	//try username specific limit first, then fall back to generic one
+	for(const char *const *attr_name=(const char *const[]){username_attr_buf, "user.data_end", NULL}; *attr_name; ++attr_name)
+	{
+		ret = fgetxattr(journal_fd, *attr_name, &limit, sizeof limit);
+		if(0 <= ret)
+			break;
+		//if the attribute does not exist, we can try again, but if some
+		//other error occured, that is unexecpted and we should just crash
+		if(ENODATA != errno)
+			err(1, "unable to read journal size from journal file");
+	}
 	if(sizeof limit != ret)
 		err(1, "unable to read journal size from journal file");
 	if(0 > limit)
@@ -226,7 +241,6 @@ int main(int argc, char **argv)
 		err(1, "Unable to open journal file \"%s\"", argv[1]);
 	if(chdir(argv[1]))
 		errx(1, "Unable to change directory to mail folder \"%s\"", argv[1]);
-	load_emails(journal_fd);
 	SEND("+OK POP3 server ready");
 	for(enum state state = START; state != QUIT;)
 	{
@@ -281,6 +295,7 @@ int main(int argc, char **argv)
 				REPLY("-ERR unrecognized command")
 			if(!check_credentials(username_size, username, line_size - 1, line_buff + 1))
 				REPLY("-ERR unauthorized")
+			load_emails(journal_fd, username_size, username);
 			state = LOGIN;
 			REPLY("+OK got username")
 		case 'rset':
