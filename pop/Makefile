@@ -8,10 +8,13 @@ endif
 
 .PHONY: all clean
 
-all: pop3
+all: pop3 init_journal
 
 pop3: pop3.c types.h
 	$(CC) $(CFLAGS) -o $@ $<
 
+init_journal: init_journal.c types.h
+	$(CC) $(CFLAGS) -o $@ $<
+
 clean:
-	-rm pop3
+	-rm pop3 init_journal

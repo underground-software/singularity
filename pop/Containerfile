@@ -12,15 +12,22 @@ COPY . /pop
 
 RUN make -C /pop CC='clang -static'
 
+RUN mkdir -p /var/lib/email/journal && \
+	/pop/init_journal /var/lib/email/journal/journal && \
+	chown -R 100:100 /var/lib/email/journal && \
+	:
+
 FROM scratch as pop
 
 VOLUME /var/lib/email
 
 COPY --from=build /tcp_server/tcp_server /usr/local/bin/tcp_server
 COPY --from=build /pop/pop3 /usr/local/bin/pop3
+COPY --from=build /pop/init_journal /usr/local/bin/init_journal
+COPY --from=build /var/lib/email/ /var/lib/email/
 
 USER 100:100
 
 ARG LISTEN_PORT=995
 EXPOSE ${LISTEN_PORT}
-ENTRYPOINT ["/usr/local/bin/tcp_server", "/usr/local/bin/pop3", "pop3", "/var/lib/email/mail"]
+ENTRYPOINT ["/usr/local/bin/tcp_server", "/usr/local/bin/pop3", "pop3", "/var/lib/email/mail", "/var/lib/email/journal/journal"]

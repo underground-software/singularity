@@ -90,6 +90,10 @@ services:
         source: email-mail
         target: /var/lib/email/mail
         read_only: true
+      - type: volume
+        source: email-journal
+        target: /var/lib/email/journal
+        read_only: false
     depends_on:
       - smtp
     networks:
@@ -143,6 +147,7 @@ volumes:
   ssl-certs:
   email-mail:
   email-logs:
+  email-journal:
   orbit-db:
   grades-db:
   submatrix-data:

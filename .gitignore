@@ -1,4 +1,5 @@
 /pop/pop3
+/pop/init_journal
 /smtp/smtp
 /tcp_server/tcp_server
 /test
