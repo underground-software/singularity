@@ -1,6 +1,7 @@
 VOLUMES='
 singularity_email-mail
 singularity_email-logs
+singularity_email-journal
 singularity_orbit-db
 singularity_ssl-certs
 singularity_submatrix-data

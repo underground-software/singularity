@@ -140,6 +140,17 @@ EOF
   | diff <(printf "") /dev/stdin
 
 
+# Verify that no email shows up without the journal being updated
+curl --url "pop3s://$SINGULARITY_HOSTNAME" \
+  --unix-socket ./socks/pop3s.sock \
+  "${CURL_OPTS[@]}" \
+  --user "user:${REGISTER_PASS}" \
+  | tee test/pop_get_empty_no_update \
+  | diff <(printf '\r\n') /dev/stdin
+
+# Update list of email to include new message
+${DOCKER} exec singularity_pop_1 /usr/local/bin/init_journal /var/lib/email/journal/journal /var/lib/email/journal/temp /var/lib/email/mail
+
 # Check that the user can get the most recent message sent to the server
 curl --url "pop3s://$SINGULARITY_HOSTNAME/1" \
   --unix-socket ./socks/pop3s.sock \

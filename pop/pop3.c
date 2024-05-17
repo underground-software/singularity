@@ -1,7 +1,5 @@
 #include <ctype.h>
-#include <dirent.h>
 #include <err.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -10,8 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/sendfile.h>
-#include <sys/stat.h>
 #include <sys/xattr.h>
 #include <time.h>
 #include <uchar.h>
@@ -147,44 +145,24 @@ static bool check_credentials(size_t u_size, const char *username, size_t p_size
 static struct email *maildrop;
 static size_t num_emails;
 
-static void load_emails(void)
+static void load_emails(int journal_fd)
 {
-	DIR *dir = opendir(".");
-	if(!dir)
-		err(1, "Unable to open mail directory");
-	size_t capacity = 16;
-	maildrop = malloc(capacity * sizeof *maildrop);
-	errno = 0;
-	for(struct dirent *ptr = readdir(dir); NULL != ptr; errno = 0, ptr = readdir(dir))
-	{
-		int fd = open(ptr->d_name, O_RDONLY | O_NOFOLLOW);
-		if(0 > fd)
-			err(1, "unable to open file \"%s\"", ptr->d_name);
-		struct stat statbuf;
-		if(0 > fstat(fd, &statbuf))
-			err(1, "unable to stat file \"%s\"", ptr->d_name);
-		//skip non regular files (e.g. symlinks, directories)
-		if(!S_ISREG(statbuf.st_mode))
-			continue;
-		struct email email =
-		{
-			.size = statbuf.st_size,
-			.active = true,
-		};
-		if(sizeof email.top_limit != fgetxattr(fd, "user.top_limit", &email.top_limit, sizeof email.top_limit))
-			err(1, "unable to read end of headers marker from email \"%s\"", ptr->d_name);
-		close(fd);
-		size_t size = strlen(ptr->d_name);
-		if(size >= sizeof email.name)
-			errx(1, "filename of email %s is too long", ptr->d_name);
-		memcpy(email.name, ptr->d_name, size + 1);
-		if(num_emails >= capacity && NULL == (maildrop = realloc(maildrop, (capacity *= 2) * sizeof *maildrop))) //this leaks the old pointer if it fails, but since we exit immediately, this isn't a bit deal
-			err(1, "unable to resize maildrop");
-		maildrop[num_emails++] = email;
-	}
-	if(errno)
-		err(1, "Unable to read from directory");
-	closedir(dir);
+	off_t limit;
+	ssize_t ret = fgetxattr(journal_fd, "user.data_end", &limit, sizeof limit);
+	if(sizeof limit != ret)
+		err(1, "unable to read journal size from journal file");
+	if(0 > limit)
+		errx(1, "invalid journal size: negative");
+	size_t maildrop_size = (size_t)limit;
+	if(maildrop_size % sizeof(struct email))
+		errx(1, "invalid journal size: not divisible by size of email struct");
+	num_emails = maildrop_size / sizeof(struct email);
+	//mmap will not accept a size of zero, so we need to check, but if size is zero, the
+	//default value of NULL for maildrop is perfectly adequate since no code should access it.
+	if(num_emails)
+		maildrop = mmap(NULL, maildrop_size, PROT_READ, MAP_PRIVATE, journal_fd, 0);
+	if(MAP_FAILED == maildrop)
+		err(1, "unable to map journal file");
 }
 
 static bool pending_deletes(void)
@@ -218,11 +196,14 @@ int main(int argc, char **argv)
 	if(0 > fcntl(STDOUT_FILENO, F_SETFL, flags))
 		err(1, "unable to set flags for stdout");
 
-	if(argc != 2)
-		errx(1, "Usage: %s <mail directory>", argv[0]);
+	if(argc != 3)
+		errx(1, "Usage: %s <mail directory> <journal file>", argv[0]);
+	int journal_fd = open(argv[2], O_RDONLY);
+	if(0 > journal_fd)
+		err(1, "Unable to open journal file \"%s\"", argv[1]);
 	if(chdir(argv[1]))
 		errx(1, "Unable to change directory to mail folder \"%s\"", argv[1]);
-	load_emails();
+	load_emails(journal_fd);
 	SEND("+OK POP3 server ready");
 	for(enum state state = START; state != QUIT;)
 	{
