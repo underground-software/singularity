@@ -218,7 +218,7 @@ enum state
 	QUIT,
 };
 
-#define REPLY(STR) { SEND(STR); break; }
+#define REPLY(STR) { SEND(STR); continue; }
 
 int main(int argc, char **argv)
 {
@@ -246,6 +246,7 @@ int main(int argc, char **argv)
 		uint32_t command = get_command();
 		if(!read_line(line_buff, &line_size))
 			REPLY("-ERR Parameters too long")
+		//valid in any state
 		switch(command)
 		{
 		case 'quit':
@@ -264,8 +265,12 @@ int main(int argc, char **argv)
 			".")
 		case 'noop':
 			REPLY("+OK did nothing")
-		case 'user':
-			if(state != START)
+		}
+		//specific commands for logging in with single associated state
+		switch(state)
+		{
+		case START:
+			if(command != 'user')
 				REPLY("-ERR command out of sequence")
 			{
 				char *ptr = line_buff;
@@ -282,8 +287,8 @@ int main(int argc, char **argv)
 			}
 			state = USER;
 			REPLY("+OK got username")
-		case 'pass':
-			if(state != USER)
+		case USER:
+			if(command != 'pass')
 				REPLY("-ERR command out of sequence")
 			if(line_buff[0] != ' ')
 				REPLY("-ERR unrecognized command")
@@ -292,15 +297,20 @@ int main(int argc, char **argv)
 			load_emails(journal_fd, username_size, username);
 			state = LOGIN;
 			REPLY("+OK got password")
+		case LOGIN:
+			break;
+		case QUIT:
+			REPLY("-ERR internal server error")
+		}
+		//we know that state==LOGIN, these are the main commands
+		switch(command)
+		{
 		case 'rset':
-			if(state != LOGIN)
-				REPLY("-ERR unauthenticated")
 			for(size_t i = 0; i < num_emails; ++i)
 				maildrop[i].active = true;
 			REPLY("+OK reset complete")
 		case 'stat':
-			if(state != LOGIN)
-				REPLY("-ERR unauthenticated")
+			;
 			size_t active_emails = 0;
 			off_t total_size = 0;
 			for(size_t i = 0; i < num_emails; ++i)
@@ -321,8 +331,6 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'list':
-			if(state != LOGIN)
-				REPLY("-ERR unauthenticated")
 			if(line_size == 0)
 			{
 				SEND("+OK maildrop follows");
@@ -363,8 +371,6 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'uidl':
-			if(state != LOGIN)
-				REPLY("-ERR unauthenticated")
 			if(line_size == 0)
 			{
 				SEND("+OK ids follow");
@@ -405,8 +411,6 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'dele':
-			if(state != LOGIN)
-				REPLY("-ERR unauthenticated")
 			if(line_size == 0)
 				REPLY("-ERR arg required for dele command")
 			{
@@ -423,8 +427,6 @@ int main(int argc, char **argv)
 			}
 			REPLY("+OK marked for deletion")
 		case 'retr':
-			if(state != LOGIN)
-				REPLY("-ERR unauthenticated")
 			if(line_size == 0)
 				REPLY("-ERR arg required for retr command")
 			{
@@ -452,8 +454,6 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'top ':
-			if(state != LOGIN)
-				REPLY("-ERR unauthenticated")
 			if(line_size == 0)
 				REPLY("-ERR arg required for dele command")
 			{
