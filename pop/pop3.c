@@ -34,6 +34,20 @@ static void send(const char *msg, size_t size)
 	while(off < size);
 }
 
+static void send_file(int fd, size_t size)
+{
+	size_t off = 0;
+	do
+	{
+		ssize_t ret = sendfile(STDOUT_FILENO, fd, NULL, size - off);
+		if(ret <= 0)
+			err(1, "failed to sendfile");
+		//safe to cast to size_t because we know that ret > 0
+		off += (size_t)ret;
+	}
+	while(off < size);
+}
+
 static uint32_t get_command(void)
 {
 	uint32_t word = 0;
@@ -443,14 +457,7 @@ int main(int argc, char **argv)
 				if(0 > fd)
 					REPLY("-ERR internal server error")
 				SEND("+OK message follows");
-				off_t offset = 0;
-				do
-				{
-					ssize_t ret = sendfile(STDOUT_FILENO, fd, &offset, (size_t)(maildrop[index].size - offset));
-					if(0 > ret)
-						err(1, "unable to sendfile");
-				}
-				while(offset < maildrop[index].size);
+				send_file(fd, (size_t)maildrop[index].size);
 			}
 			break;
 		case 'top ':
@@ -472,14 +479,7 @@ int main(int argc, char **argv)
 				if(0 > fd)
 					REPLY("-ERR internal server error")
 				SEND("+OK message follows");
-				off_t offset = 0;
-				do
-				{
-					ssize_t ret = sendfile(STDOUT_FILENO, fd, &offset, (size_t)(maildrop[index].top_limit - offset));
-					if(0 > ret)
-						err(1, "unable to sendfile");
-				}
-				while(offset < maildrop[index].top_limit);
+				send_file(fd, (size_t)maildrop[index].top_limit);
 			}
 			REPLY(".")
 		default:
