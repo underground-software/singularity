@@ -275,6 +275,92 @@ static bool send_uidl_msg(const char *prefix, size_t index, const char *id)
 	return 0 <= dprintf(STDOUT_FILENO, "%s%zu %s\r\n", prefix, index, id);
 }
 
+#define REPLY(STR) { SEND(STR); return; }
+static void handle_no_args(enum command command)
+{
+	switch(command)
+	{
+	case RSET:
+		for(size_t i = 0; i < num_emails; ++i)
+			maildrop[i].active = true;
+		REPLY("+OK reset complete")
+	case STAT:
+		{
+			size_t active_emails = 0;
+			off_t total_size = 0;
+			for(size_t i = 0; i < num_emails; ++i)
+				if(maildrop[i].active)
+				{
+					active_emails++;
+					total_size += maildrop[i].size;
+				}
+			if(!send_stat_msg("+OK ", active_emails, total_size))
+				REPLY("-ERR internal server error")
+		}
+		break;
+	case LIST:
+		SEND("+OK maildrop follows");
+		for(size_t i = 0; i < num_emails; ++i)
+		{
+			if(!maildrop[i].active)
+				continue;
+			//can't really do anything about an error here, just swallow it
+			(void)send_stat_msg("", i + 1, maildrop[i].size);
+		}
+		REPLY(".")
+	case UIDL:
+		SEND("+OK ids follow");
+		for(size_t i = 0; i < num_emails; ++i)
+		{
+			if(!maildrop[i].active)
+				continue;
+			//can't really do anything about an error here, just swallow it
+			(void)send_uidl_msg("", i + 1, maildrop[i].name);
+		}
+		REPLY(".")
+	default:
+		REPLY("-ERR command missing arguments")
+	}
+}
+static void handle_with_args(enum command command, size_t index)
+{
+	switch(command)
+	{
+	case LIST:
+		if(!send_stat_msg("+OK ", index + 1, maildrop[index].size))
+			REPLY("-ERR internal server error")
+		break;
+	case UIDL:
+		if(!send_uidl_msg("+OK ", index + 1, maildrop[index].name))
+			REPLY("-ERR internal server error")
+		break;
+	case DELE:
+		maildrop[index].active = false;
+		REPLY("+OK marked for deletion")
+	case RETR:
+		{
+			int fd = open(maildrop[index].name, O_RDONLY);
+			if(0 > fd)
+				REPLY("-ERR internal server error")
+			SEND("+OK message follows");
+			send_file(fd, (size_t)maildrop[index].size);
+		}
+		break;
+	case TOP:
+		{
+			int fd = open(maildrop[index].name, O_RDONLY);
+			if(0 > fd)
+				REPLY("-ERR internal server error")
+			SEND("+OK message follows");
+			send_file(fd, (size_t)maildrop[index].top_limit);
+		}
+		REPLY(".")
+	default:
+		REPLY("-ERR command takes no arguments")
+	}
+}
+#undef REPLY
+
 #define REPLY(STR) { SEND(STR); continue; }
 
 int main(int argc, char **argv)
@@ -365,110 +451,25 @@ int main(int argc, char **argv)
 			REPLY("-ERR internal server error")
 		}
 		//we know that state==S_LOGIN, these are the main commands
-		struct email *email_at_index = NULL;
-		if(line_size)
+		if(!line_size)
 		{
-			char *endptr;
-			uintmax_t arg = strtoumax(line_buff, &endptr, 10);
-			if(endptr != line_buff + line_size)
-			{
-				if(command != TOP)
-					REPLY("-ERR invalid index argument")
-				if(endptr[0] != ' ' || endptr[1] != '0' || endptr[2] != '\0') //we only support top <idx> 0 for now
-					REPLY("-ERR top arg 2 of nonzero value unsupported")
-			}
-			if(arg == 0 || arg > (uintmax_t)num_emails)
-				REPLY("-ERR index out of bounds")
-			size_t index = (size_t)arg - 1;
-			if(!maildrop[index].active)
-				REPLY("-ERR invalid index refers to deleted message")
-			email_at_index = &maildrop[index];
-		}
-		switch(command)
-		{
-		case RSET:
-			for(size_t i = 0; i < num_emails; ++i)
-				maildrop[i].active = true;
-			REPLY("+OK reset complete")
-		case STAT:
-			;
-			size_t active_emails = 0;
-			off_t total_size = 0;
-			for(size_t i = 0; i < num_emails; ++i)
-				if(maildrop[i].active)
-				{
-					active_emails++;
-					total_size += maildrop[i].size;
-				}
-			if(!send_stat_msg("+OK ", active_emails, total_size))
-				REPLY("-ERR internal server error")
+			handle_no_args(command);
 			continue;
-		case LIST:
-			if(!email_at_index)
-			{
-				SEND("+OK maildrop follows");
-				for(size_t i = 0; i < num_emails; ++i)
-				{
-					if(!maildrop[i].active)
-						continue;
-					//can't really do anything about an error here, just swallow it
-					(void)send_stat_msg("", i + 1, maildrop[i].size);
-				}
-				SEND(".");
-			}
-			else
-			{
-				if(!send_stat_msg("+OK ", (size_t)(email_at_index - maildrop) + 1, email_at_index->size))
-					REPLY("-ERR internal server error")
-			}
-			break;
-		case UIDL:
-			if(!email_at_index)
-			{
-				SEND("+OK ids follow");
-				for(size_t i = 0; i < num_emails; ++i)
-				{
-					if(!maildrop[i].active)
-						continue;
-					//can't really do anything about an error here, just swallow it
-					(void)send_uidl_msg("", i + 1, maildrop[i].name);
-				}
-				SEND(".");
-			}
-			else
-			{
-				if(!send_uidl_msg("+OK ", (size_t)(email_at_index - maildrop) + 1, email_at_index->name))
-					REPLY("-ERR internal server error")
-				continue;
-			}
-			break;
-		case DELE:
-			if(!email_at_index)
-				REPLY("-ERR arg required for dele command")
-			email_at_index->active = false;
-			REPLY("+OK marked for deletion")
-		case RETR:
-			if(!email_at_index)
-				REPLY("-ERR arg required for retr command")
-			{
-				int fd = open(email_at_index->name, O_RDONLY);
-				if(0 > fd)
-					REPLY("-ERR internal server error")
-				SEND("+OK message follows");
-				send_file(fd, (size_t)email_at_index->size);
-			}
-			break;
-		case TOP:
-			if(!email_at_index)
-				REPLY("-ERR arg required for dele command")
-			{
-				int fd = open(email_at_index->name, O_RDONLY);
-				if(0 > fd)
-					REPLY("-ERR internal server error")
-				SEND("+OK message follows");
-				send_file(fd, (size_t)email_at_index->top_limit);
-			}
-			REPLY(".")
 		}
+		char *endptr;
+		uintmax_t arg = strtoumax(line_buff, &endptr, 10);
+		if(endptr != line_buff + line_size)
+		{
+			if(command != TOP)
+				REPLY("-ERR invalid index argument")
+			if(endptr[0] != ' ' || endptr[1] != '0' || endptr[2] != '\0') //we only support top <idx> 0 for now
+				REPLY("-ERR top arg 2 of nonzero value unsupported")
+		}
+		if(arg == 0 || arg > (uintmax_t)num_emails)
+			REPLY("-ERR index out of bounds")
+		size_t index = (size_t)arg - 1;
+		if(!maildrop[index].active)
+			REPLY("-ERR invalid index refers to deleted message")
+		handle_with_args(command, index);
 	}
 }
