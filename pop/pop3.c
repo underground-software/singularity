@@ -265,6 +265,16 @@ static bool recognize_command(uint32_t cmd, enum command *out)
 	return false;
 }
 
+static bool send_stat_msg(const char *prefix, size_t index, off_t size)
+{
+	return 0 <= dprintf(STDOUT_FILENO, "%s%zu %" SCNdMAX "\r\n", prefix, index, (intmax_t)size);
+}
+
+static bool send_uidl_msg(const char *prefix, size_t index, const char *id)
+{
+	return 0 <= dprintf(STDOUT_FILENO, "%s%zu %s\r\n", prefix, index, id);
+}
+
 #define REPLY(STR) { SEND(STR); continue; }
 
 int main(int argc, char **argv)
@@ -390,7 +400,7 @@ int main(int argc, char **argv)
 					active_emails++;
 					total_size += maildrop[i].size;
 				}
-			if(0 > dprintf(STDOUT_FILENO, "+OK %zu %"SCNiMAX"\r\n", active_emails, (intmax_t)total_size))
+			if(!send_stat_msg("+OK ", active_emails, total_size))
 				REPLY("-ERR internal server error")
 			continue;
 		case LIST:
@@ -401,16 +411,15 @@ int main(int argc, char **argv)
 				{
 					if(!maildrop[i].active)
 						continue;
-					if(0 > dprintf(STDOUT_FILENO, "%zu %"SCNiMAX"\r\n", i + 1, (intmax_t)maildrop[i].size))
-						continue;
+					//can't really do anything about an error here, just swallow it
+					(void)send_stat_msg("", i + 1, maildrop[i].size);
 				}
 				SEND(".");
 			}
 			else
 			{
-				if(0 > dprintf(STDOUT_FILENO, "+OK %zu %"SCNiMAX"\r\n", (size_t)(email_at_index - maildrop) + 1, (intmax_t)email_at_index->size))
+				if(!send_stat_msg("+OK ", (size_t)(email_at_index - maildrop) + 1, email_at_index->size))
 					REPLY("-ERR internal server error")
-				continue;
 			}
 			break;
 		case UIDL:
@@ -421,14 +430,14 @@ int main(int argc, char **argv)
 				{
 					if(!maildrop[i].active)
 						continue;
-					if(0 > dprintf(STDOUT_FILENO, "%zu %s\r\n", i + 1, maildrop[i].name))
-						continue;
+					//can't really do anything about an error here, just swallow it
+					(void)send_uidl_msg("", i + 1, maildrop[i].name);
 				}
 				SEND(".");
 			}
 			else
 			{
-				if(0 > dprintf(STDOUT_FILENO, "+OK %zu %s\r\n", (size_t)(email_at_index - maildrop) + 1, email_at_index->name))
+				if(!send_uidl_msg("+OK ", (size_t)(email_at_index - maildrop) + 1, email_at_index->name))
 					REPLY("-ERR internal server error")
 				continue;
 			}
