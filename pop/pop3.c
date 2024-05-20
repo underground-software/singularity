@@ -226,10 +226,10 @@ static bool pending_deletes(void)
 
 enum state
 {
-	START,
-	USER,
-	LOGIN,
-	QUIT,
+	S_START,
+	S_USER,
+	S_LOGIN,
+	S_QUIT,
 };
 
 #define REPLY(STR) { SEND(STR); continue; }
@@ -255,7 +255,7 @@ int main(int argc, char **argv)
 	if(chdir(argv[1]))
 		errx(1, "Unable to change directory to mail folder \"%s\"", argv[1]);
 	SEND("+OK POP3 server ready");
-	for(enum state state = START; state != QUIT;)
+	for(enum state state = S_START; state != S_QUIT;)
 	{
 		uint32_t command = get_command();
 		if(!read_line(line_buff, &line_size))
@@ -264,7 +264,7 @@ int main(int argc, char **argv)
 		switch(command)
 		{
 		case 'quit':
-			state = QUIT;
+			state = S_QUIT;
 			if(pending_deletes())
 				REPLY("-ERR unable to delete some messages")
 			else
@@ -283,7 +283,7 @@ int main(int argc, char **argv)
 		//specific commands for logging in with single associated state
 		switch(state)
 		{
-		case START:
+		case S_START:
 			if(command != 'user')
 				REPLY("-ERR command out of sequence")
 			{
@@ -299,9 +299,9 @@ int main(int argc, char **argv)
 				if(!validate_and_case_fold_username(username_size, username))
 					REPLY("-ERR invalid username")
 			}
-			state = USER;
+			state = S_USER;
 			REPLY("+OK got username")
-		case USER:
+		case S_USER:
 			if(command != 'pass')
 				REPLY("-ERR command out of sequence")
 			if(line_buff[0] != ' ')
@@ -309,14 +309,14 @@ int main(int argc, char **argv)
 			if(!check_credentials(username_size, username, line_size - 1, line_buff + 1))
 				REPLY("-ERR unauthorized")
 			load_emails(journal_fd, username_size, username);
-			state = LOGIN;
+			state = S_LOGIN;
 			REPLY("+OK got password")
-		case LOGIN:
+		case S_LOGIN:
 			break;
-		case QUIT:
+		case S_QUIT:
 			REPLY("-ERR internal server error")
 		}
-		//we know that state==LOGIN, these are the main commands
+		//we know that state==S_LOGIN, these are the main commands
 		struct email *email_at_index = NULL;
 		if(line_size)
 		{
