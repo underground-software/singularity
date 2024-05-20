@@ -25,8 +25,7 @@ static void send(const char *msg, size_t size)
 	do
 	{
 		ssize_t ret = write(STDOUT_FILENO, msg + off, size - off);
-		//non recoverable, as the proper way to close an SMTP connection involves sending a
-		//final 421 response, but if we failed to write here, we won't be able to do that...
+		//non recoverable, if we failed to write here, we won't be able to tell the client anything
 		if(ret <= 0)
 			exit(2);
 		//safe to cast to size_t because we know that ret > 0
