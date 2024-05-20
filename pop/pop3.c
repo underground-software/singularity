@@ -296,7 +296,7 @@ int main(int argc, char **argv)
 				REPLY("-ERR unauthorized")
 			load_emails(journal_fd, username_size, username);
 			state = LOGIN;
-			REPLY("+OK got username")
+			REPLY("+OK got password")
 		case 'rset':
 			eat_rest();
 			if(state != LOGIN)
