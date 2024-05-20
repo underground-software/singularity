@@ -119,7 +119,7 @@ services:
       context: denis
       dockerfile: Containerfile
       additional_contexts:
-        - watchtower_source=./watchtower
+        - watcher_source=./watcher
     volumes:
       - type: volume
         source: email-mail

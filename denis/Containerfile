@@ -4,9 +4,9 @@ RUN apk add \
 	make \
 	;
 
-COPY --from=watchtower_source . /watchtower
+COPY --from=watcher_source . /watcher
 
-RUN make -C /watchtower CC='clang -static' watcher
+RUN make -C /watcher CC='clang -static'
 
 FROM alpine:3.19 AS denis
 
@@ -26,7 +26,7 @@ RUN mkdir -p /var/lib/denis/ && \
 
 RUN chown -R 100:100 /var/lib/denis
 
-COPY --from=build /watchtower/watcher /usr/local/bin/watcher
+COPY --from=build /watcher/watcher /usr/local/bin/watcher
 
 VOLUME /var/lib/email/
 
