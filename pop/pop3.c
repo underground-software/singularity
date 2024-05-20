@@ -232,6 +232,39 @@ enum state
 	S_QUIT,
 };
 
+#define COMMANDS(X) \
+	X(QUIT, 'quit') \
+	X(CAPA, 'capa') \
+	X(NOOP, 'noop') \
+	X(USER, 'user') \
+	X(PASS, 'pass') \
+	X(RSET, 'rset') \
+	X(STAT, 'stat') \
+	X(LIST, 'list') \
+	X(UIDL, 'uidl') \
+	X(DELE, 'dele') \
+	X(RETR, 'retr') \
+	X(TOP,  'top ') \
+
+
+#define ENUM(ENUM_NAME, STR_NAME) ENUM_NAME,
+enum command
+{
+	COMMANDS(ENUM)
+};
+#undef ENUM
+
+static bool recognize_command(uint32_t cmd, enum command *out)
+{
+	#define LABEL(ENUM_NAME, STR_NAME) case STR_NAME: *out = ENUM_NAME; return true;
+	switch(cmd)
+	{
+	COMMANDS(LABEL)
+	}
+	#undef LABEL
+	return false;
+}
+
 #define REPLY(STR) { SEND(STR); continue; }
 
 int main(int argc, char **argv)
@@ -257,19 +290,24 @@ int main(int argc, char **argv)
 	SEND("+OK POP3 server ready");
 	for(enum state state = S_START; state != S_QUIT;)
 	{
-		uint32_t command = get_command();
+		enum command command;
+		if(!recognize_command(get_command(), &command))
+		{
+			eat_rest();
+			REPLY("-ERR Unrecognized command")
+		}
 		if(!read_line(line_buff, &line_size))
 			REPLY("-ERR Parameters too long")
 		//valid in any state
 		switch(command)
 		{
-		case 'quit':
+		case QUIT:
 			state = S_QUIT;
 			if(pending_deletes())
 				REPLY("-ERR unable to delete some messages")
 			else
 				REPLY("+OK bye")
-		case 'capa':
+		case CAPA:
 			REPLY("+OK capabilities list follows\r\n"
 			"USER\r\n"
 			"UIDL\r\n"
@@ -277,14 +315,14 @@ int main(int argc, char **argv)
 			"EXPIRE NEVER\r\n"
 			"IMPLEMENTATION KDLP\r\n"
 			".")
-		case 'noop':
+		case NOOP:
 			REPLY("+OK did nothing")
 		}
 		//specific commands for logging in with single associated state
 		switch(state)
 		{
 		case S_START:
-			if(command != 'user')
+			if(command != USER)
 				REPLY("-ERR command out of sequence")
 			{
 				char *ptr = line_buff;
@@ -302,7 +340,7 @@ int main(int argc, char **argv)
 			state = S_USER;
 			REPLY("+OK got username")
 		case S_USER:
-			if(command != 'pass')
+			if(command != PASS)
 				REPLY("-ERR command out of sequence")
 			if(line_buff[0] != ' ')
 				REPLY("-ERR unrecognized command")
@@ -324,7 +362,7 @@ int main(int argc, char **argv)
 			uintmax_t arg = strtoumax(line_buff, &endptr, 10);
 			if(endptr != line_buff + line_size)
 			{
-				if(command != 'top ')
+				if(command != TOP)
 					REPLY("-ERR invalid index argument")
 				if(endptr[0] != ' ' || endptr[1] != '0' || endptr[2] != '\0') //we only support top <idx> 0 for now
 					REPLY("-ERR top arg 2 of nonzero value unsupported")
@@ -338,11 +376,11 @@ int main(int argc, char **argv)
 		}
 		switch(command)
 		{
-		case 'rset':
+		case RSET:
 			for(size_t i = 0; i < num_emails; ++i)
 				maildrop[i].active = true;
 			REPLY("+OK reset complete")
-		case 'stat':
+		case STAT:
 			;
 			size_t active_emails = 0;
 			off_t total_size = 0;
@@ -363,7 +401,7 @@ int main(int argc, char **argv)
 				send(stat_message, message_len);
 			}
 			break;
-		case 'list':
+		case LIST:
 			if(!email_at_index)
 			{
 				SEND("+OK maildrop follows");
@@ -394,7 +432,7 @@ int main(int argc, char **argv)
 				send(stat_message, message_len);
 			}
 			break;
-		case 'uidl':
+		case UIDL:
 			if(!email_at_index)
 			{
 				SEND("+OK ids follow");
@@ -425,12 +463,12 @@ int main(int argc, char **argv)
 				send(uidl_message, message_len);
 			}
 			break;
-		case 'dele':
+		case DELE:
 			if(!email_at_index)
 				REPLY("-ERR arg required for dele command")
 			email_at_index->active = false;
 			REPLY("+OK marked for deletion")
-		case 'retr':
+		case RETR:
 			if(!email_at_index)
 				REPLY("-ERR arg required for retr command")
 			{
@@ -441,7 +479,7 @@ int main(int argc, char **argv)
 				send_file(fd, (size_t)email_at_index->size);
 			}
 			break;
-		case 'top ':
+		case TOP:
 			if(!email_at_index)
 				REPLY("-ERR arg required for dele command")
 			{
@@ -452,8 +490,6 @@ int main(int argc, char **argv)
 				send_file(fd, (size_t)email_at_index->top_limit);
 			}
 			REPLY(".")
-		default:
-			REPLY("-ERR command not recognized")
 		}
 	}
 }
