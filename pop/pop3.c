@@ -244,17 +244,17 @@ int main(int argc, char **argv)
 	for(enum state state = START; state != QUIT;)
 	{
 		uint32_t command = get_command();
+		if(!read_line(line_buff, &line_size))
+			REPLY("-ERR Parameters too long")
 		switch(command)
 		{
 		case 'quit':
-			eat_rest();
 			state = QUIT;
 			if(pending_deletes())
 				REPLY("-ERR unable to delete some messages")
 			else
 				REPLY("+OK bye")
 		case 'capa':
-			eat_rest();
 			REPLY("+OK capabilities list follows\r\n"
 			"USER\r\n"
 			"UIDL\r\n"
@@ -263,11 +263,8 @@ int main(int argc, char **argv)
 			"IMPLEMENTATION KDLP\r\n"
 			".")
 		case 'noop':
-			eat_rest();
 			REPLY("+OK did nothing")
 		case 'user':
-			if(!read_line(line_buff, &line_size))
-				REPLY("-ERR Parameters too long")
 			if(state != START)
 				REPLY("-ERR command out of sequence")
 			{
@@ -286,8 +283,6 @@ int main(int argc, char **argv)
 			state = USER;
 			REPLY("+OK got username")
 		case 'pass':
-			if(!read_line(line_buff, &line_size))
-				REPLY("-ERR Parameters too long")
 			if(state != USER)
 				REPLY("-ERR command out of sequence")
 			if(line_buff[0] != ' ')
@@ -298,14 +293,12 @@ int main(int argc, char **argv)
 			state = LOGIN;
 			REPLY("+OK got password")
 		case 'rset':
-			eat_rest();
 			if(state != LOGIN)
 				REPLY("-ERR unauthenticated")
 			for(size_t i = 0; i < num_emails; ++i)
 				maildrop[i].active = true;
 			REPLY("+OK reset complete")
 		case 'stat':
-			eat_rest();
 			if(state != LOGIN)
 				REPLY("-ERR unauthenticated")
 			size_t active_emails = 0;
@@ -328,8 +321,6 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'list':
-			if(!read_line(line_buff, &line_size))
-				REPLY("-ERR Parameters too long")
 			if(state != LOGIN)
 				REPLY("-ERR unauthenticated")
 			if(line_size == 0)
@@ -372,8 +363,6 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'uidl':
-			if(!read_line(line_buff, &line_size))
-				REPLY("-ERR Parameters too long")
 			if(state != LOGIN)
 				REPLY("-ERR unauthenticated")
 			if(line_size == 0)
@@ -416,8 +405,6 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'dele':
-			if(!read_line(line_buff, &line_size))
-				REPLY("-ERR Parameters too long")
 			if(state != LOGIN)
 				REPLY("-ERR unauthenticated")
 			if(line_size == 0)
@@ -436,8 +423,6 @@ int main(int argc, char **argv)
 			}
 			REPLY("+OK marked for deletion")
 		case 'retr':
-			if(!read_line(line_buff, &line_size))
-				REPLY("-ERR Parameters too long")
 			if(state != LOGIN)
 				REPLY("-ERR unauthenticated")
 			if(line_size == 0)
@@ -467,8 +452,6 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'top ':
-			if(!read_line(line_buff, &line_size))
-				REPLY("-ERR Parameters too long")
 			if(state != LOGIN)
 				REPLY("-ERR unauthenticated")
 			if(line_size == 0)
@@ -500,7 +483,6 @@ int main(int argc, char **argv)
 			}
 			REPLY(".")
 		default:
-			eat_rest();
 			REPLY("-ERR command not recognized")
 		}
 	}
