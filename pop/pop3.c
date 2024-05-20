@@ -198,7 +198,7 @@ static void load_emails(int journal_fd, size_t username_size, char *username)
 	//mmap will not accept a size of zero, so we need to check, but if size is zero, the
 	//default value of NULL for maildrop is perfectly adequate since no code should access it.
 	if(num_emails)
-		maildrop = mmap(NULL, maildrop_size, PROT_READ, MAP_PRIVATE, journal_fd, 0);
+		maildrop = mmap(NULL, maildrop_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, journal_fd, 0);
 	if(MAP_FAILED == maildrop)
 		err(1, "unable to map journal file");
 }
