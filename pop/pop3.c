@@ -317,6 +317,25 @@ int main(int argc, char **argv)
 			REPLY("-ERR internal server error")
 		}
 		//we know that state==LOGIN, these are the main commands
+		struct email *email_at_index = NULL;
+		if(line_size)
+		{
+			char *endptr;
+			uintmax_t arg = strtoumax(line_buff, &endptr, 10);
+			if(endptr != line_buff + line_size)
+			{
+				if(command != 'top ')
+					REPLY("-ERR invalid index argument")
+				if(endptr[0] != ' ' || endptr[1] != '0' || endptr[2] != '\0') //we only support top <idx> 0 for now
+					REPLY("-ERR top arg 2 of nonzero value unsupported")
+			}
+			if(arg == 0 || arg > (uintmax_t)num_emails)
+				REPLY("-ERR index out of bounds")
+			size_t index = (size_t)arg - 1;
+			if(!maildrop[index].active)
+				REPLY("-ERR invalid index refers to deleted message")
+			email_at_index = &maildrop[index];
+		}
 		switch(command)
 		{
 		case 'rset':
@@ -345,7 +364,7 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'list':
-			if(line_size == 0)
+			if(!email_at_index)
 			{
 				SEND("+OK maildrop follows");
 				for(size_t i = 0; i < num_emails; ++i)
@@ -365,17 +384,8 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				char *endptr;
-				uintmax_t arg = strtoumax(line_buff, &endptr, 10);
-				if(endptr != line_buff + line_size)
-					REPLY("-ERR invalid index to stat command")
-				if(arg == 0 || arg > (uintmax_t)num_emails)
-					REPLY("-ERR index out of bounds for stat command")
-				size_t index = (size_t)arg - 1;
-				if(!maildrop[index].active)
-					REPLY("-ERR Invalid index")
 				char stat_message[64];
-				size_t message_len = (size_t)snprintf(stat_message, sizeof stat_message, "+OK %zu %"SCNiMAX"\r\n", index + 1, (intmax_t)maildrop[index].size);
+				size_t message_len = (size_t)snprintf(stat_message, sizeof stat_message, "+OK %zu %"SCNiMAX"\r\n", (size_t)(email_at_index - maildrop) + 1, (intmax_t)email_at_index->size);
 				if(sizeof stat_message <= message_len)
 				{
 					warnx("stat buffer was not big enough: %d", __LINE__);
@@ -385,7 +395,7 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'uidl':
-			if(line_size == 0)
+			if(!email_at_index)
 			{
 				SEND("+OK ids follow");
 				for(size_t i = 0; i < num_emails; ++i)
@@ -405,17 +415,8 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				char *endptr;
-				uintmax_t arg = strtoumax(line_buff, &endptr, 10);
-				if(endptr != line_buff + line_size)
-					REPLY("-ERR invalid index to uidl command")
-				if(arg == 0 || arg > (uintmax_t)num_emails)
-					REPLY("-ERR index out of bounds for uidl command")
-				size_t index = (size_t)arg - 1;
-				if(!maildrop[index].active)
-					REPLY("-ERR Invalid index")
 				char uidl_message[64];
-				size_t message_len = (size_t)snprintf(uidl_message, sizeof uidl_message, "+OK %zu %s\r\n", index + 1, maildrop[index].name);
+				size_t message_len = (size_t)snprintf(uidl_message, sizeof uidl_message, "+OK %zu %s\r\n", (size_t)(email_at_index - maildrop) + 1, email_at_index->name);
 				if(sizeof uidl_message <= message_len)
 				{
 					warnx("stat buffer was not big enough: %d", __LINE__);
@@ -425,61 +426,30 @@ int main(int argc, char **argv)
 			}
 			break;
 		case 'dele':
-			if(line_size == 0)
+			if(!email_at_index)
 				REPLY("-ERR arg required for dele command")
-			{
-				char *endptr;
-				uintmax_t arg = strtoumax(line_buff, &endptr, 10);
-				if(endptr != line_buff + line_size)
-					REPLY("-ERR invalid index to dele command")
-				if(arg == 0 || arg > (uintmax_t)num_emails)
-					REPLY("-ERR index out of bounds for dele command")
-				size_t index = (size_t)arg - 1;
-				if(!maildrop[index].active)
-					REPLY("-ERR Invalid index")
-				maildrop[index].active = false;
-			}
+			email_at_index->active = false;
 			REPLY("+OK marked for deletion")
 		case 'retr':
-			if(line_size == 0)
+			if(!email_at_index)
 				REPLY("-ERR arg required for retr command")
 			{
-				char *endptr;
-				uintmax_t arg = strtoumax(line_buff, &endptr, 10);
-				if(endptr != line_buff + line_size)
-					REPLY("-ERR invalid index to retr command")
-				if(arg == 0 || arg > (uintmax_t)num_emails)
-					REPLY("-ERR index out of bounds for retr command")
-				size_t index = (size_t)arg - 1;
-				if(!maildrop[index].active)
-					REPLY("-ERR Invalid index")
-				int fd = open(maildrop[index].name, O_RDONLY);
+				int fd = open(email_at_index->name, O_RDONLY);
 				if(0 > fd)
 					REPLY("-ERR internal server error")
 				SEND("+OK message follows");
-				send_file(fd, (size_t)maildrop[index].size);
+				send_file(fd, (size_t)email_at_index->size);
 			}
 			break;
 		case 'top ':
-			if(line_size == 0)
+			if(!email_at_index)
 				REPLY("-ERR arg required for dele command")
 			{
-				char *endptr;
-				uintmax_t arg = strtoumax(line_buff, &endptr, 10);
-				if(endptr == line_buff || endptr == line_buff + line_size)
-					REPLY("-ERR missing args to top command")
-				if(endptr[0] != ' ' || endptr[1] != '0' || endptr[2] != '\0') //we only support top <idx> 0 for now
-					REPLY("-ERR top arg 2 of nonzero value unsupported")
-				if(arg == 0 || arg > (uintmax_t)num_emails)
-					REPLY("-ERR index out of bounds for stat command")
-				size_t index = (size_t)arg - 1;
-				if(!maildrop[index].active)
-					REPLY("-ERR Invalid index")
-				int fd = open(maildrop[index].name, O_RDONLY);
+				int fd = open(email_at_index->name, O_RDONLY);
 				if(0 > fd)
 					REPLY("-ERR internal server error")
 				SEND("+OK message follows");
-				send_file(fd, (size_t)maildrop[index].top_limit);
+				send_file(fd, (size_t)email_at_index->top_limit);
 			}
 			REPLY(".")
 		default:
