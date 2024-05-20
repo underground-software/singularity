@@ -390,17 +390,9 @@ int main(int argc, char **argv)
 					active_emails++;
 					total_size += maildrop[i].size;
 				}
-			{
-				char stat_message[64];
-				size_t message_len = (size_t)snprintf(stat_message, sizeof stat_message, "+OK %zu %"SCNiMAX"\r\n", active_emails, (intmax_t)total_size);
-				if(sizeof stat_message <= message_len)
-				{
-					warnx("stat buffer was not big enough");
-					REPLY("-ERR internal server error")
-				}
-				send(stat_message, message_len);
-			}
-			break;
+			if(0 > dprintf(STDOUT_FILENO, "+OK %zu %"SCNiMAX"\r\n", active_emails, (intmax_t)total_size))
+				REPLY("-ERR internal server error")
+			continue;
 		case LIST:
 			if(!email_at_index)
 			{
@@ -409,27 +401,16 @@ int main(int argc, char **argv)
 				{
 					if(!maildrop[i].active)
 						continue;
-					char stat_message[64];
-					size_t message_len = (size_t)snprintf(stat_message, sizeof stat_message, "%zu %"SCNiMAX"\r\n", i + 1, (intmax_t)maildrop[i].size);
-					if(sizeof stat_message <= message_len)
-					{
-						warnx("stat buffer was not big enough: %d", __LINE__);
+					if(0 > dprintf(STDOUT_FILENO, "%zu %"SCNiMAX"\r\n", i + 1, (intmax_t)maildrop[i].size))
 						continue;
-					}
-					send(stat_message, message_len);
 				}
 				SEND(".");
 			}
 			else
 			{
-				char stat_message[64];
-				size_t message_len = (size_t)snprintf(stat_message, sizeof stat_message, "+OK %zu %"SCNiMAX"\r\n", (size_t)(email_at_index - maildrop) + 1, (intmax_t)email_at_index->size);
-				if(sizeof stat_message <= message_len)
-				{
-					warnx("stat buffer was not big enough: %d", __LINE__);
+				if(0 > dprintf(STDOUT_FILENO, "+OK %zu %"SCNiMAX"\r\n", (size_t)(email_at_index - maildrop) + 1, (intmax_t)email_at_index->size))
 					REPLY("-ERR internal server error")
-				}
-				send(stat_message, message_len);
+				continue;
 			}
 			break;
 		case UIDL:
@@ -440,27 +421,16 @@ int main(int argc, char **argv)
 				{
 					if(!maildrop[i].active)
 						continue;
-					char uidl_message[64];
-					size_t message_len = (size_t)snprintf(uidl_message, sizeof uidl_message, "%zu %s\r\n", i + 1, maildrop[i].name);
-					if(sizeof uidl_message <= message_len)
-					{
-						warnx("stat buffer was not big enough: %d", __LINE__);
+					if(0 > dprintf(STDOUT_FILENO, "%zu %s\r\n", i + 1, maildrop[i].name))
 						continue;
-					}
-					send(uidl_message, message_len);
 				}
 				SEND(".");
 			}
 			else
 			{
-				char uidl_message[64];
-				size_t message_len = (size_t)snprintf(uidl_message, sizeof uidl_message, "+OK %zu %s\r\n", (size_t)(email_at_index - maildrop) + 1, email_at_index->name);
-				if(sizeof uidl_message <= message_len)
-				{
-					warnx("stat buffer was not big enough: %d", __LINE__);
+				if(0 > dprintf(STDOUT_FILENO, "+OK %zu %s\r\n", (size_t)(email_at_index - maildrop) + 1, email_at_index->name))
 					REPLY("-ERR internal server error")
-				}
-				send(uidl_message, message_len);
+				continue;
 			}
 			break;
 		case DELE:
