@@ -1,8 +1,3 @@
-/pop/pop3
-/pop/init_journal
-/pop/restrict_access
-/smtp/smtp
-/tcp_server/tcp_server
 /test
 cert*
 .*.sw*
