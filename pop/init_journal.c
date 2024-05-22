@@ -84,7 +84,7 @@ static void replicate_xattrs(int targetfd, char *srcpath)
 	if(0 > ret)
 		err(1, "unable to fetch xattrs from \"%s\"", srcpath);
 	char *end = buf + (size_t)ret;
-	for(char *ptr = buf; ptr < end; ptr += 1 + strnlen(buf, (size_t)(end - ptr)))
+	for(char *ptr = buf; ptr < end; ptr += 1 + strnlen(ptr, (size_t)(end - ptr)))
 	{
 		if(ptr[0] != 'u' || ptr[1] != 's' || ptr[2] != 'e' || ptr[3] != 'r' || ptr[4] != '.')
 			continue;
