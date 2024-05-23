@@ -65,7 +65,7 @@ def main(argv):
     if not patches:
         # only one patch, but addressed to an
         # assignment inbox. This cannot be valid.
-        sub.status = 'no patches or no cover letter'
+        sub.status = 'rejected: no patches or no cover letter'
         sub.save()
         return 0
 
@@ -105,7 +105,7 @@ def main(argv):
                 continue
 
             # If we still fail, the patch does not apply
-            sub.status = f'patch {i+1} failed to apply'
+            sub.status = f'rejected: patch {i+1} failed to apply'
             sub.save()
             return 0
 
