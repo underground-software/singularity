@@ -6,7 +6,9 @@ COPY homeserver.yaml.template /etc/synapse/homeserver.yaml.template
 
 COPY homeserver.log.config /etc/synapse/homeserver.log.config
 
-COPY orbit_auth.py /usr/lib/python3.11/site-packages/orbit_auth.py
+COPY orbit_auth.py /usr/local/share/submatrix/
+
+COPY start.sh /usr/local/share/submatrix/
 
 ARG MATRIX_HOSTNAME=localhost
 
@@ -16,5 +18,5 @@ VOLUME /var/synapse
 
 USER 100:100
 
-CMD ["synapse_homeserver", "-c", "/etc/synapse/homeserver.yaml"]
+ENTRYPOINT ["/usr/local/share/submatrix/start.sh"]
 
