@@ -137,12 +137,29 @@ services:
       - smtp
     networks:
       - denis
+  chronus:
+    build:
+      context: chronus
+      dockerfile: Containerfile
+      additional_contexts:
+        - run_at_source=./run-at
+        - denis_source=./denis
+    volumes:
+      - type: volume
+        source: grades-db
+        target: /var/lib/denis
+        read_only: true
+    depends_on:
+      - denis
+    networks:
+      - chronus
 networks:
   orbit:
   smtp:
   pop:
   submatrix:
   denis:
+  chronus:
 volumes:
   ssl-certs:
   email-mail:

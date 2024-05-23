@@ -1,0 +1,33 @@
+FROM alpine:3.19 AS build
+
+RUN apk add \
+	clang \
+	make \
+	;
+
+COPY --from=run_at_source . /run_at
+
+RUN make -C /run_at CC='clang -static' run-at
+
+FROM alpine:3.19 AS denis
+
+RUN apk add \
+	py3-peewee \
+	;
+
+
+WORKDIR /usr/local/share/chronus
+
+COPY --from=denis_source . ./denis
+
+RUN chown -R 100:100 /usr/local/share/chronus
+
+COPY . .
+
+COPY --from=build /run_at/run-at /usr/local/bin/run-at
+
+VOLUME /mnt/email_data/
+
+USER 100:100
+
+ENTRYPOINT ["/bin/sh", "release_daemons.sh"]
