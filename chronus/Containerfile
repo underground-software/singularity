@@ -1,0 +1,31 @@
+FROM alpine:3.19 AS build
+RUN apk add \
+	clang \
+	make \
+	;
+
+COPY --from=run_at_source . /run-at
+
+RUN make -C /run-at CC='clang -static'
+
+FROM alpine:3.19 AS chronus
+
+RUN apk add \
+	py3-peewee \
+	;
+
+WORKDIR /usr/local/share/chronus
+
+COPY . .
+
+RUN mkdir -p /var/lib/chronus && \
+	./db.py \
+	:
+
+RUN chown -R 100:100 /var/lib/chronus
+
+COPY --from=build /run-at/run-at /usr/local/bin/run-at
+
+USER 100:100
+
+ENTRYPOINT ["/usr/local/share/chronus/start.py"]
