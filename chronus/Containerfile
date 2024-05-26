@@ -8,6 +8,10 @@ COPY --from=run_at_source . /run-at
 
 RUN make -C /run-at CC='clang -static'
 
+COPY --from=pop_source . /pop
+
+RUN make -C /pop CC='clang -static' restrict_access
+
 FROM alpine:3.19 AS chronus
 
 RUN apk add \
@@ -17,6 +21,8 @@ RUN apk add \
 WORKDIR /usr/local/share/chronus
 
 COPY . .
+COPY --from=denis_source . ./denis
+COPY --from=orbit_source . ./orbit
 
 RUN mkdir -p /var/lib/chronus && \
 	./db.py \
@@ -25,6 +31,7 @@ RUN mkdir -p /var/lib/chronus && \
 RUN chown -R 100:100 /var/lib/chronus
 
 COPY --from=build /run-at/run-at /usr/local/bin/run-at
+COPY --from=build /pop/restrict_access /usr/local/bin/restrict_access
 
 USER 100:100
 
