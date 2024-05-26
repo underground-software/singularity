@@ -143,11 +143,26 @@ services:
       dockerfile: Containerfile
       additional_contexts:
         - run_at_source=./run-at
+        - pop_source=./pop
+        - denis_source=./denis
+        - orbit_source=./orbit
     volumes:
       - type: volume
         source: chronus-db
         target: /var/lib/chronus
         read_only: false
+      - type: volume
+        source: email-journal
+        target: /var/lib/email/journal
+        read_only: false
+      - type: volume
+        source: orbit-db
+        target: /var/lib/orbit
+        read_only: true
+      - type: volume
+        source: grades-db
+        target: /var/lib/denis
+        read_only: true
     networks:
       - chronus
 networks:
