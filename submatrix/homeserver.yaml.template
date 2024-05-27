@@ -18,6 +18,7 @@ max_upload_size: 100M
 media_store_path: /var/synapse/media_store
 report_stats: true
 signing_key_path: "/var/synapse/${MATRIX_HOSTNAME}.signing.key"
+registration_shared_secret_path: /tmp/matrix_shared_secret
 federation_domain_whitelist:
   - underground.software # TODO also harden at firewall level
 trusted_key_servers: []
