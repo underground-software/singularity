@@ -2,9 +2,7 @@
 
 import peewee
 
-import config
-
-DB = peewee.SqliteDatabase(config.database)
+DB = peewee.SqliteDatabase('/var/lib/orbit/orbit.db')
 
 
 class BaseModel(peewee.Model):
