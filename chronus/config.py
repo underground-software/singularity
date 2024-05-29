@@ -1,0 +1,1 @@
+hostname = '${CHRONUS_HOSTNAME}'

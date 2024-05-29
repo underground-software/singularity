@@ -146,6 +146,8 @@ services:
         - pop_source=./pop
         - denis_source=./denis
         - orbit_source=./orbit
+      args:
+        CHRONUS_HOSTNAME: ${SINGULARITY_HOSTNAME}
     volumes:
       - type: volume
         source: chronus-db
@@ -165,6 +167,7 @@ services:
         read_only: true
     networks:
       - chronus
+      - smtp
 networks:
   orbit:
   smtp:
