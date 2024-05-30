@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import collections
-import db
 from pathlib import Path
 import sys
 import git
 import tempfile
 import time
+
+import db
 
 ASSIGNMENT_LIST = ["introductions",
                    "exercise0", "exercise1", "exercise2",

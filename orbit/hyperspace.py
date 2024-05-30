@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
 import argparse
-import sys
 import bcrypt
-import db
+import sys
+
 from datetime import datetime
 
 # internal imports
 import config
+import db
 
 
 def errx(msg):
