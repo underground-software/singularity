@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+
 import peewee
+
 import config
 
 DB = peewee.SqliteDatabase(config.database)

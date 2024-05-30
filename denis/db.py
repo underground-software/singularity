@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import peewee
 
 DB = peewee.SqliteDatabase("/var/lib/denis/grades.db")
