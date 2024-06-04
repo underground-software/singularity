@@ -1,23 +1,13 @@
-# Specify the css url
-css=/style.css
-
 # Allow http transport git clone
 enable-http-clone=0
 
-# Enable caching of up to 1000 output entries
-cache-size=0
-
-# Use a custom logo
-logo=/images/kdlp_logo.png
-
-# Set the title and heading of the repository index page
-root-title=Kernel Development Learning Pipeline Git Repositories
-
-# Set a subheading for the repository index page
-root-desc=Explore the class git repositories here!
-
 # Allow cgit to use git config to set repo-specific settings
 enable-git-config=1
+
+
+# Create output suitable for embedding within other pages
+embedded=1
+noheader=1
 
 ##
 ## List of common mimetypes
