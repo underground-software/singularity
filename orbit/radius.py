@@ -450,9 +450,11 @@ def handle_cgit(rocket):
     cgit_env['PATH_INFO'] = rocket.path_info.removeprefix('/cgit')
     cgit_env['QUERY_STRING'] = rocket.env.get('QUERY_STRING', '')
 
-    path_array = cgit_env['PATH_INFO'].split('/')
-    if len(path_array) > 2 and path_array[2] == 'plain':
-        return rocket.raw_respond(HTTPStatus.NOT_FOUND)
+    def cgit_internal_server_error(msg):
+        print(f'cgit: Error {msg} at path_info "{cgit_env["PATH_INFO"]}"'
+              f' and query string "{cgit_env["QUERY_STRING"]}"',
+              file=sys.stderr)
+        return rocket.raw_respond(HTTPStatus.INTERNAL_SERVER_ERROR)
 
     proc = subprocess.Popen(['/usr/share/webapps/cgit/cgit'],
                             stdout=subprocess.PIPE,
@@ -460,14 +462,31 @@ def handle_cgit(rocket):
                             env=cgit_env)
     so, se = proc.communicate()
     try:
-        outstring = so.decode()
-        begin = outstring.index('\n\n')
-        return rocket.respond(outstring[begin+2:])
-    except (UnicodeDecodeError, ValueError) as ex:
-        print(f'cgit: Error {type(ex)} at path_info "{cgit_env["PATH_INFO"]}"'
-              f' and query string "{cgit_env["QUERY_STRING"]}"',
-              file=sys.stderr)
-        return rocket.raw_respond(HTTPStatus.INTERNAL_SERVER_ERROR)
+        raw_headers, raw_body = so.split(b'\n\n', maxsplit=1)
+        headers_text = raw_headers.decode()
+        headers = [tuple(line.split(': ', maxsplit=1))
+                   for line in headers_text.split('\n')]
+        raw_return = False
+        status = HTTPStatus.OK
+        if headers[0][0] == 'Status':
+            status_str = headers[0][1]
+            status = HTTPStatus(int(status_str.split(' ')[0]))
+            if status == HTTPStatus.OK:
+                return cgit_internal_server_error('Unexpected 200 status')
+            raw_return = True
+            raw_body = b''
+            del headers[0]
+        if headers[0][0] != 'Content-Type':
+            return cgit_internal_server_error('missing Content-Type')
+        if headers[0][1] != 'text/html; charset=UTF-8':
+            raw_return = True
+        rocket.headers += headers
+        if raw_return:
+            return rocket.raw_respond(status, raw_body)
+        outstring = raw_body.decode()
+        return rocket.respond(outstring)
+    except (UnicodeDecodeError, ValueError, IndexError) as ex:
+        return cgit_internal_server_error(type(ex))
 
 
 def handle_error(rocket):
