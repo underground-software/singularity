@@ -1,15 +1,9 @@
-#!/bin/sh -e
+#!/bin/sh
 #
 # the warp drive allows you to enter hyperspace
 
-require() { command -v "$1" > /dev/null || { echo "error: $1 command required yet absent" ; exit 1 ; } ; }
+set -e
 
-cd "$(dirname "$0")"
+DOCKER_COMPOSE=${DOCKER_COMPOSE:-podman-compose}
 
-DOCKER=${DOCKER:-podman}
-
-require "${DOCKER}"
-
-CONTAINER=${CONTAINER:-singularity_orbit_1}
-
-$DOCKER exec -i "$CONTAINER" ./hyperspace.py "$@"
+$DOCKER_COMPOSE exec orbit ./hyperspace.py "$@"
