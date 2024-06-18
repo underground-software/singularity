@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 			errx(1, "Username \"%s\" is too long", *username);
 		int ret;
 		if(denying)
-			ret = fsetxattr(journalfd, attr_buf, &limit, sizeof limit, 0);
+			ret = fsetxattr(journalfd, attr_buf, &limit, sizeof limit, XATTR_CREATE);
 		else
 			ret = fremovexattr(journalfd, attr_buf);
 		if(0 > ret)
