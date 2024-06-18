@@ -119,7 +119,7 @@ def hyperspace_main(raw_args):
                          help='Change password for supplied username to supplied password',  # NOQA: E501
                          dest='do', const=do_change_password)
     actions.add_argument('-c', '--clearpassword', action='store_const',
-                         help='clear password for supplied username so they canot login',  # NOQA: E501
+                         help='clear password for supplied username so they cannot login',  # NOQA: E501
                          dest='do', const=do_reset_password)
     actions.add_argument('-w', '--withdrawuser', action='store_const',
                          help='Delete ("withdraw") the supplied username',
