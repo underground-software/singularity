@@ -559,8 +559,10 @@ static void handle_mail(enum state *state)
 		}
 		dprintf(CURR_EMAIL_FD,
 			"Received: by " HOSTNAME " ; %s\r\n"
-			"Message-ID: <%s@" HOSTNAME ">\r\nFrom: <%.*s@" HOSTNAME ">\r\n",
-			now(), message_id, (int)username_size, username);
+			"X-KDLP-Submission-ID: <%s@" HOSTNAME ">\r\n"
+			"Message-ID: <%s@" HOSTNAME ">\r\n"
+			"From: <%.*s@" HOSTNAME ">\r\n",
+			now(), session_id, message_id, (int)username_size, username);
 		*state = MAIL;
 		REPLY("250 OK")
 	case GREET:
