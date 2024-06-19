@@ -5,7 +5,6 @@ from pathlib import Path
 import sys
 import git
 import tempfile
-import time
 
 import db
 
