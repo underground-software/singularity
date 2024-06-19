@@ -6,7 +6,6 @@ import bcrypt
 import html
 import markdown
 import os
-import re
 import subprocess
 import sys
 import secrets
@@ -484,20 +483,16 @@ def handle_error(rocket):
     return rocket.respond(error_description)
 
 
-def handle_md(rocket, md_path):
-    with open(md_path, 'r', newline='') as f:
-        content = markdown.markdown(f.read(),
-                                    extensions=['tables', 'fenced_code'])
-        return rocket.respond(content)
-
-
 def handle_try_md(rocket):
-    md_path = f'{config.doc_root}{rocket.path_info}'
-    if re.match("^(?!/cgit)(.*\\.md)$", rocket.path_info) \
-            and os.access(md_path, os.R_OK):
-        return handle_md(rocket, md_path)
-    else:
+    if not rocket.path_info.endswith('.md'):
         return rocket.raw_respond(HTTPStatus.NOT_FOUND)
+    path = f'{config.doc_root}{rocket.path_info}'
+    if not os.access(path, os.R_OK):
+        return rocket.raw_respond(HTTPStatus.NOT_FOUND)
+    with open(path) as file:
+        md = file.read()
+    html = markdown.markdown(md, extensions=['tables', 'fenced_code'])
+    return rocket.respond(html)
 
 
 def application(env, SR):
@@ -506,24 +501,27 @@ def application(env, SR):
         return rocket.raw_respond(HTTPStatus.METHOD_NOT_ALLOWED)
 
     # routes supporting get and post
-    if re.match("^/login", rocket.path_info):
-        return handle_login(rocket)
-    elif re.match("^/register", rocket.path_info):
-        return handle_register(rocket)
-    else:
-        if rocket.method != 'GET':
-            return rocket.raw_respond(HTTPStatus.METHOD_NOT_ALLOWED)
+    match rocket.path_info:
+        case '/login':
+            return handle_login(rocket)
+        case '/register':
+            return handle_register(rocket)
+        case _:
+            if rocket.method != 'GET':
+                return rocket.raw_respond(HTTPStatus.METHOD_NOT_ALLOWED)
 
     # routes supporting only get
-    if re.match("^/logout", rocket.path_info):
-        return handle_logout(rocket)
-    elif re.match("^/mail_auth", rocket.path_info):
-        return handle_mail_auth(rocket)
-    elif re.match("^/dashboard", rocket.path_info):
-        return handle_dashboard(rocket)
-    elif re.match("^/cgit", rocket.path_info):
-        return handle_cgit(rocket)
-    elif re.match("^/error", rocket.path_info):
-        return handle_error(rocket)
-    else:
-        return handle_try_md(rocket)
+    match rocket.path_info:
+        case '/logout':
+            return handle_logout(rocket)
+        case '/mail_auth':
+            return handle_mail_auth(rocket)
+        case '/dashboard':
+            return handle_dashboard(rocket)
+        case '/error':
+            return handle_error(rocket)
+        case p:
+            if p.startswith('/cgit'):
+                return handle_cgit(rocket)
+            else:
+                return handle_try_md(rocket)
