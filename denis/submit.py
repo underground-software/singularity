@@ -84,7 +84,7 @@ def main(argv):
         maildir = Path(MAIL_DIR_ABSPATH)
         author_args = ["-c", "user.name=Denis", "-c",
                        "user.email=daemon@denis.d"]
-        git_am_args = ["git", *author_args, "am"]
+        git_am_args = ["git", *author_args, "am", "--keep"]
         whitespace_errors = []
         for i, patch in enumerate(patches):
             patch_abspath = str(maildir / patch.msg_id)
