@@ -487,7 +487,7 @@ def handle_error(rocket):
 def handle_md(rocket, md_path):
     with open(md_path, 'r', newline='') as f:
         content = markdown.markdown(f.read(),
-                                    extensions=['tables', 'fenced_code'])
+                                    extensions=['tables', 'fenced_code', 'footnotes'])
         return rocket.respond(content)
 
 
