@@ -484,21 +484,17 @@ def handle_error(rocket):
     return rocket.respond(error_description)
 
 
-def handle_md(rocket, md_path):
-    with open(md_path, 'r', newline='') as f:
-        content = markdown.markdown(f.read(),
-                                    extensions=['tables', 'fenced_code',
-                                                'footnotes'])
-        return rocket.respond(content)
-
-
 def handle_try_md(rocket):
-    md_path = f'{config.doc_root}{rocket.path_info}'
-    if re.match("^(?!/cgit)(.*\\.md)$", rocket.path_info) \
-            and os.access(md_path, os.R_OK):
-        return handle_md(rocket, md_path)
-    else:
+    if not rocket.path_info.endswith('.md'):
         return rocket.raw_respond(HTTPStatus.NOT_FOUND)
+    path = f'{config.doc_root}{rocket.path_info}'
+    if not os.access(path, os.R_OK):
+        return rocket.raw_respond(HTTPStatus.NOT_FOUND)
+    with open(path) as file:
+        md = file.read()
+    html = markdown.markdown(md, extensions=['tables', 'fenced_code',
+                                             'footnotes'])
+    return rocket.respond(html)
 
 
 def application(env, SR):
