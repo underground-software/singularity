@@ -37,8 +37,9 @@ static void write_with_retry(int fd, void *data, size_t size)
 	while(off < size);
 }
 
-static void load_emails(int journal_fd, char *path)
+static off_t load_emails(int journal_fd, char *path)
 {
+	off_t f_pos = 0;
 	int mail_dir = openat(AT_FDCWD, path, O_RDONLY | O_DIRECTORY);
 	if(0 > mail_dir)
 		err(1, "unable to open mail directory \"%s\"", path);
@@ -70,10 +71,12 @@ static void load_emails(int journal_fd, char *path)
 			errx(1, "filename of email %s is too long", ptr->d_name);
 		memcpy(email.name, ptr->d_name, size + 1);
 		write_with_retry(journal_fd, &email, sizeof email);
+		f_pos += sizeof email;
 	}
 	if(errno)
 		err(1, "Unable to read from directory");
 	closedir(dir);
+	return f_pos;
 }
 
 static void replicate_xattrs(int targetfd, char *srcpath)
@@ -119,12 +122,12 @@ int main(int argc, char **argv)
 	int new_fd = openat(AT_FDCWD, new_file, O_CREAT | O_EXCL | O_WRONLY, 0600);
 	if(0 > new_fd)
 		err(1, "Unable to create file \"%s\"", new_file);
+	off_t f_pos = 0;
 	if(email_folder)
 	{
-		load_emails(new_fd, email_folder);
+		f_pos = load_emails(new_fd, email_folder);
 		replicate_xattrs(new_fd, journal_file);
 	}
-	off_t f_pos = lseek(new_fd, 0, SEEK_CUR);
 	if(fsetxattr(new_fd, "user.data_end", &f_pos, sizeof f_pos, 0))
 		err(1, "unable to write journal file size to journal file");
 	if(fdatasync(new_fd))
