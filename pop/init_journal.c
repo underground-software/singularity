@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/xattr.h>
 #include <unistd.h>
@@ -79,6 +80,18 @@ static off_t load_emails(int journal_fd, char *path)
 	return f_pos;
 }
 
+static int compar_email(const void *e1, const void *e2)
+{
+	return strcmp(((const struct email *)e1)->name, ((const struct email *)e2)->name);
+}
+
+static void sort_mail(int journal_fd, size_t journal_size)
+{
+	void *data = mmap(NULL, journal_size, PROT_READ | PROT_WRITE, MAP_SHARED, journal_fd, 0);
+	qsort(data, sizeof(struct email), journal_size / sizeof(struct email), compar_email);
+	munmap(data, journal_size);
+}
+
 static void replicate_xattrs(int targetfd, char *srcpath)
 {
 	//ought to be big enough for our purposes
@@ -126,6 +139,7 @@ int main(int argc, char **argv)
 	if(email_folder)
 	{
 		f_pos = load_emails(new_fd, email_folder);
+		sort_mail(new_fd, (size_t)f_pos);
 		replicate_xattrs(new_fd, journal_file);
 	}
 	if(fsetxattr(new_fd, "user.data_end", &f_pos, sizeof f_pos, 0))
