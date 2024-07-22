@@ -16,5 +16,15 @@ class Assignment(BaseModel):
     final_due_date = peewee.IntegerField()
 
 
+class PeerReviewAssignment(BaseModel):
+    assignment = peewee.TextField()
+    reviewer = peewee.TextField()
+    reviewee1 = peewee.TextField()
+    reviewee2 = peewee.TextField()
+
+    class Meta:
+        indexes = ((('assignment', 'reviewer'), True),)
+
+
 if __name__ == '__main__':
     DB.create_tables(BaseModel.__subclasses__())
