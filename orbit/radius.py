@@ -16,7 +16,7 @@ from urllib.parse import parse_qs, urlparse
 # === internal imports & constants ===
 import config
 import db
-import denis.db
+import mailman.db
 
 sec_per_min = 60
 min_per_ses = config.minutes_each_session_token_is_valid
@@ -382,9 +382,9 @@ def handle_dashboard(rocket):
     if not rocket.session:
         return rocket.raw_respond(HTTPStatus.UNAUTHORIZED)
 
-    submissions = (denis.db.Submission.select()
-                   .where(denis.db.Submission.user == rocket.session.username)
-                   .order_by(- denis.db.Submission.timestamp))
+    submissions = (mailman.db.Submission.select()
+                   .where(mailman.db.Submission.user == rocket.session.username)  # NOQA: E501
+                   .order_by(- mailman.db.Submission.timestamp))
 
     def submission_fields(sub):
         return (datetime.fromtimestamp(sub.timestamp).isoformat(),

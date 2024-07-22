@@ -82,7 +82,7 @@ def main(argv):
         repo = git.Repo.init(repo_path)
         maildir = Path(MAIL_DIR_ABSPATH)
         author_args = ["-c", "user.name=Denis", "-c",
-                       "user.email=daemon@denis.d"]
+                       "user.email=daemon@mailman.d"]
         git_am_args = ["git", *author_args, "am", "--keep"]
         whitespace_errors = []
         for i, patch in enumerate(patches):

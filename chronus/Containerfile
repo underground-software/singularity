@@ -33,7 +33,7 @@ RUN apk add \
 WORKDIR /usr/local/share/chronus
 
 COPY --from=build /usr/local/share/chronus .
-COPY --from=denis_source . ./denis
+COPY --from=mailman_source . ./mailman
 COPY --from=orbit_source . ./orbit
 
 RUN mkdir -p /var/lib/chronus && \

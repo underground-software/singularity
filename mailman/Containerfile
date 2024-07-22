@@ -8,7 +8,7 @@ COPY --from=watcher_source . /watcher
 
 RUN make -C /watcher CC='clang -static'
 
-FROM alpine:3.19 AS denis
+FROM alpine:3.19 AS mailman
 
 RUN apk add \
 	py3-peewee \
@@ -16,15 +16,15 @@ RUN apk add \
 	;
 
 
-WORKDIR /usr/local/share/denis
+WORKDIR /usr/local/share/mailman
 
 COPY . .
 
-RUN mkdir -p /var/lib/denis/ && \
+RUN mkdir -p /var/lib/mailman/ && \
 	./db.py \
 	:
 
-RUN chown -R 100:100 /var/lib/denis
+RUN chown -R 100:100 /var/lib/mailman
 
 COPY --from=build /watcher/watcher /usr/local/bin/watcher
 
