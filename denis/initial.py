@@ -10,6 +10,7 @@ import config
 import mailman.db
 import orbit.db
 
+
 def generate_peer_review_email(assignment, review_table):
     return f'''\
 Subject: Peer review assignments for {assignment}
@@ -103,14 +104,13 @@ General Tips:
     - An attempt to apply the cover letter will require a `git am --abort`
 '''
 
+
 # this is passed from start.py via run-at
 assignment = sys.argv[1]
 
 students_who_submitted = [user.username for user in orbit.db.User.select()
-        if mailman.db.Submission.get_or_none((mailman.db.Submission.user
-                                           == user.username) &
-                                           (mailman.db.Submission.assignment
-                                           == assignment)) is not None]
+                          if mailman.db.Submission.get_or_none((mailman.db.Submission.user == user.username) &  # NOQA: E501
+                                                               (mailman.db.Submission.assignment == assignment)) is not None]  # NOQA: E501
 
 # let them see emails that have been sent since last final due date
 for student in students_who_submitted:
@@ -131,9 +131,9 @@ random.shuffle(students_who_submitted)
 # is the situation where there are fewer than 3 students total and it is
 # impossible to have any triplets. In that case we can form two pairs,
 # one singleton, or the empty list which is why we have min(len, 3)
-reviews = [[students_who_submitted[i+j] for j in
-                 range(-min(len(students_who_submitted), 3), 0)]
-                 for i in range(len(students_who_submitted))]
+reviews = [[students_who_submitted[i+j]
+            for j in range(-min(len(students_who_submitted), 3), 0)]
+           for i in range(len(students_who_submitted))]
 
 # To make it easier for the student to find their row, we can sort the
 # list. This will alphabetize based on the first column (and only the
@@ -152,7 +152,7 @@ review_table = '\n'.join(review_rows)
 email_contents = generate_peer_review_email(assignment, review_table)
 
 client = pycurl.Curl()
-client.setopt(client.URL, f'smtp://smtp:1465')
+client.setopt(client.URL, 'smtp://smtp:1465')
 
 # Client must log in, so the server knows their username
 # but the password is not verified by the upstream server,
