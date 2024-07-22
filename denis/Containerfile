@@ -13,7 +13,7 @@ COPY --from=pop_source . /pop
 
 RUN make -C /pop CC='clang -static' restrict_access
 
-WORKDIR /usr/local/share/chronus
+WORKDIR /usr/local/share/denis
 COPY . .
 
 ARG CHRONUS_HOSTNAME
@@ -23,28 +23,28 @@ RUN test -n "$CHRONUS_HOSTNAME " || (echo 'CHRONUS_HOSTNAME is not set' && false
 	rm config.py.template \
 	;
 
-FROM alpine:3.19 AS chronus
+FROM alpine:3.19 AS denis
 
 RUN apk add \
 	py3-peewee \
 	py3-curl \
 	;
 
-WORKDIR /usr/local/share/chronus
+WORKDIR /usr/local/share/denis
 
-COPY --from=build /usr/local/share/chronus .
+COPY --from=build /usr/local/share/denis .
 COPY --from=mailman_source . ./mailman
 COPY --from=orbit_source . ./orbit
 
-RUN mkdir -p /var/lib/chronus && \
+RUN mkdir -p /var/lib/denis && \
 	./db.py \
 	:
 
-RUN chown -R 100:100 /var/lib/chronus
+RUN chown -R 100:100 /var/lib/denis
 
 COPY --from=build /run-at/run-at /usr/local/bin/run-at
 COPY --from=build /pop/restrict_access /usr/local/bin/restrict_access
 
 USER 100:100
 
-ENTRYPOINT ["/usr/local/share/chronus/start.py"]
+ENTRYPOINT ["/usr/local/share/denis/start.py"]

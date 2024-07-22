@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import peewee
 
-DB = peewee.SqliteDatabase("/var/lib/chronus/assignments.db")
+DB = peewee.SqliteDatabase("/var/lib/denis/assignments.db")
 
 
 class BaseModel(peewee.Model):
