@@ -21,12 +21,8 @@ require "${DOCKER}"
 # Check for shell script style compliance with shellcheck
 ./script-lint.sh
 
-# Check python style compliance with flake8
-pushd orbit
-./test-style.sh
-popd
-
-flake8 submatrix/orbit_auth.py
+# Check python style compliance
+flake8
 
 # Create test dir if it does not exist yet
 mkdir -p test

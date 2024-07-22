@@ -7,7 +7,6 @@ set -ex
 
 shellcheck script-lint.sh
 shellcheck test.sh
-shellcheck orbit/test-style.sh
 shellcheck orbit/warpdrive.sh
 
 # -x needed to make shellcheck follow `source` command
