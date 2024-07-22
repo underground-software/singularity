@@ -7,6 +7,7 @@ import random
 import sys
 
 import config
+import db
 import mailman.db
 import orbit.db
 
@@ -134,6 +135,18 @@ random.shuffle(students_who_submitted)
 reviews = [[students_who_submitted[i+j]
             for j in range(-min(len(students_who_submitted), 3), 0)]
            for i in range(len(students_who_submitted))]
+
+
+try:
+    with db.DB.atomic():
+        db.PeerReviewAssignment.insert_many(
+            [{'assignment': assignment,
+              'reviewer': reviewer,
+              'reviewee1': reviewee1,
+              'reviewee2': reviewee2}
+             for (reviewer, reviewee1, reviewee2) in reviews]).execute()
+except db.peewee.IntegrityError as e:
+    print(e)
 
 # To make it easier for the student to find their row, we can sort the
 # list. This will alphabetize based on the first column (and only the
