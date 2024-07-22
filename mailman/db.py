@@ -2,7 +2,7 @@
 
 import peewee
 
-DB = peewee.SqliteDatabase("/var/lib/mailman/grades.db")
+DB = peewee.SqliteDatabase("/var/lib/mailman/submissions.db")
 
 
 class BaseModel(peewee.Model):
