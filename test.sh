@@ -215,3 +215,5 @@ curl --url "https://$SINGULARITY_HOSTNAME/_matrix/client/r0/login" \
       }" \
   | tee test/matrix_login_invalid \
   | grep '{"errcode":"M_FORBIDDEN","error":"Invalid username or password"}'
+
+echo "ALL TESTS PASS"
