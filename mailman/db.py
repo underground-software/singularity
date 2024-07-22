@@ -2,7 +2,7 @@
 
 import peewee
 
-DB = peewee.SqliteDatabase("/var/lib/denis/grades.db")
+DB = peewee.SqliteDatabase("/var/lib/mailman/grades.db")
 
 
 class BaseModel(peewee.Model):

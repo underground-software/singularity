@@ -7,7 +7,7 @@ import random
 import sys
 
 import config
-import denis.db
+import mailman.db
 import orbit.db
 
 def generate_peer_review_email(assignment, review_table):
@@ -107,9 +107,9 @@ General Tips:
 assignment = sys.argv[1]
 
 students_who_submitted = [user.username for user in orbit.db.User.select()
-        if denis.db.Submission.get_or_none((denis.db.Submission.user
+        if mailman.db.Submission.get_or_none((mailman.db.Submission.user
                                            == user.username) &
-                                           (denis.db.Submission.assignment
+                                           (mailman.db.Submission.assignment
                                            == assignment)) is not None]
 
 # let them see emails that have been sent since last final due date

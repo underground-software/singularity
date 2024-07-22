@@ -40,7 +40,7 @@ services:
         - orbit_singularity_git_dir=./.git
         - orbit_docs_source=./docs
         - orbit_repos_source=./cgit_repos
-        - denis_source=./denis
+        - mailman_source=./mailman
       target: orbit
       args:
         orbit_version_info: "singularity ${SINGULARITY_VERSION} ${SINGULARITY_DEPLOYMENT_STATUS} https://github.com/underground-software/singularity"
@@ -51,7 +51,7 @@ services:
         read_only: false
       - type: volume
         source: grades-db
-        target: /var/lib/denis
+        target: /var/lib/mailman
         read_only: true
     networks:
       - orbit
@@ -114,9 +114,9 @@ services:
     networks:
       - submatrix
       - orbit
-  denis:
+  mailman:
     build:
-      context: denis
+      context: mailman
       dockerfile: Containerfile
       additional_contexts:
         - watcher_source=./watcher
@@ -131,12 +131,12 @@ services:
         read_only: true
       - type: volume
         source: grades-db
-        target: /var/lib/denis
+        target: /var/lib/mailman
         read_only: false
     depends_on:
       - smtp
     networks:
-      - denis
+      - mailman
   chronus:
     build:
       context: chronus
@@ -144,7 +144,7 @@ services:
       additional_contexts:
         - run_at_source=./run-at
         - pop_source=./pop
-        - denis_source=./denis
+        - mailman_source=./mailman
         - orbit_source=./orbit
       args:
         CHRONUS_HOSTNAME: ${SINGULARITY_HOSTNAME}
@@ -163,7 +163,7 @@ services:
         read_only: true
       - type: volume
         source: grades-db
-        target: /var/lib/denis
+        target: /var/lib/mailman
         read_only: true
     networks:
       - chronus
@@ -173,7 +173,7 @@ networks:
   smtp:
   pop:
   submatrix:
-  denis:
+  mailman:
   chronus:
 volumes:
   ssl-certs:
