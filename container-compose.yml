@@ -50,7 +50,7 @@ services:
         target: /var/lib/orbit
         read_only: false
       - type: volume
-        source: grades-db
+        source: submissions-db
         target: /var/lib/mailman
         read_only: true
     networks:
@@ -130,7 +130,7 @@ services:
         target: /var/lib/email/logs
         read_only: true
       - type: volume
-        source: grades-db
+        source: submissions-db
         target: /var/lib/mailman
         read_only: false
     depends_on:
@@ -162,7 +162,7 @@ services:
         target: /var/lib/orbit
         read_only: true
       - type: volume
-        source: grades-db
+        source: submissions-db
         target: /var/lib/mailman
         read_only: true
     networks:
@@ -181,6 +181,6 @@ volumes:
   email-logs:
   email-journal:
   orbit-db:
-  grades-db:
+  submissions-db:
   submatrix-data:
   chronus-db:
