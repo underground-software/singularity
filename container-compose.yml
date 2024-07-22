@@ -137,9 +137,9 @@ services:
       - smtp
     networks:
       - mailman
-  chronus:
+  denis:
     build:
-      context: chronus
+      context: denis
       dockerfile: Containerfile
       additional_contexts:
         - run_at_source=./run-at
@@ -150,8 +150,8 @@ services:
         CHRONUS_HOSTNAME: ${SINGULARITY_HOSTNAME}
     volumes:
       - type: volume
-        source: chronus-db
-        target: /var/lib/chronus
+        source: denis-db
+        target: /var/lib/denis
         read_only: false
       - type: volume
         source: email-journal
@@ -166,7 +166,7 @@ services:
         target: /var/lib/mailman
         read_only: true
     networks:
-      - chronus
+      - denis
       - smtp
 networks:
   orbit:
@@ -174,7 +174,7 @@ networks:
   pop:
   submatrix:
   mailman:
-  chronus:
+  denis:
 volumes:
   ssl-certs:
   email-mail:
@@ -183,4 +183,4 @@ volumes:
   orbit-db:
   submissions-db:
   submatrix-data:
-  chronus-db:
+  denis-db:

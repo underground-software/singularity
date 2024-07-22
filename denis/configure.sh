@@ -3,5 +3,5 @@ set -e
 
 COMPOSE=${COMPOSE:-podman-compose}
 
-${COMPOSE} exec chronus ./configure.py "$@"
+${COMPOSE} exec denis ./configure.py "$@"
 
