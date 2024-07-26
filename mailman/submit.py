@@ -85,6 +85,26 @@ def main(argv):
                        "user.email=daemon@mailman.d"]
         git_am_args = ["git", *author_args, "am", "--keep"]
         whitespace_errors = []
+
+        def am_cover_letter(keep_empty=True):
+            args = git_am_args
+            if keep_empty:
+                args.append("--empty=keep")
+            repo.git.execute([*args, str(maildir/cover_letter.msg_id)])
+
+        if try_or_false(lambda: am_cover_letter(keep_empty=False),
+                        git.GitCommandError):
+            sub.status = "missing cover letter"
+            sub.save()
+            return 0
+        repo.git.execute(["git", *author_args, "am", "--abort"])
+        if not try_or_false(lambda: am_cover_letter(keep_empty=True),
+                            git.GitCommandError):
+            sub.status = ("missing cover letter and "
+                          "first patch failed to apply")
+            sub.save()
+            return 0
+
         for i, patch in enumerate(patches):
             patch_abspath = str(maildir / patch.msg_id)
 
