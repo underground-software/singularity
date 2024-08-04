@@ -43,8 +43,14 @@ def main():
     command_parsers.add_parser('dump')
     command_parsers.add_parser('reload')
 
+    # Dictionary containing the desired command and all flags with their values
     kwargs = vars(parser.parse_args())
-    globals()[kwargs.pop('command')](**kwargs)
+    # Subparsers store their name in the destination `'command'`
+    subparser_name = kwargs.pop('command')
+    # Get a handle to the function with the desired name
+    subparser_func = globals()[subparser_name]
+    # Call the desired subparser with the remaining flags/values as kwargs
+    subparser_func(**kwargs)
 
 
 def create(assignment, initial, final):
