@@ -19,6 +19,12 @@ def main():
                             help='Initial submission due date timestamp',
                             required=required)
 
+    def add_peer_review(parser, required=True):
+        parser.add_argument('-p', '--peer-review',
+                            type=int,
+                            help='Peer review submission due date timestamp',
+                            required=required)
+
     def add_final(parser, required=True):
         parser.add_argument('-f', '--final',
                             type=int,
@@ -30,11 +36,13 @@ def main():
     create_parser = command_parsers.add_parser('create')
     add_assignment(create_parser)
     add_initial(create_parser)
+    add_peer_review(create_parser)
     add_final(create_parser)
 
     alter_parser = command_parsers.add_parser('alter')
     add_assignment(alter_parser)
     add_initial(alter_parser, required=False)
+    add_peer_review(alter_parser, required=False)
     add_final(alter_parser, required=False)
 
     remove_parser = command_parsers.add_parser('remove')
@@ -53,19 +61,22 @@ def main():
     subparser_func(**kwargs)
 
 
-def create(assignment, initial, final):
+def create(assignment, initial, peer_review, final):
     try:
         db.Assignment.create(name=assignment,
                              initial_due_date=initial,
+                             peer_review_due_date=peer_review,
                              final_due_date=final)
     except db.peewee.IntegrityError:
         print('cannot create assignment with duplicate name')
 
 
-def alter(assignment, initial, final):
+def alter(assignment, initial, peer_review, final):
     alterations = {}
     if initial is not None:
         alterations[db.Assignment.initial_due_date] = initial
+    if peer_review is not None:
+        alterations[db.Assignment.peer_review_due_date] = peer_review
     if final is not None:
         alterations[db.Assignment.final_due_date] = final
     if not alterations:
@@ -90,6 +101,7 @@ def dump():
     for asn in db.Assignment.select():
         print(f'''{asn.name}:
 \tInitial: {asn.initial_due_date}
+\tPeer Review: {asn.peer_review_due_date}
 \tFinal: {asn.final_due_date}''')
 
 
