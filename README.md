@@ -14,7 +14,7 @@ libraries needed to run the code from the system packages installed as dependenc
 package.
 
  - Make sure you have `git`, `podman`, and `podman-compose` installed on your host machine.
-On fedora these packages can be obtained by running `sudo dnf install -y git podman podman-compose`.
+On Fedora these packages can be obtained by running `sudo dnf install -y git podman podman-compose`.
 
  - Clone the upstream podman-compose repo. We recommend creating folder `mkdir -p ~/.local/src/` where the repo
 can be placed. The appropriate command is `git -C ~/.local/src clone https://github.com/containers/podman-compose.git`
@@ -45,7 +45,12 @@ Section 3: Testing and basic functionality
  - In order to verify that singularity is behaving correctly, you should run the test suite.
 
  - You will need to install some host packages needed by the testing script: flake8, shellcheck, jq, and curl.
-On fedora these packages can be obtained by running `sudo dnf install -y flake8 shellcheck jq curl`.
+On Fedora these packages can be obtained by running `sudo dnf install -y flake8 shellcheck jq curl`.
+
+ - On recent versions of Fedora, the default version of `curl` is `curl-minimal`, which does not support pop3s.
+To switch to `curl-full`, run `dnf download curl-full libcurl-full`, followed by `sudo dnf install --allowerasing ./...`,
+where `...` are the downloads from the prior command. The `.rpm` files can be removed after this finishes.
+Note that libcurl will sometimes download versions for different architectures, only one of which is necessary to install.
 
  - Now you can run `./test.sh && echo 'tests passed'`. If you followed the directions, the tests should pass.
 
@@ -53,7 +58,7 @@ On fedora these packages can be obtained by running `sudo dnf install -y flake8 
 services listening on unix sockets instead of TCP ports.
 
  - Fortunately, it is easy to proxy the relevant TCP ports to the unix sockets so that the services can be accessed.
-You will need the host program socat. On fedora it can be obtained by running `sudo dnf install -y socat`.
+You will need the host program socat. On Fedora it can be obtained by running `sudo dnf install -y socat`.
 
  - Run `./dev_sockets.sh &` or `sudo ./dev_sockets.sh &` to spawn three instances of socat in the background.
 
