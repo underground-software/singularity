@@ -13,6 +13,7 @@ class BaseModel(peewee.Model):
 class Assignment(BaseModel):
     name = peewee.TextField(unique=True)
     initial_due_date = peewee.IntegerField()
+    peer_review_due_date = peewee.IntegerField()
     final_due_date = peewee.IntegerField()
 
 

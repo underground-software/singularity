@@ -31,12 +31,18 @@ def main():
         for assignment in db.Assignment.select():
             name = assignment.name
             initial = assignment.initial_due_date
+            peer_review = assignment.peer_review_due_date
             final = assignment.final_due_date
 
             if in_the_future(initial):
                 procs.append(spawn_waiter(str(initial), name, './initial.py'))
             else:
                 print(f'skipping initial for {name}', file=sys.stderr)
+
+            if in_the_future(peer_review):
+                procs.append(spawn_waiter(str(peer_review), name, './peer_review.py'))  # NOQA: E501
+            else:
+                print(f'skipping peer review for {name}', file=sys.stderr)
 
             if in_the_future(final):
                 procs.append(spawn_waiter(str(final), name, './final.py'))
