@@ -3,28 +3,14 @@
 import collections
 from pathlib import Path
 import sys
-import git
-import tempfile
 
+import patchset
 import db
 
 ASSIGNMENT_LIST = ["introductions",
                    "exercise0", "exercise1", "exercise2",
                    "programming0", "programming1", "programming2",
                    "final0", "final1"]
-
-MAIL_DIR_ABSPATH = "/var/lib/email/mail"
-
-REMOTE_URL = "http://host.containers.internal:3366/cgi-bin/git-receive-pack/grading.git"  # NOQA: E501
-
-
-def try_or_false(do, exc):
-    try:
-        do()
-        return True
-    except exc as e:
-        print(e, file=sys.stderr)
-        return False
 
 
 Email = collections.namedtuple('Email', ['rcpt', 'msg_id'])
@@ -78,67 +64,8 @@ def main(argv):
         sub.save()
         return 0
 
-    with tempfile.TemporaryDirectory() as repo_path:
-        repo = git.Repo.init(repo_path)
-        maildir = Path(MAIL_DIR_ABSPATH)
-        author_args = ["-c", "user.name=Denis", "-c",
-                       "user.email=daemon@mailman.d"]
-        git_am_args = ["git", *author_args, "am", "--keep"]
-        whitespace_errors = []
-
-        def am_cover_letter(keep_empty=True):
-            args = git_am_args
-            if keep_empty:
-                args.append("--empty=keep")
-            repo.git.execute([*args, str(maildir/cover_letter.msg_id)])
-
-        if try_or_false(lambda: am_cover_letter(keep_empty=False),
-                        git.GitCommandError):
-            sub.status = "missing cover letter"
-            sub.save()
-            return 0
-        repo.git.execute(["git", *author_args, "am", "--abort"])
-        if not try_or_false(lambda: am_cover_letter(keep_empty=True),
-                            git.GitCommandError):
-            sub.status = ("missing cover letter and "
-                          "first patch failed to apply")
-            sub.save()
-            return 0
-
-        for i, patch in enumerate(patches):
-            patch_abspath = str(maildir / patch.msg_id)
-
-            # Try and apply and fail if there are whitespace errors
-            def do_git_am(extra_args=[]):
-                repo.git.execute([*git_am_args, *extra_args, patch_abspath]),
-
-            # If this fails, the patch may apply with whitespace errors
-            if try_or_false(lambda: do_git_am(['--whitespace=error-all']),
-                            git.GitCommandError):
-                continue
-
-            repo.git.execute(["git", *author_args, "am", "--abort"])
-
-            # Try again, if we succeed, count this patch as a whitespace error
-            if try_or_false(lambda: do_git_am(), git.GitCommandError):
-                whitespace_errors.append(str(i+1))
-                continue
-
-            # If we still fail, the patch does not apply
-            sub.status = f'patch {i+1} failed to apply'
-            sub.save()
-            return 0
-
-        if whitespace_errors:
-            sub.status = ('whitespace error patch(es) '
-                          f'{",".join(whitespace_errors)}')
-        else:
-            sub.status = 'patchset applies'
-        sub.save()
-
-        repo.create_tag(logfile)
-        repo.create_remote("origin", REMOTE_URL)
-        repo.git.push("origin", tags=True)
+    sub.status = patchset.check(cover_letter, patches, submission_id=logfile)
+    sub.save()
 
 
 if __name__ == "__main__":
