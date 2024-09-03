@@ -492,7 +492,7 @@ def handle_try_md(rocket):
     with open(path) as file:
         md = file.read()
     html = markdown.markdown(md, extensions=['tables', 'fenced_code',
-                                             'footnotes'])
+                                             'footnotes', 'toc'])
     return rocket.respond(html)
 
 
