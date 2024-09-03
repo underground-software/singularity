@@ -2,7 +2,7 @@
 
 The singularity at the center of the KDLP infrastructure black hole.
 
-Section 1: Podman Setup 
+Section 1: Podman Setup
 --
  - Unfortunately, this project uses features that have been merged into podman-compose but as of June 2024,
 have not yet been made part of a tagged release, so the version of podman-compose provided by any distro
@@ -124,7 +124,7 @@ that new file with `--env-file` when running podman-compose.
 
  - podman-compose currently does not properly override values specified in `.env` with the values
 of the corresponding environment variables as required by the compose specification, however
-we maintain our own fork of the project with a not yet merged pr applied to fix it. You can add 
+we maintain our own fork of the project with a not yet merged pr applied to fix it. You can add
 [our repository](https://github.com/underground-software/podman-compose.git) as a remote in your
 clone of `podman-compose` and check out the `kdlp` branch. You can then export values in your shell
 (e.g. `export SINGULARITY_HOSTNAME=my.real.domain.name`) and the containers will pick them up instead
