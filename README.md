@@ -2,29 +2,12 @@
 
 The singularity at the center of the KDLP infrastructure black hole.
 
-Section 1: Podman Setup
+Section 1: Prerequisites
 --
- - Unfortunately, this project uses features that have been merged into podman-compose but as of June 2024,
-have not yet been made part of a tagged release, so the version of podman-compose provided by any distro
-is unlikely to work.
-
- - Fortunately, as podman-compose is written in python, it is simple to just clone a newer version of the
-source code and add a symlink to your path to run the newer version of the script. Python will find any
-libraries needed to run the code from the system packages installed as dependencies of the system podman-compose
-package.
 
  - Make sure you have `git`, `podman`, and `podman-compose` installed on your host machine.
 On fedora these packages can be obtained by running `sudo dnf install -y git podman podman-compose`.
-
- - Clone the upstream podman-compose repo. We recommend creating folder `mkdir -p ~/.local/src/` where the repo
-can be placed. The appropriate command is `git -C ~/.local/src clone https://github.com/containers/podman-compose.git`
-
- - Create a symlink in `~/.local/bin` named `podman-compose` which points to the `podman_compose.py` script in
-the cloned repository. The appropriate command is `ln -s ../src/podman-compose/podman_compose.py ~/.local/bin/podman-compose`
-
- - Verify that `which podman-compose` outputs `~/.local/bin/podman-compose`. If it does not, you may need to refresh the cached
-path for the program (for bash that is `hash podman-compose`), or potentially add `$HOME/.local/bin` to `$PATH` if it is
-not already present. The exact details will vary depending on your shell and are outside the scope of this document.
+As this project uses modern features of `podman` and `podman-compose`, it is recommended to be running the latest versions.
 
 Section 2: Singularity Setup
 --
