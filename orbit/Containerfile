@@ -1,4 +1,4 @@
-FROM alpine:3.19 AS build
+FROM alpine:3.20 AS build
 
 RUN apk update && apk upgrade && apk add \
 	envsubst \
@@ -14,7 +14,7 @@ RUN test -n "$orbit_version_info" || (echo 'version info is not set' && false) &
 	rm config.py.template \
 	;
 
-FROM alpine:3.19 AS orbit
+FROM alpine:3.20 AS orbit
 
 RUN apk update && apk upgrade && apk add \
 	py3-bcrypt \

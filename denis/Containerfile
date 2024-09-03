@@ -1,4 +1,4 @@
-FROM alpine:3.19 AS build
+FROM alpine:3.20 AS build
 RUN apk add \
 	clang \
 	make \
@@ -23,7 +23,7 @@ RUN test -n "$CHRONUS_HOSTNAME " || (echo 'CHRONUS_HOSTNAME is not set' && false
 	rm config.py.template \
 	;
 
-FROM alpine:3.19 AS denis
+FROM alpine:3.20 AS denis
 
 RUN apk add \
 	py3-peewee \
