@@ -32,6 +32,10 @@ On Fedora these packages can be obtained by running `sudo dnf install -y flake8 
 
  - Now you can run `./test.sh`. If you followed the directions, the tests should pass.
 
+ - Note that recent versions of Fedora ship with `curl-minimal` rather than `curl`, and that the former does not support pop3s.
+If, when running the tests, you encounter an error like `"pop3s: protocol not supported"` you can first try `dnf swap libcurl-minimal libcurl`--
+failing that, you may need to run `dnf download libcurl.$(uname -m) && sudo dnf install --allowerasing ./libcurl*.rpm && rm libcurl*.rpm`.
+
  - You will not be able to access the services using a normal web browser or email client without one more step as the
 services listening on unix sockets instead of TCP ports.
 
