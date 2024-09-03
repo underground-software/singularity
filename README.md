@@ -30,7 +30,7 @@ Section 3: Testing and basic functionality
  - You will need to install some host packages needed by the testing script: flake8, shellcheck, jq, and curl.
 On fedora these packages can be obtained by running `sudo dnf install -y flake8 shellcheck jq curl`.
 
- - Now you can run `./test.sh && echo 'tests passed'`. If you followed the directions, the tests should pass.
+ - Now you can run `./test.sh`. If you followed the directions, the tests should pass.
 
  - You will not be able to access the services using a normal web browser or email client without one more step as the
 services listening on unix sockets instead of TCP ports.
