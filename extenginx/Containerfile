@@ -1,4 +1,4 @@
-FROM alpine:3.19 AS build
+FROM alpine:3.20 AS build
 
 RUN apk update && apk upgrade && apk add \
     envsubst \
@@ -49,7 +49,7 @@ RUN envsubst \
 	> nginx.conf \
 	;
 
-FROM alpine:3.19 AS nginx
+FROM alpine:3.20 AS nginx
 
 RUN apk update && apk upgrade && apk add \
     nginx          \
