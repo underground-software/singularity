@@ -100,7 +100,7 @@ However, you can setup your local environment to enable immediate live editing o
 
  - For security reasons, be sure to `unset COMPOSE_FILE` and rebuild before a production deployment.
 
-Section 5: Production Deployment
+Section 6: Production Deployment
 --
 
  - To publish an instance of singularity on the internet, you must configure the hostname.
