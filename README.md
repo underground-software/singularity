@@ -6,7 +6,7 @@ Section 1: Prerequisites
 --
 
  - Make sure you have `git`, `podman`, and `podman-compose` installed on your host machine.
-On fedora these packages can be obtained by running `sudo dnf install -y git podman podman-compose`.
+On Fedora these packages can be obtained by running `sudo dnf install -y git podman podman-compose`.
 As this project uses modern features of `podman` and `podman-compose`, it is recommended to be running the latest versions.
 
 Section 2: Singularity Setup
@@ -28,7 +28,7 @@ Section 3: Testing and basic functionality
  - In order to verify that singularity is behaving correctly, you should run the test suite.
 
  - You will need to install some host packages needed by the testing script: flake8, shellcheck, jq, and curl.
-On fedora these packages can be obtained by running `sudo dnf install -y flake8 shellcheck jq curl`.
+On Fedora these packages can be obtained by running `sudo dnf install -y flake8 shellcheck jq curl`.
 
  - Now you can run `./test.sh`. If you followed the directions, the tests should pass.
 
@@ -36,7 +36,7 @@ On fedora these packages can be obtained by running `sudo dnf install -y flake8 
 services listening on unix sockets instead of TCP ports.
 
  - Fortunately, it is easy to proxy the relevant TCP ports to the unix sockets so that the services can be accessed.
-You will need the host program socat. On fedora it can be obtained by running `sudo dnf install -y socat`.
+You will need the host program socat. On Fedora it can be obtained by running `sudo dnf install -y socat`.
 
  - Run `./dev_sockets.sh &` or `sudo ./dev_sockets.sh &` to spawn three instances of socat in the background.
 
