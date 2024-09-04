@@ -1,6 +1,3 @@
-# Allow http transport git clone
-enable-http-clone=0
-
 # Allow cgit to use git config to set repo-specific settings
 enable-git-config=1
 

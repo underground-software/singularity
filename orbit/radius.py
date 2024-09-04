@@ -2,6 +2,7 @@
 #
 # it's all one things now
 
+import base64
 import bcrypt
 import html
 import markdown
@@ -443,9 +444,26 @@ def handle_register(rocket):
     <h3>Password: {password}</h3><br>''')
 
 
+def http_basic_auth(rocket):
+    if (auth_str := rocket.env.get('HTTP_AUTHORIZATION')) is None:
+        return
+    if not auth_str.startswith('Basic '):
+        return
+    cred_str = base64.b64decode(auth_str.removeprefix('Basic '))
+    username, password = cred_str.decode().split(':', maxsplit=1)
+    if not check_credentials(username, password):
+        return
+    return True
+
+
 def handle_cgit(rocket):
     if not rocket.session:
-        return rocket.raw_respond(HTTPStatus.FORBIDDEN)
+        if (not (agent := rocket.env.get('HTTP_USER_AGENT'))
+           or not agent.startswith('git/')):
+            return rocket.raw_respond(HTTPStatus.FORBIDDEN)
+        if not http_basic_auth(rocket):
+            rocket.headers.append(('WWW-Authenticate', 'Basic realm="cgit"'))
+            return rocket.raw_respond(HTTPStatus.UNAUTHORIZED)
     cgit_env = os.environ.copy()
     cgit_env['PATH_INFO'] = rocket.path_info.removeprefix('/cgit')
     cgit_env['QUERY_STRING'] = rocket.env.get('QUERY_STRING', '')
