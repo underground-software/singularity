@@ -379,7 +379,7 @@ def handle_stub(rocket, more=[]):
     return rocket.respond(content)
 
 
-def handle_dashboard(rocket):
+def handle_activity(rocket):
     if not rocket.session:
         return rocket.raw_respond(HTTPStatus.FORBIDDEN)
 
@@ -569,8 +569,8 @@ def application(env, SR):
             return handle_logout(rocket)
         case '/mail_auth':
             return handle_mail_auth(rocket)
-        case '/dashboard':
-            return handle_dashboard(rocket)
+        case '/activity':
+            return handle_activity(rocket)
         case '/error':
             return handle_error(rocket)
         case p:
