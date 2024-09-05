@@ -23,6 +23,8 @@ RUN apk update && apk upgrade && apk add \
 	uwsgi-python3 \
 	uwsgi-http \
 	cgit \
+	libmemcached-dev \
+	memcached \
 	;
 
 WORKDIR /usr/local/share/orbit
@@ -38,6 +40,10 @@ RUN mkdir -p /var/lib/orbit/ && \
 	:
 
 COPY cgitrc /etc/cgitrc
+
+RUN mkdir /run/orbit && \
+	chown 100:100 /run/orbit && \
+	:
 
 RUN chown -R 100:100 /var/lib/orbit
 
