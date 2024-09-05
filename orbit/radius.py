@@ -444,15 +444,29 @@ def handle_register(rocket):
     <h3>Password: {password}</h3><br>''')
 
 
+def determine_cache_entry(cred_str):
+    import hashlib
+    import time
+    hasher = hashlib.sha256()
+    hasher.update(cred_str)
+    hasher.update(str(int(time.time())).encode())
+    return hasher.digest()
+
+
 def http_basic_auth(rocket):
+    import authcache
     if (auth_str := rocket.env.get('HTTP_AUTHORIZATION')) is None:
         return
     if not auth_str.startswith('Basic '):
         return
     cred_str = base64.b64decode(auth_str.removeprefix('Basic '))
+    cache_entry = determine_cache_entry(cred_str)
+    if authcache.entry_exists(cache_entry):
+        return True
     username, password = cred_str.decode().split(':', maxsplit=1)
     if not check_credentials(username, password):
         return
+    authcache.add_entry(cache_entry)
     return True
 
 
