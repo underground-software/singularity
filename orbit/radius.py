@@ -425,7 +425,7 @@ class AsmtTable:
             <th>Request an 'Oopsie'</th>
           </tr>
           <tr>
-            <th><button>Oopsie!</button></th>
+            <th><button type="submit" name="oopsie" value="{self.name}">Oopsie!</button></th>
           </tr>
         </table>
         <br>
@@ -435,12 +435,14 @@ class AsmtTable:
 def handle_dashboard(rocket):
     if not rocket.session:
         return rocket.raw_respond(HTTPStatus.FORBIDDEN)
-    ret = ''
+    if rocket.method != 'GET':
+        print(f'dashboard post req: {rocket.body_args_query("oopsie")}')
+    ret = '<form method="post" action="/dashboard">'
     asmt_tbl = denis.db.Assignment
     assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
     for assignment in assignments:
         ret += str(AsmtTable(assignment))
-    return rocket.respond(ret)
+    return rocket.respond(ret + '</form>')
 
 
 def find_creds_for_registration(student_id):
