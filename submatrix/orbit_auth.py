@@ -41,23 +41,31 @@ class OrbitAuthProvider:
         if login_type != "m.login.password":
             return None
 
-        # Verify that the input string can be parsed as a matrix username and
+        # Check if the input string was sent in the form of a fully qualified
+        # domain specific string that can be parsed into a matrix username and
         # that the domain name is sane
-        if not types.UserID.is_valid(input_username):
-            return None
+        if types.UserID.is_valid(input_username):
 
-        # Should not throw because valid check passed above
-        user_id = types.UserID.from_string(input_username)
+            # Should not throw because valid check passed above
+            user_id_obj = types.UserID.from_string(input_username)
 
-        # Check that username contains a hostname, and
-        # that that hostname matches the matrix server
-        if not self.api.is_mine(user_id):
-            return None
+            # Check that username contains a hostname, and
+            # that that hostname matches the matrix server
+            if not self.api.is_mine(user_id_obj):
+                return None
 
-        # given a username in the canonical format of "@<username>:<domain>"
-        # only the username part is the Orbit ID. No empty usernames allowed
-        if not (username := user_id.localpart):
-            return None
+            # given a username in canonical format of "@<username>:<domain>"
+            # only the username part is Orbit ID. No empty usernames allowed
+            if not (username := user_id_obj.localpart):
+                return None
+
+            user_id = user_id_obj.to_string()
+
+        else:
+
+            username = types.map_username_to_mxid_localpart(input_username)
+
+            user_id = self.api.get_qualified_user_id(username)
 
         # No empty passwords allowed
         if not (password := login_dict.get("password", None)):
@@ -69,7 +77,7 @@ class OrbitAuthProvider:
 
         # Look up existing record for user (matrix usernames are not
         # case sensistive) and return canonical capitalization of it
-        existing_user = await self.api.check_user_exists(user_id.to_string())
+        existing_user = await self.api.check_user_exists(user_id)
         if existing_user is not None:
             return (existing_user, None)
 
