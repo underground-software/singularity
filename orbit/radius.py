@@ -435,10 +435,26 @@ class AsmtTable:
 def handle_dashboard(rocket):
     if not rocket.session:
         return rocket.raw_respond(HTTPStatus.FORBIDDEN)
+    asmt_tbl = denis.db.Assignment
     if rocket.method != 'GET':
+        if not (asn := rocket.body_args_query('oopsie')):
+            return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
+        if not asmt_tbl.get_or_none(asmt_tbl.name == asn):
+            return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
+        if not rocket.body_args_query('confirm'):
+            return rocket.respond(f'''
+                <h2>Are you sure?</h2>
+                <p>You get only one oopsie during the whole semester.
+                Are you sure that you want to use it on {asn}?</p>
+                <form method="post" action="/dashboard">
+                <input type="hidden" name="oopsie" value="{asn}">
+                <button type="submit" formmethod="get">Cancel</button>
+                <button type="submit" name="confirm" value="y">Confirm</button>
+                <br><br>
+                </form>
+            ''')
         print(f'dashboard post req: {rocket.body_args_query("oopsie")}')
     ret = '<form method="post" action="/dashboard">'
-    asmt_tbl = denis.db.Assignment
     assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
     for assignment in assignments:
         ret += str(AsmtTable(assignment))
