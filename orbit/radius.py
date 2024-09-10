@@ -453,7 +453,11 @@ def handle_dashboard(rocket):
                 <br><br>
                 </form>
             ''')
-        print(f'dashboard post req: {rocket.body_args_query("oopsie")}')
+        try:
+            db.Oopsie.create(user=rocket.session.username, assignment=asn,
+                             timestamp=int(datetime.now().timestamp()))
+        except db.peewee.IntegrityError:
+            return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
     ret = '<form method="post" action="/dashboard">'
     assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
     for assignment in assignments:
