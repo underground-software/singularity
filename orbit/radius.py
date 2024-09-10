@@ -439,6 +439,10 @@ def handle_dashboard(rocket):
     if rocket.method != 'GET':
         if not (asn := rocket.body_args_query('oopsie')):
             return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
+        if not (asn_entry := asmt_tbl.get_or_none(asmt_tbl.name == asn)):
+            return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
+        if (now := datetime.now().timestamp()) > asn_entry.initial_due_date:
+            return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
         if not rocket.body_args_query('confirm'):
             return rocket.respond(f'''
                 <h2>Are you sure?</h2>
@@ -451,7 +455,11 @@ def handle_dashboard(rocket):
                 <br><br>
                 </form>
             ''')
-        print(f'dashboard post req: {rocket.body_args_query("oopsie")}')
+        try:
+            db.Oopsie.create(user=rocket.session.username, assignment=asn,
+                             timestamp=int(now))
+        except db.peewee.IntegrityError:
+            return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
     assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
     ret = '<form method="post" action="/dashboard">'
     for assignment in assignments:
