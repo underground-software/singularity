@@ -568,12 +568,12 @@ def application(env, SR):
             return handle_logout(rocket)
         case '/mail_auth':
             return handle_mail_auth(rocket)
-        case '/dashboard':
-            return handle_dashboard(rocket)
         case '/error':
             return handle_error(rocket)
         case p:
             if p.startswith('/cgit'):
                 return handle_cgit(rocket)
+            elif p.startswith('/dashboard'):
+                return handle_dashboard(rocket)
             else:
                 return handle_try_md(rocket)
