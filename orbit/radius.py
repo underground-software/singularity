@@ -422,10 +422,18 @@ class AsmtTable:
         self.final = final
         self.oopsie_status = oopsie_status
 
+    def oopsie_button(self):
+        return f"""
+        <form method="post" action="/dashboard/oops">
+            <input type="hidden" name="assignment" value="{self.name}">
+            <button type="submit">Oopsie!</button>
+        </form>
+        """
+
     def build_oopsie_cell(self):
         match self.oopsie_status:
             case OopsieCode.AVAILABLE:
-                return "<button>Oopsie!</button>"
+                return self.oopsie_button()
             case OopsieCode.SPENT:
                 return "No Oopsie remaining"
             case OopsieCode.USED_HERE:
@@ -569,6 +577,27 @@ def handle_dashboard_main(rocket):
     return rocket.respond(ret)
 
 
+def handle_dashboard_oops(rocket):
+    oops_tbl = db.Oopsie
+    asmt_tbl = denis.db.Assignment
+    oops = (oops_tbl.select()
+                    .where(oops_tbl.user == rocket.session.username)
+                    .first())
+    reqd_asmt = rocket.body_args_query("assignment")
+    asmt_obj = (asmt_tbl.select()
+                        .where(asmt_tbl.name == reqd_asmt)
+                        .first())
+
+    now = int(datetime.timestamp(datetime.now()))
+    if oops or not asmt_obj or now >= asmt_obj.initial_due_date:
+        return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
+
+    q = oops_tbl.insert(user=rocket.session.username, assignment=reqd_asmt,
+                        timestamp=now)
+    q.execute()
+    return handle_dashboard_main(rocket)
+
+
 def handle_dashboard(rocket):
     if not rocket.session:
         return rocket.raw_respond(HTTPStatus.FORBIDDEN)
@@ -577,6 +606,8 @@ def handle_dashboard(rocket):
             return handle_dashboard_main(rocket)
         case '/dashboard/log':
             return handle_dashboard_log(rocket)
+        case '/dashboard/oops':
+            return handle_dashboard_oops(rocket)
         case _:
             return rocket.raw_respond(HTTPStatus.NOT_FOUND)
 
@@ -736,8 +767,10 @@ def application(env, SR):
             return handle_login(rocket)
         case '/register':
             return handle_register(rocket)
-        case _:
-            if rocket.method != 'GET':
+        case p:
+            if p.startswith('/dashboard'):
+                return handle_dashboard(rocket)
+            elif rocket.method != 'GET':
                 return rocket.raw_respond(HTTPStatus.METHOD_NOT_ALLOWED)
 
     # routes supporting only get
@@ -751,7 +784,5 @@ def application(env, SR):
         case p:
             if p.startswith('/cgit'):
                 return handle_cgit(rocket)
-            elif p.startswith('/dashboard'):
-                return handle_dashboard(rocket)
             else:
                 return handle_try_md(rocket)
