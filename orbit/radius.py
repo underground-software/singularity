@@ -17,6 +17,7 @@ from urllib.parse import parse_qs, urlparse
 # === internal imports & constants ===
 import config
 import db
+import denis.db
 import mailman.db
 
 sec_per_min = 60
@@ -407,13 +408,79 @@ def handle_dashboard_log(rocket):
     """)
 
 
+class AsmtTable:
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return f"""
+        <table>
+          <caption>{self.name}</caption>
+          <tr>
+            <th>Total Score: -</th>
+            <th>Timestamp</th>
+            <th>Submission ID</th>
+            <th>Request an 'Oopsie'</th>
+          </tr>
+          <tr>
+            <th>Initial Submission</th>
+            <td>-</td>
+            <td>-</td>
+            <th><button>Oopsie!</button></th>
+          </tr>
+          <tr>
+            <th>Automated Feedback</th>
+            <td colspan=3>-</td>
+          </tr>
+          <tr>
+            <th></th>
+            <th>Timestamp</th>
+            <th>Submission ID</th>
+            <th>Score</th>
+          </tr>
+          <tr>
+            <th>Peer Review 1</th>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th>Peer Review 2</th>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th>Final Submission</th>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th>Comments</th>
+            <td colspan=3>-</td>
+          </tr>
+        </table>
+        """
+
+
+def handle_dashboard_main(rocket):
+    asmt_tbl = denis.db.Assignment
+    ret = ("<a href='dashboard/log'>View a complete history of your "
+           "submissions.</a><br>")
+    assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
+    for assignment in assignments:
+        ret += "<br>"
+        ret += str(AsmtTable(assignment.name))
+    return rocket.respond(ret)
+
+
 def handle_dashboard(rocket):
     if not rocket.session:
         return rocket.raw_respond(HTTPStatus.FORBIDDEN)
     match rocket.path_info:
         case '/dashboard':
-            return rocket.respond("<a href='dashboard/log'>View a complete"
-                                  " history of your submissions.</a>")
+            return handle_dashboard_main(rocket)
         case '/dashboard/log':
             return handle_dashboard_log(rocket)
         case _:
