@@ -408,11 +408,30 @@ def handle_dashboard_log(rocket):
     """)
 
 
+class OopsieCode:
+    AVAILABLE = 0
+    SPENT = 1
+    USED_HERE = 2
+    LATE = 3
+
+
 class AsmtTable:
-    def __init__(self, name, initial, final):
+    def __init__(self, name, initial, final, oopsie_status):
         self.name = name
         self.initial = initial
         self.final = final
+        self.oopsie_status = oopsie_status
+
+    def build_oopsie_cell(self):
+        match self.oopsie_status:
+            case OopsieCode.AVAILABLE:
+                return "<button>Oopsie!</button>"
+            case OopsieCode.SPENT:
+                return "No Oopsie remaining"
+            case OopsieCode.USED_HERE:
+                return "Oopsie used!"
+            case OopsieCode.LATE:
+                return "Past initial due date!<br>Can't oopsie!"
 
     @staticmethod
     def iso_stamp_if_exists(entry):
@@ -433,7 +452,7 @@ class AsmtTable:
             <th>Initial Submission</th>
             <td>{AsmtTable.iso_stamp_if_exists(self.initial)}</td>
             <td>{self.initial.submission_id if self.initial else '-'}</td>
-            <th><button>Oopsie!</button></th>
+            <th>{self.build_oopsie_cell()}</th>
           </tr>
           <tr>
             <th>Automated Feedback</th>
@@ -506,13 +525,30 @@ def build_next_assignment_due(due_tuple):
     """
 
 
+def get_oopsieness(oops, cur_assignment):
+    if oops is None:
+        if (int(datetime.timestamp(datetime.now()))
+                > cur_assignment.initial_due_date):
+            return OopsieCode.LATE
+        else:
+            return OopsieCode.AVAILABLE
+    elif oops.assignment == cur_assignment.name:
+        return OopsieCode.USED_HERE
+    else:
+        return OopsieCode.SPENT
+
+
 def handle_dashboard_main(rocket):
     asmt_tbl = denis.db.Assignment
     sub_tbl = mailman.db.Submission
+    oops_tbl = db.Oopsie
     ret = build_next_assignment_due(find_nearest_due_date(asmt_tbl))
     ret += ("<a href='dashboard/log'>View a complete history of your "
             "submissions.</a><br>")
     assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
+    oops = (oops_tbl.select()
+            .where(oops_tbl.user == rocket.session.username)
+            .first())
     for assignment in assignments:
         ret += "<br>"
         initial = (sub_tbl.select()
@@ -528,7 +564,8 @@ def handle_dashboard_main(rocket):
                  .where(sub_tbl.timestamp < assignment.final_due_date)
                  .order_by(sub_tbl.timestamp.desc())
                  .first())
-        ret += str(AsmtTable(assignment.name, initial, final))
+        ret += str(AsmtTable(assignment.name, initial, final,
+                             get_oopsieness(oops, assignment)))
     return rocket.respond(ret)
 
 
