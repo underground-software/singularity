@@ -409,8 +409,15 @@ def handle_dashboard_log(rocket):
 
 
 class AsmtTable:
-    def __init__(self, name):
+    def __init__(self, name, initial, final):
         self.name = name
+        self.initial = initial
+        self.final = final
+
+    @staticmethod
+    def iso_stamp_if_exists(entry):
+        return (datetime.fromtimestamp(entry.timestamp).isoformat()
+                if entry else '-')
 
     def __str__(self):
         return f"""
@@ -424,8 +431,8 @@ class AsmtTable:
           </tr>
           <tr>
             <th>Initial Submission</th>
-            <td>-</td>
-            <td>-</td>
+            <td>{AsmtTable.iso_stamp_if_exists(self.initial)}</td>
+            <td>{self.initial.submission_id if self.initial else '-'}</td>
             <th><button>Oopsie!</button></th>
           </tr>
           <tr>
@@ -452,8 +459,8 @@ class AsmtTable:
           </tr>
           <tr>
             <th>Final Submission</th>
-            <td>-</td>
-            <td>-</td>
+            <td>{AsmtTable.iso_stamp_if_exists(self.final)}</td>
+            <td>{self.final.submission_id if self.final else '-'}</td>
             <td>-</td>
           </tr>
           <tr>
@@ -466,12 +473,26 @@ class AsmtTable:
 
 def handle_dashboard_main(rocket):
     asmt_tbl = denis.db.Assignment
+    sub_tbl = mailman.db.Submission
     ret = ("<a href='dashboard/log'>View a complete history of your "
            "submissions.</a><br>")
     assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
     for assignment in assignments:
         ret += "<br>"
-        ret += str(AsmtTable(assignment.name))
+        initial = (sub_tbl.select()
+                   .where(sub_tbl.user == rocket.session.username)
+                   .where(sub_tbl.assignment == assignment.name)
+                   .where(sub_tbl.timestamp < assignment.initial_due_date)
+                   .order_by(sub_tbl.timestamp.desc())
+                   .first())
+        final = (sub_tbl.select()
+                 .where(sub_tbl.user == rocket.session.username)
+                 .where(sub_tbl.assignment == assignment.name)
+                 .where(sub_tbl.timestamp >= assignment.initial_due_date)
+                 .where(sub_tbl.timestamp < assignment.final_due_date)
+                 .order_by(sub_tbl.timestamp.desc())
+                 .first())
+        ret += str(AsmtTable(assignment.name, initial, final))
     return rocket.respond(ret)
 
 
