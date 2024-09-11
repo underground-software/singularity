@@ -41,6 +41,7 @@ services:
         - orbit_docs_source=./docs
         - orbit_repos_source=./cgit_repos
         - mailman_source=./mailman
+        - denis_source=./denis
       target: orbit
       args:
         orbit_version_info: "singularity ${SINGULARITY_VERSION} ${SINGULARITY_DEPLOYMENT_STATUS} https://github.com/underground-software/singularity"
@@ -52,6 +53,10 @@ services:
       - type: volume
         source: submissions-db
         target: /var/lib/mailman
+        read_only: true
+      - type: volume
+        source: denis-db
+        target: /var/lib/denis
         read_only: true
     networks:
       - orbit
