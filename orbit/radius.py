@@ -471,11 +471,47 @@ class AsmtTable:
         """
 
 
+def find_nearest_due_date(assignments):
+    current_time = int(datetime.timestamp(datetime.now()))
+    closest = None
+    smallest_time_diff = float("inf")
+    for assignment in assignments:
+        idt = assignment.initial_due_date - current_time
+        pdt = assignment.peer_review_due_date - current_time
+        fdt = assignment.final_due_date - current_time
+        if idt > 0 and idt < smallest_time_diff:
+            closest = (f"{assignment.name} initial submission",
+                       assignment.initial_due_date)
+            smallest_time_diff = idt
+        elif pdt > 0 and pdt < smallest_time_diff:
+            closest = (f"{assignment.name} peer review",
+                       assignment.peer_review_due_date)
+            smallest_time_diff = pdt
+        elif fdt > 0 and fdt < smallest_time_diff:
+            closest = (f"{assignment.name} final submission",
+                       assignment.final_due_date)
+            smallest_time_diff = fdt
+    return closest
+
+
+def build_next_assignment_due(due_tuple):
+    if not due_tuple:
+        return "<h4>no upcoming due dates</h4>"
+    assignment, ts = due_tuple
+    return f"""
+        <h4>
+            Next assignment: {assignment} due
+             {datetime.fromtimestamp(ts).strftime('%a, %d %b %Y %H:%M:%S GMT')}
+        </h4>
+    """
+
+
 def handle_dashboard_main(rocket):
     asmt_tbl = denis.db.Assignment
     sub_tbl = mailman.db.Submission
-    ret = ("<a href='dashboard/log'>View a complete history of your "
-           "submissions.</a><br>")
+    ret = build_next_assignment_due(find_nearest_due_date(asmt_tbl))
+    ret += ("<a href='dashboard/log'>View a complete history of your "
+            "submissions.</a><br>")
     assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
     for assignment in assignments:
         ret += "<br>"
