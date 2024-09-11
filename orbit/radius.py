@@ -379,10 +379,7 @@ def handle_stub(rocket, more=[]):
     return rocket.respond(content)
 
 
-def handle_dashboard(rocket):
-    if not rocket.session:
-        return rocket.raw_respond(HTTPStatus.FORBIDDEN)
-
+def handle_dashboard_log(rocket):
     submissions = (mailman.db.Submission.select()
                    .where(mailman.db.Submission.user == rocket.session.username)  # NOQA: E501
                    .order_by(- mailman.db.Submission.timestamp))
@@ -401,6 +398,19 @@ def handle_dashboard(rocket):
 <tr>{table_content}</tr>
 </table>
 """)
+
+
+def handle_dashboard(rocket):
+    if not rocket.session:
+        return rocket.raw_respond(HTTPStatus.FORBIDDEN)
+    match rocket.path_info:
+        case '/dashboard':
+            return rocket.respond("<a href='dashboard/log'>View a complete"
+                                  " history of your submissions.</a>")
+        case '/dashboard/log':
+            return handle_dashboard_log(rocket)
+        case _:
+            return rocket.raw_respond(HTTPStatus.NOT_FOUND)
 
 
 def find_creds_for_registration(student_id):
