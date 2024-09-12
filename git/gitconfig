@@ -1,0 +1,2 @@
+[core]
+	hooksPath=/var/lib/git/hooks/
