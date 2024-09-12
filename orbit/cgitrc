@@ -20,4 +20,5 @@ mimetype.svg=image/svg+xml
 
 virtual-root=/cgit
 
-include=/etc/cgit/cgitrepos
+enable-index-owner=0
+scan-path=/var/lib/git
