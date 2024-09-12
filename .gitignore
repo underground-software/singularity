@@ -2,3 +2,4 @@
 cert*
 .*.sw*
 /docs
+/repos

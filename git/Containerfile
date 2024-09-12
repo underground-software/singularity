@@ -1,0 +1,54 @@
+FROM alpine:3.20 as git
+
+RUN apk update && apk upgrade && apk add \
+	python3 \
+	git \
+	git-daemon \
+	;
+
+RUN mkdir /usr/local/share/git
+
+WORKDIR /usr/local/share/git
+
+COPY ./gitconfig ./.gitconfig
+
+COPY ./hooks ./hooks
+
+COPY ./setup-repo.sh ./setup-repo.sh
+
+COPY ./create-repo.sh ./create-repo.sh
+
+RUN mkdir /var/lib/git/
+
+WORKDIR /var/lib/git/
+
+RUN mkdir singularity
+
+COPY --from=git_singularity_git_dir . singularity/
+
+RUN echo 'Repository containing all KDLP content and infrastructure.' > singularity/description
+
+COPY --from=git_course_repositories . .
+
+RUN for dir in $(ls); \
+	do \
+		if [ -d $dir/.git ]; \
+		then \
+			dir=$dir/.git; \
+		fi; \
+		/usr/local/share/git/setup-repo.sh $dir ; \
+	done
+
+
+
+COPY ./cgi-bin ./cgi-bin
+
+RUN chown -R 100:100 .
+
+USER 100:100
+
+VOLUME /var/lib/git/
+
+WORKDIR /usr/local/share/git
+
+CMD trap exit TERM; python -m http.server --directory /var/lib/git/ --cgi & wait

@@ -168,6 +168,19 @@ services:
     networks:
       - denis
       - smtp
+  git:
+    build:
+      context: git
+      dockerfile: Containerfile
+      additional_contexts:
+        - git_singularity_git_dir=./.git
+        - git_course_repositories=repos
+    volumes:
+      - type: volume
+        source: git-repos
+        target: /var/lib/git/
+    ports:
+      - "8000"
 networks:
   orbit:
   smtp:
@@ -184,3 +197,4 @@ volumes:
   submissions-db:
   submatrix-data:
   denis-db:
+  git-repos:
