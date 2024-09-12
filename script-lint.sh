@@ -8,6 +8,11 @@ set -ex
 shellcheck script-lint.sh
 shellcheck test.sh
 shellcheck orbit/warpdrive.sh
+shellcheck git/admin.sh
+shellcheck git/create-repo.sh
+shellcheck git/setup-repo.sh
+shellcheck git/cgi-bin/git-receive-pack
+shellcheck git/hooks/post-update
 
 # -x needed to make shellcheck follow `source` command
 shellcheck -x backup/backup.sh
