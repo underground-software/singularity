@@ -17,6 +17,7 @@ from urllib.parse import parse_qs, urlparse
 # === internal imports & constants ===
 import config
 import db
+import denis.db
 import mailman.db
 
 sec_per_min = 60
@@ -379,10 +380,7 @@ def handle_stub(rocket, more=[]):
     return rocket.respond(content)
 
 
-def handle_dashboard(rocket):
-    if not rocket.session:
-        return rocket.raw_respond(HTTPStatus.FORBIDDEN)
-
+def handle_dashboard_log(rocket):
     submissions = (mailman.db.Submission.select()
                    .where(mailman.db.Submission.user == rocket.session.username)  # NOQA: E501
                    .order_by(- mailman.db.Submission.timestamp))
@@ -396,11 +394,222 @@ def handle_dashboard(rocket):
                   for sub in submissions]
     table_content = '</tr>\n<tr>'.join(''.join(row) for row in table_data)
 
-    return rocket.respond(f"""<table>
-<tr><th>Timestamp</th><th>Assignment</th><th>Submission ID</th><th>Status</th></tr>
-<tr>{table_content}</tr>
-</table>
-""")
+    return rocket.respond(f"""
+    <a href='/dashboard'>Return to main dashboard page</a>
+    <table>
+      <tr>
+        <th>Timestamp</th>
+        <th>Assignment</th>
+        <th>Submission ID</th>
+        <th>Status</th>
+      </tr>
+      <tr>{table_content}</tr>
+    </table>
+    """)
+
+
+class OopsieCode:
+    AVAILABLE = 0
+    SPENT = 1
+    USED_HERE = 2
+    LATE = 3
+
+
+class AsmtTable:
+    def __init__(self, name, initial, final, oopsie_status):
+        self.name = name
+        self.initial = initial
+        self.final = final
+        self.oopsie_status = oopsie_status
+
+    def oopsie_button(self):
+        return f"""
+        <form method="post" action="/dashboard/oops">
+            <input type="hidden" name="assignment" value="{self.name}">
+            <button type="submit">Oopsie!</button>
+        </form>
+        """
+
+    def build_oopsie_cell(self):
+        match self.oopsie_status:
+            case OopsieCode.AVAILABLE:
+                return self.oopsie_button()
+            case OopsieCode.SPENT:
+                return "No Oopsie remaining"
+            case OopsieCode.USED_HERE:
+                return "Oopsie used!"
+            case OopsieCode.LATE:
+                return "Past initial due date!<br>Can't oopsie!"
+
+    @staticmethod
+    def iso_stamp_if_exists(entry):
+        return (datetime.fromtimestamp(entry.timestamp).isoformat()
+                if entry else '-')
+
+    def __str__(self):
+        return f"""
+        <table>
+          <caption>{self.name}</caption>
+          <tr>
+            <th>Total Score: -</th>
+            <th>Timestamp</th>
+            <th>Submission ID</th>
+            <th>Request an 'Oopsie'</th>
+          </tr>
+          <tr>
+            <th>Initial Submission</th>
+            <td>{AsmtTable.iso_stamp_if_exists(self.initial)}</td>
+            <td>{self.initial.submission_id if self.initial else '-'}</td>
+            <th>{self.build_oopsie_cell()}</th>
+          </tr>
+          <tr>
+            <th>Automated Feedback</th>
+            <td colspan=3>-</td>
+          </tr>
+          <tr>
+            <th></th>
+            <th>Timestamp</th>
+            <th>Submission ID</th>
+            <th>Score</th>
+          </tr>
+          <tr>
+            <th>Peer Review 1</th>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th>Peer Review 2</th>
+            <td>-</td>
+            <td>-</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th>Final Submission</th>
+            <td>{AsmtTable.iso_stamp_if_exists(self.final)}</td>
+            <td>{self.final.submission_id if self.final else '-'}</td>
+            <td>-</td>
+          </tr>
+          <tr>
+            <th>Comments</th>
+            <td colspan=3>-</td>
+          </tr>
+        </table>
+        """
+
+
+def find_nearest_due_date(assignments):
+    current_time = int(datetime.timestamp(datetime.now()))
+    closest = None
+    smallest_time_diff = float("inf")
+    for assignment in assignments:
+        idt = assignment.initial_due_date - current_time
+        pdt = assignment.peer_review_due_date - current_time
+        fdt = assignment.final_due_date - current_time
+        if idt > 0 and idt < smallest_time_diff:
+            closest = (f"{assignment.name} initial submission",
+                       assignment.initial_due_date)
+            smallest_time_diff = idt
+        elif pdt > 0 and pdt < smallest_time_diff:
+            closest = (f"{assignment.name} peer review",
+                       assignment.peer_review_due_date)
+            smallest_time_diff = pdt
+        elif fdt > 0 and fdt < smallest_time_diff:
+            closest = (f"{assignment.name} final submission",
+                       assignment.final_due_date)
+            smallest_time_diff = fdt
+    return closest
+
+
+def build_next_assignment_due(due_tuple):
+    if not due_tuple:
+        return "<h4>no upcoming due dates</h4>"
+    assignment, ts = due_tuple
+    return f"""
+        <h4>
+            Next assignment: {assignment} due
+             {datetime.fromtimestamp(ts).strftime('%a, %d %b %Y %H:%M:%S GMT')}
+        </h4>
+    """
+
+
+def get_oopsieness(oops, cur_assignment):
+    if oops is None:
+        if (int(datetime.timestamp(datetime.now()))
+                > cur_assignment.initial_due_date):
+            return OopsieCode.LATE
+        else:
+            return OopsieCode.AVAILABLE
+    elif oops.assignment == cur_assignment.name:
+        return OopsieCode.USED_HERE
+    else:
+        return OopsieCode.SPENT
+
+
+def handle_dashboard_main(rocket):
+    asmt_tbl = denis.db.Assignment
+    sub_tbl = mailman.db.Submission
+    oops_tbl = db.Oopsie
+    ret = build_next_assignment_due(find_nearest_due_date(asmt_tbl))
+    ret += ("<a href='dashboard/log'>View a complete history of your "
+            "submissions.</a><br>")
+    assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
+    oops = (oops_tbl.select()
+            .where(oops_tbl.user == rocket.session.username)
+            .first())
+    for assignment in assignments:
+        ret += "<br>"
+        initial = (sub_tbl.select()
+                   .where(sub_tbl.user == rocket.session.username)
+                   .where(sub_tbl.assignment == assignment.name)
+                   .where(sub_tbl.timestamp < assignment.initial_due_date)
+                   .order_by(sub_tbl.timestamp.desc())
+                   .first())
+        final = (sub_tbl.select()
+                 .where(sub_tbl.user == rocket.session.username)
+                 .where(sub_tbl.assignment == assignment.name)
+                 .where(sub_tbl.timestamp >= assignment.initial_due_date)
+                 .where(sub_tbl.timestamp < assignment.final_due_date)
+                 .order_by(sub_tbl.timestamp.desc())
+                 .first())
+        ret += str(AsmtTable(assignment.name, initial, final,
+                             get_oopsieness(oops, assignment)))
+    return rocket.respond(ret)
+
+
+def handle_dashboard_oops(rocket):
+    oops_tbl = db.Oopsie
+    asmt_tbl = denis.db.Assignment
+    oops = (oops_tbl.select()
+                    .where(oops_tbl.user == rocket.session.username)
+                    .first())
+    reqd_asmt = rocket.body_args_query("assignment")
+    asmt_obj = (asmt_tbl.select()
+                        .where(asmt_tbl.name == reqd_asmt)
+                        .first())
+
+    now = int(datetime.timestamp(datetime.now()))
+    if oops or not asmt_obj or now >= asmt_obj.initial_due_date:
+        return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
+
+    q = oops_tbl.insert(user=rocket.session.username, assignment=reqd_asmt,
+                        timestamp=now)
+    q.execute()
+    return handle_dashboard_main(rocket)
+
+
+def handle_dashboard(rocket):
+    if not rocket.session:
+        return rocket.raw_respond(HTTPStatus.FORBIDDEN)
+    match rocket.path_info:
+        case '/dashboard':
+            return handle_dashboard_main(rocket)
+        case '/dashboard/log':
+            return handle_dashboard_log(rocket)
+        case '/dashboard/oops':
+            return handle_dashboard_oops(rocket)
+        case _:
+            return rocket.raw_respond(HTTPStatus.NOT_FOUND)
 
 
 def find_creds_for_registration(student_id):
@@ -558,8 +767,10 @@ def application(env, SR):
             return handle_login(rocket)
         case '/register':
             return handle_register(rocket)
-        case _:
-            if rocket.method != 'GET':
+        case p:
+            if p.startswith('/dashboard'):
+                return handle_dashboard(rocket)
+            elif rocket.method != 'GET':
                 return rocket.raw_respond(HTTPStatus.METHOD_NOT_ALLOWED)
 
     # routes supporting only get
@@ -568,8 +779,6 @@ def application(env, SR):
             return handle_logout(rocket)
         case '/mail_auth':
             return handle_mail_auth(rocket)
-        case '/dashboard':
-            return handle_dashboard(rocket)
         case '/error':
             return handle_error(rocket)
         case p:
