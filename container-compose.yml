@@ -37,9 +37,7 @@ services:
       context: orbit
       dockerfile: Containerfile
       additional_contexts:
-        - orbit_singularity_git_dir=./.git
         - orbit_docs_source=./docs
-        - orbit_repos_source=./cgit_repos
         - mailman_source=./mailman
       target: orbit
       args:
@@ -53,6 +51,12 @@ services:
         source: submissions-db
         target: /var/lib/mailman
         read_only: true
+      - type: volume
+        source: git-repos
+        target: /var/lib/git
+        read_only: true
+    depends_on:
+      - git
     networks:
       - orbit
   smtp:

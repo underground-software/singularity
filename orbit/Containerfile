@@ -32,8 +32,6 @@ WORKDIR /usr/local/share/orbit
 COPY --from=build /usr/local/share/orbit /usr/local/share/orbit
 COPY --from=orbit_docs_source . ./docs
 COPY --from=mailman_source . ./mailman
-COPY --from=orbit_singularity_git_dir . /var/git/singularity
-COPY --from=orbit_repos_source . /etc/cgit
 
 RUN mkdir -p /var/lib/orbit/ && \
 	./db.py \
