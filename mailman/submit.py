@@ -39,9 +39,32 @@ def main(argv):
 
     # if the 'cover letter' is not addressed to
     # an assignment inbox, this email session
-    # isn't a patchset at all
+    # isn't a patchset at all, but it could be a peer review.
     if cover_letter.rcpt not in ASSIGNMENT_LIST:
-        # TODO process peer review
+        if patches or user == cover_letter.rcpt:
+            return 0
+        with open(f'/var/lib/email/mail/{cover_letter.msg_id}', 'r') as f:
+            for line in f:
+                if line == '':
+                    return 0
+                if not line.startswith('In-Reply-To: '):
+                    continue
+                lt_ind = line.find('<')
+                at_ind = line.find('@')
+                if lt_ind == -1 or at_ind == -1 or lt_ind > at_ind:
+                    return 0
+                irt = line[lt_ind+1:at_ind]
+                break
+        # 'clear the lower 16 bits' to get the reviewee patchset id
+        patchset_id = irt[:-4]+'0000'
+        reviewee_sub = (db.Submission
+                          .select()
+                          .where(db.Submission.submission_id == patchset_id)
+                          .first())
+        db.PeerReview.create(review_id=logfile, reviewer=user,
+                             reviewee=cover_letter.rcpt,
+                             assignment=reviewee_sub.assignment,
+                             timestamp=timestamp)
         return 0
 
     sub = db.Submission(submission_id=logfile, assignment=cover_letter.rcpt,
