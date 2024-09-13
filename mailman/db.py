@@ -19,5 +19,13 @@ class Submission(BaseModel):
     status = peewee.TextField()
 
 
+class PeerReview(BaseModel):
+    review_id = peewee.TextField(unique=True)
+    reviewer = peewee.TextField()
+    reviewee = peewee.TextField()
+    assignment = peewee.TextField()
+    timestamp = peewee.IntegerField()
+
+
 if __name__ == '__main__':
     DB.create_tables(BaseModel.__subclasses__())
