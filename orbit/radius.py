@@ -389,7 +389,8 @@ def handle_dashboard(rocket):
 
     def submission_fields(sub):
         return (datetime.fromtimestamp(sub.timestamp).isoformat(),
-                sub.assignment, sub.submission_id, sub.status)
+                sub.recipient, sub.email_count, sub.in_reply_to or '-',
+                sub.submission_id, )
 
     # Split data from Submission table into values for HTML table
     table_data = [[f'<td>{val}</td>' for val in submission_fields(sub)]
@@ -397,7 +398,7 @@ def handle_dashboard(rocket):
     table_content = '</tr>\n<tr>'.join(''.join(row) for row in table_data)
 
     return rocket.respond(f"""<table>
-<tr><th>Timestamp</th><th>Assignment</th><th>Submission ID</th><th>Status</th></tr>
+<tr><th>Timestamp</th><th>Recipient</th><th>Email Count</th><th>In Reply To</th><th>Submission ID</th></tr>
 <tr>{table_content}</tr>
 </table>
 """)

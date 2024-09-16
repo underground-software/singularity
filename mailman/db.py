@@ -13,10 +13,11 @@ class BaseModel(peewee.Model):
 
 class Submission(BaseModel):
     submission_id = peewee.TextField(unique=True)
-    assignment = peewee.TextField()
     timestamp = peewee.IntegerField()
     user = peewee.TextField()
-    status = peewee.TextField()
+    recipient = peewee.TextField()
+    email_count = peewee.IntegerField()
+    in_reply_to = peewee.TextField(null=True)
 
 
 if __name__ == '__main__':
