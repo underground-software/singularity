@@ -4,9 +4,7 @@ import collections
 from pathlib import Path
 import sys
 
-import patchset
 import db
-import denis.db
 
 
 Email = collections.namedtuple('Email', ['rcpt', 'msg_id'])
@@ -31,38 +29,26 @@ def main(argv):
     if not emails:
         return 0
 
-    cover_letter, *patches = emails
+    irt_header = 'In-Reply-To: <'
+    reply_id = None
+    with open(f'/var/lib/email/mail/{emails[0].msg_id}') as f:
+        for line in f:
+            if not line:
+                break
+            if not line.startswith(irt_header):
+                continue
+            at_sign = line.find('@', len(irt_header))
+            if -1 == at_sign:
+                continue
+            reply_email_id = line[len(irt_header):at_sign]
 
-    # if the 'cover letter' is not addressed to
-    # an assignment inbox, this email session
-    # isn't a patchset at all
-    asn_db = denis.db.Assignment
-    if not asn_db.get_or_none(asn_db.name == cover_letter.rcpt):
-        # TODO process peer review
-        return 0
+            # "clear the lower 16 bits" to get the reviewee patchset id
+            reply_id = reply_email_id[:-4] + '0000'
+            break
 
-    sub = db.Submission(submission_id=logfile, assignment=cover_letter.rcpt,
-                        timestamp=timestamp, user=user, status='new')
-
-    # only one email
-    if not patches:
-        # only one patch, but addressed to an
-        # assignment inbox. This cannot be valid.
-        sub.status = 'no patches or no cover letter'
-        sub.save()
-        return 0
-
-    mis_addressed_patches = [str(i+1) for i, patch in enumerate(patches)
-                             if patch.rcpt != cover_letter.rcpt]
-
-    if mis_addressed_patches:
-        sub.status = (f'patch(es) {",".join(mis_addressed_patches)} '
-                      f'not addressed to {cover_letter.rcpt}')
-        sub.save()
-        return 0
-
-    sub.status = patchset.check(cover_letter, patches, submission_id=logfile)
-    sub.save()
+    db.Submission.create(submission_id=logfile, timestamp=timestamp,
+                         user=user, recipient=emails[0].rcpt,
+                         email_count=len(emails), in_reply_to=reply_id)
 
 
 if __name__ == "__main__":
