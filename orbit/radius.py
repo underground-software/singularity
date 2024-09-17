@@ -412,10 +412,30 @@ def handle_activity(rocket):
     """)
 
 
+class OopsStatus:
+    PAST_DUE = 0
+    AVAILABLE = 1
+    USED_HERE = 2
+    UNAVAILABLE = 3
+
+
 class AsmtTable:
-    def __init__(self, assignment):
+    def __init__(self, assignment, oopsieness):
         self.assignment = assignment
         self.name = assignment.name
+        self.oopsieness = oopsieness
+
+    def oops_button_hover(self):
+        match self.oopsieness:
+            case OopsStatus.PAST_DUE:
+                return (f"Too late to oopsie! {self.name} "
+                        "initial submission is past due!")
+            case OopsStatus.AVAILABLE:
+                return f"Click to use your oopsie on {self.name}"
+            case OopsStatus.USED_HERE:
+                return "Oopsie used here!"
+            case OopsStatus.UNAVAILABLE:
+                return "You have already used your oopsie"
 
     def gradeable_row(self, item_name, rightmost_col):
         return f"""
@@ -436,8 +456,13 @@ class AsmtTable:
         """
 
     def oopsie_button(self):
-        return f'''<button type="submit" name="oopsie"
-                   value="{self.name}">Oopsie!</button>'''
+        return f"""
+        <button {'disabled' if self.oopsieness != OopsStatus.AVAILABLE else ''}
+         title='{self.oops_button_hover()}' type="submit" name="oopsie"
+         value="{self.name}">
+           Oopsie!
+         </button>
+        """
 
     def __str__(self):
         return f"""
@@ -472,6 +497,16 @@ class AsmtTable:
         """
 
 
+def get_asmt_oopsieness(oops, cur_assignment, initial_due):
+    if oops and oops.assignment == cur_assignment:
+        return OopsStatus.USED_HERE
+    if initial_due < int(datetime.now().timestamp()):
+        return OopsStatus.PAST_DUE
+    if oops:
+        return OopsStatus.UNAVAILABLE
+    return OopsStatus.AVAILABLE
+
+
 def handle_dashboard(rocket):
     if not rocket.session:
         return rocket.raw_respond(HTTPStatus.FORBIDDEN)
@@ -499,9 +534,13 @@ def handle_dashboard(rocket):
         except db.peewee.IntegrityError:
             return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
     ret = '<form method="post" action="/dashboard">'
+    oops_tbl = db.Oopsie
     assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
+    oops = oops_tbl.get_or_none(oops_tbl.user == rocket.session.username)
     for assignment in assignments:
-        ret += str(AsmtTable(assignment))
+        oopsieness = get_asmt_oopsieness(oops, assignment.name,
+                                         assignment.initial_due_date)
+        ret += str(AsmtTable(assignment, oopsieness))
     return rocket.respond(ret + '</form>')
 
 
