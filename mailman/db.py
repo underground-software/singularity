@@ -20,5 +20,13 @@ class Submission(BaseModel):
     in_reply_to = peewee.TextField(null=True)
 
 
+class Gradeable(BaseModel):
+    submission_id = peewee.TextField(unique=True)
+    timestamp = peewee.IntegerField()
+    user = peewee.TextField()
+    assignment = peewee.TextField()
+    component = peewee.TextField()
+
+
 if __name__ == '__main__':
     DB.create_tables(BaseModel.__subclasses__())
