@@ -124,6 +124,7 @@ services:
       dockerfile: Containerfile
       additional_contexts:
         - watcher_source=./watcher
+        - denis_source=./denis
     volumes:
       - type: volume
         source: email-mail
@@ -134,11 +135,16 @@ services:
         target: /var/lib/email/logs
         read_only: true
       - type: volume
+        source: denis-db
+        target: /var/lib/denis
+        read_only: true
+      - type: volume
         source: submissions-db
         target: /var/lib/mailman
         read_only: false
     depends_on:
       - smtp
+      - denis
     networks:
       - mailman
   denis:
