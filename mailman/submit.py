@@ -6,11 +6,7 @@ import sys
 
 import patchset
 import db
-
-ASSIGNMENT_LIST = ["introductions",
-                   "exercise0", "exercise1", "exercise2",
-                   "programming0", "programming1", "programming2",
-                   "final0", "final1"]
+import denis.db
 
 
 Email = collections.namedtuple('Email', ['rcpt', 'msg_id'])
@@ -40,7 +36,8 @@ def main(argv):
     # if the 'cover letter' is not addressed to
     # an assignment inbox, this email session
     # isn't a patchset at all
-    if cover_letter.rcpt not in ASSIGNMENT_LIST:
+    asn_db = denis.db.Assignment
+    if not asn_db.get_or_none(asn_db.name == cover_letter.rcpt):
         # TODO process peer review
         return 0
 
