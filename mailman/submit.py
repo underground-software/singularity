@@ -71,6 +71,32 @@ def main(argv):
                      assignment=asn.name, component=typ)
         return set_status(f'{asn.name}: {typ}')
 
+    if reply_id:
+        if not (orig := gr_db.get_or_none(gr_db.submission_id == reply_id)):
+            return set_status('not a reply to a submission')
+        asn_name = orig.assignment
+        asn = asn_db.get_or_none(asn_name == asn_db.name)
+        if not asn:
+            raise RuntimeError('invalid assignment name in gradeable DB')
+        if timestamp > asn.peer_review_due_date:
+            return set_status(f'{asn.name} review past due')
+        rev_db = denis.db.PeerReviewAssignment
+        rev = rev_db.get_or_none((rev_db.assignment == asn_name) &
+                                 (rev_db.reviewer == user))
+        if not rev:
+            return set_status('ineligible for peer review')
+        match emails[0].rcpt:
+            case rev.reviewee1:
+                typ = 'review1'
+            case rev.reviewee2:
+                typ = 'review2'
+            case _:
+                return set_status('reviewed wrong submission')
+        gr_db.create(submission_id=logfile, timestamp=timestamp,
+                     user=user, assignment=asn_name, component=typ,
+                     comments=None)
+        return set_status(f'{asn_name}: {typ}')
+
     return set_status('Not a recognized recipient')
 
 
