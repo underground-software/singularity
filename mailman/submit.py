@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 
 import db
+import denis.db
 
 
 Email = collections.namedtuple('Email', ['rcpt', 'msg_id'])
@@ -22,6 +23,7 @@ def main(argv):
     with open(Path(logdir) / logfile) as log:
         header, *email_lines = log.readlines()
     timestamp, user = header.split()
+    timestamp = int(timestamp)
 
     emails = [email_from_log_line(line) for line in email_lines]
 
@@ -54,6 +56,19 @@ def main(argv):
         sub.status = status
         sub.save()
         return 0
+
+    asn_db = denis.db.Assignment
+    gr_db = db.Gradeable
+    if asn := asn_db.get_or_none(asn_db.name == emails[0].rcpt):
+        if len(emails) < 2:
+            return set_status('missing patches')
+        typ = ('initial' if timestamp < asn.initial_due_date
+               else 'final' if timestamp < asn.final_due_date else None)
+        if not typ:
+            return set_status(f'{asn.name} past due')
+        gr_db.create(submission_id=logfile, timestamp=timestamp, user=user,
+                     assignment=asn.name, component=typ)
+        return set_status(f'{asn.name}: {typ}')
 
     return set_status('Not a recognized recipient')
 
