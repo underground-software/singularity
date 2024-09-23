@@ -464,6 +464,36 @@ class AsmtTable:
          </button>
         """
 
+    def body(self):
+        if self.oopsieness == OopsStatus.USED_HERE:
+            return f"""
+            {self.gradeable_row('Final Submission', self.oopsie_button())}
+            <tr>
+              <th>Comments</th>
+              <td colspan="3">-</td>
+            </tr>
+            """
+        return f"""
+        {self.gradeable_row('Initial Submission', self.oopsie_button())}
+        <tr>
+          <th>Automated Feedback</th>
+          <td colspan="3">-</td>
+        </tr>
+        <tr>
+          <th></th>
+          <th>Timestamp</th>
+          <th>Submission ID</th>
+          <th>Score</th>
+        </tr>
+        {self.gradeable_row('Peer Review 1', '-')}
+        {self.gradeable_row('Peer Review 2', '-')}
+        {self.gradeable_row('Final Submission', '-')}
+        <tr>
+          <th>Comments</th>
+          <td colspan="3">-</td>
+        </tr>
+        """
+
     def __str__(self):
         return f"""
         <table>
@@ -474,24 +504,7 @@ class AsmtTable:
             <th>Submission ID</th>
             <th>Request an 'Oopsie'</th>
           </tr>
-          {self.gradeable_row('Initial Submission', self.oopsie_button())}
-          <tr>
-            <th>Automated Feedback</th>
-            <td colspan="3">-</td>
-          </tr>
-          <tr>
-            <th></th>
-            <th>Timestamp</th>
-            <th>Submission ID</th>
-            <th>Score</th>
-          </tr>
-          {self.gradeable_row('Peer Review 1', '-')}
-          {self.gradeable_row('Peer Review 2', '-')}
-          {self.gradeable_row('Final Submission', '-')}
-          <tr>
-            <th>Comments</th>
-            <td colspan="3">-</td>
-          </tr>
+          {self.body()}
         </table>
         <br>
         """
