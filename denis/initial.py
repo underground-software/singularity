@@ -142,9 +142,9 @@ try:
         db.PeerReviewAssignment.insert_many(
             [{'assignment': assignment,
               'reviewer': reviewer,
-              'reviewee1': reviewee1,
-              'reviewee2': reviewee2}
-             for (reviewer, reviewee1, reviewee2) in reviews]).execute()
+              'reviewee1': reviewees[0] if len(reviewees) >= 1 else None,
+              'reviewee2': reviewees[1] if len(reviewees) >= 2 else None}
+             for [reviewer, *reviewees] in reviews]).execute()
 except db.peewee.IntegrityError as e:
     print(e)
 
