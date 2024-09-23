@@ -18,6 +18,7 @@ class Submission(BaseModel):
     recipient = peewee.TextField()
     email_count = peewee.IntegerField()
     in_reply_to = peewee.TextField(null=True)
+    status = peewee.TextField(null=True)
 
 
 class Gradeable(BaseModel):
