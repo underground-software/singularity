@@ -421,10 +421,12 @@ class OopsStatus:
 
 
 class AsmtTable:
-    def __init__(self, assignment, oopsieness):
+    def __init__(self, assignment, oopsieness, peer1, peer2):
         self.assignment = assignment
         self.name = assignment.name
         self.oopsieness = oopsieness
+        self.peer1 = peer1
+        self.peer2 = peer2
 
     def oops_button_hover(self):
         match self.oopsieness:
@@ -486,8 +488,8 @@ class AsmtTable:
             <th>Submission ID</th>
             <th>Score</th>
           </tr>
-          {self.gradeable_row('Peer Review 1', '-')}
-          {self.gradeable_row('Peer Review 2', '-')}
+          {self.gradeable_row(self.peer1 + ' Peer Review', '-') if self.peer1 else ''}
+          {self.gradeable_row(self.peer2 + ' Peer Review', '-') if self.peer2 else ''}
           {self.gradeable_row('Final Submission', '-')}
           <tr>
             <th>Comments</th>
@@ -551,12 +553,19 @@ def handle_dashboard(rocket):
             return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
     oops_tbl = db.Oopsie
     oops = oops_tbl.get_or_none(oops_tbl.user == rocket.session.username)
+    peer_tbl = denis.db.PeerReviewAssignment
+    peer_asns = (peer_tbl.select()
+                         .where(peer_tbl.reviewer == rocket.session.username))
     assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
     ret = '<form method="post" action="/dashboard">'
     for assignment in assignments:
         oopsieness = get_asmt_oopsieness(oops, assignment.name,
                                          assignment.initial_due_date)
-        ret += str(AsmtTable(assignment, oopsieness))
+        peers = (peer_asns.where(peer_tbl.assignment == assignment.name)
+                          .first())
+        peer1 = peers.reviewee1 if peers else None
+        peer2 = peers.reviewee2 if peers else None
+        ret += str(AsmtTable(assignment, oopsieness, peer1, peer2))
     return rocket.respond(ret + '</form>')
 
 
