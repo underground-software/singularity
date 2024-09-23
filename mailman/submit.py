@@ -46,9 +46,16 @@ def main(argv):
             reply_id = reply_email_id[:-4] + '0000'
             break
 
-    db.Submission.create(submission_id=logfile, timestamp=timestamp,
-                         user=user, recipient=emails[0].rcpt,
-                         email_count=len(emails), in_reply_to=reply_id)
+    sub = db.Submission(submission_id=logfile, timestamp=timestamp,
+                        user=user, recipient=emails[0].rcpt,
+                        email_count=len(emails), in_reply_to=reply_id)
+
+    def set_status(status):
+        sub.status = status
+        sub.save()
+        return 0
+
+    return set_status('Not a recognized recipient')
 
 
 if __name__ == "__main__":
