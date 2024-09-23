@@ -391,7 +391,7 @@ def handle_activity(rocket):
     def submission_fields(sub):
         return (datetime.fromtimestamp(sub.timestamp).astimezone().isoformat(),
                 sub.recipient, sub.email_count, sub.in_reply_to or '-',
-                sub.submission_id, )
+                sub.submission_id, sub.status or '-')
 
     # Split data from Submission table into values for HTML table
     table_data = [[f'<td>{val}</td>' for val in submission_fields(sub)]
@@ -406,6 +406,7 @@ def handle_activity(rocket):
       <th>Email Count</th>
       <th>In Reply To</th>
       <th>Submission ID</th>
+      <th>Status</th>
     </tr>
     <tr>{table_content}</tr>
     </table>
