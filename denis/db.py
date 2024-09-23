@@ -20,8 +20,8 @@ class Assignment(BaseModel):
 class PeerReviewAssignment(BaseModel):
     assignment = peewee.TextField()
     reviewer = peewee.TextField()
-    reviewee1 = peewee.TextField()
-    reviewee2 = peewee.TextField()
+    reviewee1 = peewee.TextField(null=True)
+    reviewee2 = peewee.TextField(null=True)
 
     class Meta:
         indexes = ((('assignment', 'reviewer'), True),)
