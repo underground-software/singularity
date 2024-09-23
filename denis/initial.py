@@ -111,7 +111,7 @@ assignment = sys.argv[1]
 
 students_who_submitted = [user.username for user in orbit.db.User.select()
                           if mailman.db.Submission.get_or_none((mailman.db.Submission.user == user.username) &  # NOQA: E501
-                                                               (mailman.db.Submission.assignment == assignment)) is not None]  # NOQA: E501
+                                                               (mailman.db.Submission.recipient == assignment)) is not None]  # NOQA: E501
 
 # let them see emails that have been sent since last final due date
 for student in students_who_submitted:
