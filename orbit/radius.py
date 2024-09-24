@@ -440,17 +440,17 @@ class AsmtTable:
             case OopsStatus.UNAVAILABLE:
                 return "You have already used your oopsie"
 
-    def gradeable_row(self, item_name, rightmost_col):
+    def gradeable_row(self, item_name, gradeable, rightmost_col):
         return f"""
         <tr>
           <th>
             {item_name}
           </th>
           <td>
-            -
+            {datetime.fromtimestamp(gradeable.timestamp).astimezone().isoformat() if gradeable else '-'}
           </td>
           <td>
-            -
+            {gradeable.submission_id if gradeable else '-'}
           </td>
           <th>
             {rightmost_col}
@@ -470,14 +470,14 @@ class AsmtTable:
     def body(self):
         if self.oopsieness == OopsStatus.USED_HERE:
             return f"""
-              {self.gradeable_row('Final Submission', self.oopsie_button())}
+              {self.gradeable_row('Final Submission', None, self.oopsie_button())}
               <tr>
                 <th>Comments</th>
                 <td colspan="3">-</td>
               </tr>
             """
         return f"""
-          {self.gradeable_row('Initial Submission', self.oopsie_button())}
+          {self.gradeable_row('Initial Submission', None, self.oopsie_button())}
           <tr>
             <th>Automated Feedback</th>
             <td colspan="3">-</td>
@@ -488,9 +488,9 @@ class AsmtTable:
             <th>Submission ID</th>
             <th>Score</th>
           </tr>
-          {self.gradeable_row(self.peer1 + ' Peer Review', '-') if self.peer1 else ''}
-          {self.gradeable_row(self.peer2 + ' Peer Review', '-') if self.peer2 else ''}
-          {self.gradeable_row('Final Submission', '-')}
+          {self.gradeable_row(self.peer1 + ' Peer Review', None, '-') if self.peer1 else ''}
+          {self.gradeable_row(self.peer2 + ' Peer Review', None, '-') if self.peer2 else ''}
+          {self.gradeable_row('Final Submission', None, '-')}
           <tr>
             <th>Comments</th>
             <td colspan="3">-</td>
