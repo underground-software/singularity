@@ -421,12 +421,13 @@ class OopsStatus:
 
 
 class AsmtTable:
-    def __init__(self, assignment, oopsieness, peer1, peer2):
+    def __init__(self, assignment, oopsieness, peer1, peer2, init):
         self.assignment = assignment
         self.name = assignment.name
         self.oopsieness = oopsieness
         self.peer1 = peer1
         self.peer2 = peer2
+        self.init = init
 
     def oops_button_hover(self):
         match self.oopsieness:
@@ -440,17 +441,17 @@ class AsmtTable:
             case OopsStatus.UNAVAILABLE:
                 return "You have already used your oopsie"
 
-    def gradeable_row(self, item_name, rightmost_col):
+    def gradeable_row(self, item_name, component, rightmost_col):
         return f"""
         <tr>
           <th>
             {item_name}
           </th>
           <td>
-            -
+            {datetime.fromtimestamp(component.timestamp).isoformat() if component else '-'}
           </td>
           <td>
-            -
+            {component.submission_id if component else '-'}
           </td>
           <th>
             {rightmost_col}
@@ -470,14 +471,24 @@ class AsmtTable:
     def body(self):
         if self.oopsieness == OopsStatus.USED_HERE:
             return f"""
-            {self.gradeable_row('Final Submission', self.oopsie_button())}
+            {self.gradeable_row('Final Submission', None, self.oopsie_button())}
             <tr>
               <th>Comments</th>
               <td colspan="3">-</td>
             </tr>
             """
+        if (not self.init or
+            (int(datetime.now().timestamp())
+             < self.assignment.initial_due_date)):
+            return f"""
+            {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
+            <tr>
+              <th>Automated Feedback</th>
+              <td colspan="3">-</td>
+            </tr>
+            """
         return f"""
-        {self.gradeable_row('Initial Submission', self.oopsie_button())}
+        {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
         <tr>
           <th>Automated Feedback</th>
           <td colspan="3">-</td>
@@ -488,9 +499,9 @@ class AsmtTable:
           <th>Submission ID</th>
           <th>Score</th>
         </tr>
-        {self.gradeable_row(self.peer1 + ' Peer Review', '-') if self.peer1 else ''}
-        {self.gradeable_row(self.peer2 + ' Peer Review', '-') if self.peer2 else ''}
-        {self.gradeable_row('Final Submission', '-')}
+        {self.gradeable_row(self.peer1 + ' Peer Review', None, '-') if self.peer1 else ''}
+        {self.gradeable_row(self.peer2 + ' Peer Review', None, '-') if self.peer2 else ''}
+        {self.gradeable_row('Final Submission', None, '-')}
         <tr>
           <th>Comments</th>
           <td colspan="3">-</td>
@@ -556,6 +567,10 @@ def handle_dashboard(rocket):
     peer_tbl = denis.db.PeerReviewAssignment
     peer_asns = (peer_tbl.select()
                          .where(peer_tbl.reviewer == rocket.session.username))
+    grd_tbl = mailman.db.Gradeable
+    user_gradeables = (grd_tbl.select()
+                       .where(grd_tbl.user == rocket.session.username)
+                       .order_by(grd_tbl.timestamp.desc()))
     for assignment in assignments:
         oopsieness = get_asmt_oopsieness(oops, assignment.name,
                                          assignment.initial_due_date)
@@ -563,7 +578,10 @@ def handle_dashboard(rocket):
                           .first())
         peer1 = peers.reviewee1 if peers else None
         peer2 = peers.reviewee2 if peers else None
-        ret += str(AsmtTable(assignment, oopsieness, peer1, peer2))
+        asn_gradeables = (user_gradeables
+                          .where(grd_tbl.assignment == assignment.name))
+        init = asn_gradeables.where(grd_tbl.component == 'initial').first()
+        ret += str(AsmtTable(assignment, oopsieness, peer1, peer2, init))
     return rocket.respond(ret + '</form>')
 
 
