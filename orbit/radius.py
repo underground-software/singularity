@@ -421,12 +421,17 @@ class OopsStatus:
 
 
 class AsmtTable:
-    def __init__(self, assignment, oopsieness, peer1, peer2):
+    def __init__(self, assignment, oopsieness, peer1, peer2, init,
+                 review1, review2, final):
         self.assignment = assignment
         self.name = assignment.name
         self.oopsieness = oopsieness
         self.peer1 = peer1
         self.peer2 = peer2
+        self.init = init
+        self.review1 = review1
+        self.review2 = review2
+        self.final = final
 
     def oops_button_hover(self):
         match self.oopsieness:
@@ -470,14 +475,14 @@ class AsmtTable:
     def body(self):
         if self.oopsieness == OopsStatus.USED_HERE:
             return f"""
-              {self.gradeable_row('Final Submission', None, self.oopsie_button())}
+              {self.gradeable_row('Final Submission', self.final, self.oopsie_button())}
               <tr>
                 <th>Comments</th>
                 <td colspan="3">-</td>
               </tr>
             """
         return f"""
-          {self.gradeable_row('Initial Submission', None, self.oopsie_button())}
+          {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
           <tr>
             <th>Automated Feedback</th>
             <td colspan="3">-</td>
@@ -488,9 +493,9 @@ class AsmtTable:
             <th>Submission ID</th>
             <th>Score</th>
           </tr>
-          {self.gradeable_row(self.peer1 + ' Peer Review', None, '-') if self.peer1 else ''}
-          {self.gradeable_row(self.peer2 + ' Peer Review', None, '-') if self.peer2 else ''}
-          {self.gradeable_row('Final Submission', None, '-')}
+          {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, '-') if self.peer1 else ''}
+          {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, '-') if self.peer2 else ''}
+          {self.gradeable_row('Final Submission', self.final, '-')}
           <tr>
             <th>Comments</th>
             <td colspan="3">-</td>
@@ -556,6 +561,10 @@ def handle_dashboard(rocket):
     peer_tbl = denis.db.PeerReviewAssignment
     peer_asns = (peer_tbl.select()
                          .where(peer_tbl.reviewer == rocket.session.username))
+    grd_tbl = mailman.db.Gradeable
+    user_gradeables = (grd_tbl.select()
+                       .where(grd_tbl.user == rocket.session.username)
+                       .order_by(grd_tbl.timestamp.desc()))
     assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
     ret = '<form method="post" action="/dashboard">'
     for assignment in assignments:
@@ -565,7 +574,14 @@ def handle_dashboard(rocket):
                           .first())
         peer1 = peers.reviewee1 if peers else None
         peer2 = peers.reviewee2 if peers else None
-        ret += str(AsmtTable(assignment, oopsieness, peer1, peer2))
+        asn_gradeables = (user_gradeables
+                          .where(grd_tbl.assignment == assignment.name))
+        init = asn_gradeables.where(grd_tbl.component == 'initial').first()
+        rev1 = asn_gradeables.where(grd_tbl.component == 'review1').first()
+        rev2 = asn_gradeables.where(grd_tbl.component == 'review2').first()
+        final = asn_gradeables.where(grd_tbl.component == 'final').first()
+        ret += str(AsmtTable(assignment, oopsieness, peer1, peer2, init, rev1,
+                             rev2, final))
     return rocket.respond(ret + '</form>')
 
 
