@@ -8,6 +8,7 @@ set -ex
 shellcheck script-lint.sh
 shellcheck test.sh
 shellcheck orbit/warpdrive.sh
+shellcheck denis/configure.sh
 shellcheck mailman/inspector.sh
 shellcheck git/admin.sh
 shellcheck git/create-repo.sh
