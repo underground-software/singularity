@@ -7,4 +7,5 @@ singularity_ssl-certs
 singularity_submatrix-data
 singularity_submissions-db
 singularity_denis-db
+singularity_git-repos
 '
