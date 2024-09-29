@@ -380,16 +380,12 @@ def handle_stub(rocket, more=[]):
 
 
 def handle_dashboard(rocket):
-    if not rocket.session:
-        return rocket.raw_respond(HTTPStatus.FORBIDDEN)
-
     submissions = (mailman.db.Submission.select()
-                   .where(mailman.db.Submission.user == rocket.session.username)  # NOQA: E501
                    .order_by(- mailman.db.Submission.timestamp))
 
     def submission_fields(sub):
-        return (datetime.fromtimestamp(sub.timestamp).isoformat(),
-                sub.assignment, sub.submission_id, sub.status)
+        return (sub.user, datetime.fromtimestamp(sub.timestamp).isoformat(),
+                sub.assignment, sub.status)
 
     # Split data from Submission table into values for HTML table
     table_data = [[f'<td>{val}</td>' for val in submission_fields(sub)]
@@ -397,7 +393,7 @@ def handle_dashboard(rocket):
     table_content = '</tr>\n<tr>'.join(''.join(row) for row in table_data)
 
     return rocket.respond(f"""<table>
-<tr><th>Timestamp</th><th>Assignment</th><th>Submission ID</th><th>Status</th></tr>
+<tr><th>User</th><th>Timestamp</th><th>Assignment</th><th>Status</th></tr>
 <tr>{table_content}</tr>
 </table>
 """)
