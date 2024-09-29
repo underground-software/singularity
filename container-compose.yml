@@ -125,6 +125,7 @@ services:
       additional_contexts:
         - watcher_source=./watcher
         - denis_source=./denis
+        - orbit_source=./orbit
     volumes:
       - type: volume
         source: email-mail
@@ -137,6 +138,10 @@ services:
       - type: volume
         source: denis-db
         target: /var/lib/denis
+        read_only: true
+      - type: volume
+        source: orbit-db
+        target: /var/lib/orbit
         read_only: true
       - type: volume
         source: submissions-db
