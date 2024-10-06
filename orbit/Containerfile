@@ -25,6 +25,7 @@ RUN apk update && apk upgrade && apk add \
 	cgit \
 	libmemcached-dev \
 	memcached \
+	tzdata \
 	;
 
 WORKDIR /usr/local/share/orbit
