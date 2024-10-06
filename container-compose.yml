@@ -12,6 +12,8 @@ services:
         NGINX_HTTPS_LISTEN: 'unix:/run/nginx/socks/https.sock'
         NGINX_SMTPS_LISTEN: 'unix:/run/nginx/socks/smtps.sock'
         NGINX_POP3S_LISTEN: 'unix:/run/nginx/socks/pop3s.sock'
+    environment:
+      TZ: ${SINGULARITY_TIMEZONE}
     volumes:
       - type: bind
         source: ./socks
@@ -42,6 +44,8 @@ services:
       target: orbit
       args:
         orbit_version_info: "singularity ${SINGULARITY_VERSION} ${SINGULARITY_DEPLOYMENT_STATUS} https://github.com/underground-software/singularity"
+    environment:
+      TZ: ${SINGULARITY_TIMEZONE}
     volumes:
       - type: volume
         source: orbit-db
@@ -108,6 +112,8 @@ services:
       dockerfile: Containerfile
       args:
         MATRIX_HOSTNAME: ${SINGULARITY_HOSTNAME}
+    environment:
+      TZ: ${SINGULARITY_TIMEZONE}
     volumes:
       - type: volume
         source: submatrix-data

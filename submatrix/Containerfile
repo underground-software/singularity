@@ -4,6 +4,7 @@ RUN apk add \
 	synapse \
 	envsubst \
 	py3-curl \
+	tzdata \
 	;
 
 COPY homeserver.yaml.template /etc/synapse/homeserver.yaml.template
