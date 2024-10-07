@@ -23,5 +23,11 @@ class Session(BaseModel):
     expiry = peewee.FloatField()
 
 
+class Oopsie(BaseModel):
+    user = peewee.TextField(primary_key=True)
+    assignment = peewee.TextField()
+    timestamp = peewee.IntegerField()
+
+
 if __name__ == '__main__':
     DB.create_tables(BaseModel.__subclasses__())

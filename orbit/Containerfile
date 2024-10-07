@@ -32,6 +32,7 @@ WORKDIR /usr/local/share/orbit
 COPY --from=build /usr/local/share/orbit /usr/local/share/orbit
 COPY --from=orbit_docs_source . ./docs
 COPY --from=mailman_source . ./mailman
+COPY --from=denis_source . ./denis
 
 RUN mkdir -p /var/lib/orbit/ && \
 	./db.py \

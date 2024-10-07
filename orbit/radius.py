@@ -18,6 +18,7 @@ from urllib.parse import parse_qs, urlparse
 import config
 import db
 import mailman.db
+import denis.db
 
 sec_per_min = 60
 min_per_ses = config.minutes_each_session_token_is_valid
@@ -379,7 +380,7 @@ def handle_stub(rocket, more=[]):
     return rocket.respond(content)
 
 
-def handle_dashboard(rocket):
+def handle_activity(rocket):
     if not rocket.session:
         return rocket.raw_respond(HTTPStatus.FORBIDDEN)
 
@@ -390,18 +391,206 @@ def handle_dashboard(rocket):
     def submission_fields(sub):
         return (datetime.fromtimestamp(sub.timestamp).isoformat(),
                 sub.recipient, sub.email_count, sub.in_reply_to or '-',
-                sub.submission_id, )
+                sub.submission_id, sub.status or '-')
 
     # Split data from Submission table into values for HTML table
     table_data = [[f'<td>{val}</td>' for val in submission_fields(sub)]
                   for sub in submissions]
     table_content = '</tr>\n<tr>'.join(''.join(row) for row in table_data)
 
-    return rocket.respond(f"""<table>
-<tr><th>Timestamp</th><th>Recipient</th><th>Email Count</th><th>In Reply To</th><th>Submission ID</th></tr>
-<tr>{table_content}</tr>
-</table>
-""")
+    return rocket.respond(f"""
+    <table>
+    <tr>
+      <th>Timestamp</th>
+      <th>Recipient</th>
+      <th>Email Count</th>
+      <th>In Reply To</th>
+      <th>Submission ID</th>
+      <th>Status</th>
+    </tr>
+    <tr>{table_content}</tr>
+    </table>
+    """)
+
+
+class OopsStatus:
+    PAST_DUE = 0
+    AVAILABLE = 1
+    USED_HERE = 2
+    UNAVAILABLE = 3
+
+
+class AsmtTable:
+    def __init__(self, assignment, oopsieness, peer1, peer2, init,
+                 review1, review2, final):
+        self.assignment = assignment
+        self.name = assignment.name
+        self.oopsieness = oopsieness
+        self.peer1 = peer1
+        self.peer2 = peer2
+        self.init = init
+        self.review1 = review1
+        self.review2 = review2
+        self.final = final
+
+    def oops_button_hover(self):
+        match self.oopsieness:
+            case OopsStatus.PAST_DUE:
+                return (f"Too late to oopsie! {self.name} "
+                        "initial submission is past due!")
+            case OopsStatus.AVAILABLE:
+                return f"Click to use your oopsie on {self.name}"
+            case OopsStatus.USED_HERE:
+                return "Oopsie used here!"
+            case OopsStatus.UNAVAILABLE:
+                return "You have already used your oopsie"
+
+    def gradeable_row(self, item_name, component, rightmost_col):
+        return f"""
+        <tr>
+          <th>
+            {item_name}
+          </th>
+          <td>
+            {datetime.fromtimestamp(component.timestamp).isoformat() if component else '-'}
+          </td>
+          <td>
+            {component.submission_id if component else '-'}
+          </td>
+          <th>
+            {rightmost_col}
+          </th>
+        </tr>
+        """
+
+    def oopsie_button(self):
+        return f"""
+        <button {'disabled' if self.oopsieness != OopsStatus.AVAILABLE else ''}
+         title='{self.oops_button_hover()}' type="submit" name="oopsie"
+         value="{self.name}">
+           Oopsie!
+         </button>
+        """
+
+    def body(self):
+        if self.oopsieness == OopsStatus.USED_HERE:
+            return f"""
+            {self.gradeable_row('Final Submission', self.final, self.oopsie_button())}
+            <tr>
+              <th>Comments</th>
+              <td colspan="3">-</td>
+            </tr>
+            """
+        if (not self.init or
+            (int(datetime.now().timestamp())
+             < self.assignment.initial_due_date)):
+            return f"""
+            {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
+            <tr>
+              <th>Automated Feedback</th>
+              <td colspan="3">-</td>
+            </tr>
+            """
+        return f"""
+        {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
+        <tr>
+          <th>Automated Feedback</th>
+          <td colspan="3">-</td>
+        </tr>
+        <tr>
+          <th></th>
+          <th>Timestamp</th>
+          <th>Submission ID</th>
+          <th>Score</th>
+        </tr>
+        {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, '-') if self.peer1 else ''}
+        {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, '-') if self.peer2 else ''}
+        {self.gradeable_row('Final Submission', self.final, '-')}
+        <tr>
+          <th>Comments</th>
+          <td colspan="3">-</td>
+        </tr>
+        """
+
+    def __str__(self):
+        return f"""
+        <table>
+          <caption><h3>{self.name}</h3></caption>
+          <tr>
+            <th>Total Score: -</th>
+            <th>Timestamp</th>
+            <th>Submission ID</th>
+            <th>Request an 'Oopsie'</th>
+          </tr>
+          {self.body()}
+        </table>
+        <br>
+        """
+
+
+def get_asmt_oopsieness(oops, cur_assignment, initial_due):
+    if oops and oops.assignment == cur_assignment:
+        return OopsStatus.USED_HERE
+    if initial_due < int(datetime.now().timestamp()):
+        return OopsStatus.PAST_DUE
+    if oops:
+        return OopsStatus.UNAVAILABLE
+    return OopsStatus.AVAILABLE
+
+
+def handle_dashboard(rocket):
+    if not rocket.session:
+        return rocket.raw_respond(HTTPStatus.FORBIDDEN)
+    asmt_tbl = denis.db.Assignment
+    if rocket.method != 'GET':
+        if not (asn := rocket.body_args_query('oopsie')):
+            return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
+        if not asmt_tbl.get_or_none(asmt_tbl.name == asn):
+            return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
+        if not rocket.body_args_query('confirm'):
+            return rocket.respond(f'''
+                <h2>Are you sure?</h2>
+                <p>You get only one oopsie during the whole semester.
+                Are you sure that you want to use it on {asn}?</p>
+                <form method="post" action="/dashboard">
+                <input type="hidden" name="oopsie" value="{asn}">
+                <button type="submit" formmethod="get">Cancel</button>
+                <button type="submit" name="confirm" value="y">Confirm</button>
+                <br><br>
+                </form>
+            ''')
+        try:
+            db.Oopsie.create(user=rocket.session.username, assignment=asn,
+                             timestamp=int(datetime.now().timestamp()))
+        except db.peewee.IntegrityError:
+            return rocket.raw_respond(HTTPStatus.BAD_REQUEST)
+    ret = '<form method="post" action="/dashboard">'
+    oops_tbl = db.Oopsie
+    assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
+    oops = oops_tbl.get_or_none(oops_tbl.user == rocket.session.username)
+    peer_tbl = denis.db.PeerReviewAssignment
+    peer_asns = (peer_tbl.select()
+                         .where(peer_tbl.reviewer == rocket.session.username))
+    grd_tbl = mailman.db.Gradeable
+    user_gradeables = (grd_tbl.select()
+                       .where(grd_tbl.user == rocket.session.username)
+                       .order_by(grd_tbl.timestamp.desc()))
+    for assignment in assignments:
+        oopsieness = get_asmt_oopsieness(oops, assignment.name,
+                                         assignment.initial_due_date)
+        peers = (peer_asns.where(peer_tbl.assignment == assignment.name)
+                          .first())
+        peer1 = peers.reviewee1 if peers else None
+        peer2 = peers.reviewee2 if peers else None
+        asn_gradeables = (user_gradeables
+                          .where(grd_tbl.assignment == assignment.name))
+        init = asn_gradeables.where(grd_tbl.component == 'initial').first()
+        rev1 = asn_gradeables.where(grd_tbl.component == 'review1').first()
+        rev2 = asn_gradeables.where(grd_tbl.component == 'review2').first()
+        final = asn_gradeables.where(grd_tbl.component == 'final').first()
+        ret += str(AsmtTable(assignment, oopsieness, peer1, peer2, init, rev1,
+                             rev2, final))
+    return rocket.respond(ret + '</form>')
 
 
 def find_creds_for_registration(student_id):
@@ -559,6 +748,8 @@ def application(env, SR):
             return handle_login(rocket)
         case '/register':
             return handle_register(rocket)
+        case '/dashboard':
+            return handle_dashboard(rocket)
         case _:
             if rocket.method != 'GET':
                 return rocket.raw_respond(HTTPStatus.METHOD_NOT_ALLOWED)
@@ -569,8 +760,8 @@ def application(env, SR):
             return handle_logout(rocket)
         case '/mail_auth':
             return handle_mail_auth(rocket)
-        case '/dashboard':
-            return handle_dashboard(rocket)
+        case '/activity':
+            return handle_activity(rocket)
         case '/error':
             return handle_error(rocket)
         case p:

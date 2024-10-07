@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 
 import db
+import denis.db
 
 
 Email = collections.namedtuple('Email', ['rcpt', 'msg_id'])
@@ -22,6 +23,7 @@ def main(argv):
     with open(Path(logdir) / logfile) as log:
         header, *email_lines = log.readlines()
     timestamp, user = header.split()
+    timestamp = int(timestamp)
 
     emails = [email_from_log_line(line) for line in email_lines]
 
@@ -46,9 +48,56 @@ def main(argv):
             reply_id = reply_email_id[:-4] + '0000'
             break
 
-    db.Submission.create(submission_id=logfile, timestamp=timestamp,
-                         user=user, recipient=emails[0].rcpt,
-                         email_count=len(emails), in_reply_to=reply_id)
+    sub = db.Submission(submission_id=logfile, timestamp=timestamp,
+                        user=user, recipient=emails[0].rcpt,
+                        email_count=len(emails), in_reply_to=reply_id)
+
+    def set_status(status):
+        sub.status = status
+        sub.save()
+        return 0
+
+    asn_db = denis.db.Assignment
+    gr_db = db.Gradeable
+    if asn := asn_db.get_or_none(asn_db.name == emails[0].rcpt):
+        if len(emails) < 2:
+            return set_status('missing patches')
+        typ = ('initial' if timestamp < asn.initial_due_date
+               else 'final' if timestamp < asn.final_due_date else None)
+        if not typ:
+            return set_status(f'{asn.name} past due')
+        cover_letter, *patches = emails
+        gr_db.create(submission_id=logfile, timestamp=timestamp, user=user,
+                     assignment=asn.name, component=typ)
+        return set_status(f'{asn.name}: {typ}')
+
+    if reply_id:
+        if not (orig := gr_db.get_or_none(gr_db.submission_id == reply_id)):
+            return set_status('not a reply to a submission')
+        asn_name = orig.assignment
+        asn = asn_db.get_or_none(asn_name == asn_db.name)
+        if not asn:
+            raise RuntimeError('invalid assignment name in gradeable DB')
+        if timestamp > asn.peer_review_due_date:
+            return set_status(f'{asn.name} review past due')
+        rev_db = denis.db.PeerReviewAssignment
+        rev = rev_db.get_or_none((rev_db.assignment == asn_name) &
+                                 (rev_db.reviewer == user))
+        if not rev:
+            return set_status('ineligible for peer review')
+        match emails[0].rcpt:
+            case rev.reviewee1:
+                typ = 'review1'
+            case rev.reviewee2:
+                typ = 'review2'
+            case _:
+                return set_status('reviewed wrong submission')
+        gr_db.create(submission_id=logfile, timestamp=timestamp,
+                     user=user, assignment=asn_name, component=typ,
+                     comments=None)
+        return set_status(f'{asn_name}: {typ}')
+
+    return set_status('Not a recognized recipient')
 
 
 if __name__ == "__main__":
