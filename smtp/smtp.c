@@ -116,21 +116,28 @@ _Static_assert(__BYTE_ORDER__ == __LITTLE_ENDIAN, "Big endian byte order not sup
 
 _Static_assert('\x01\x02\x03\x04' == 0x01020304, "Multichar characters are in the wrong order");
 
-#define SEND(STR) send(STR "\r\n", sizeof(STR "\r\n") - 1)
-static void send(const char *msg, size_t size)
+static bool retry_write(const char *ptr, size_t size, int fd)
 {
 	size_t off = 0;
 	do
 	{
-		ssize_t ret = write(STDOUT_FILENO, msg + off, size - off);
-		//non recoverable, as the proper way to close an SMTP connection involves sending a
-		//final 421 response, but if we failed to write here, we won't be able to do that...
+		ssize_t ret = write(fd, ptr + off, size - off);
 		if(ret <= 0)
-			exit(2);
+			return false;
 		//safe to cast to size_t because we know that ret > 0
 		off += (size_t)ret;
 	}
 	while(off < size);
+	return true;
+}
+
+#define SEND(STR) send(STR "\r\n", sizeof(STR "\r\n") - 1)
+static void send(const char *msg, size_t size)
+{
+	//non recoverable, as the proper way to close an SMTP connection involves sending a
+	//final 421 response, but if we failed to write here, we won't be able to do that...
+	if(!retry_write(msg, size, STDOUT_FILENO))
+		exit(2);
 }
 
 static uint32_t get_command(void)
