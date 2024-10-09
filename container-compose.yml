@@ -74,6 +74,7 @@ services:
       dockerfile: Containerfile
       additional_contexts:
         - tcp_server_source=./tcp_server
+        - journal_source=./journal
       target: smtp
       args:
         hostname: ${SINGULARITY_HOSTNAME}
@@ -86,6 +87,10 @@ services:
       - type: volume
         source: email-logs
         target: /var/lib/email/logs
+        read_only: false
+      - type: volume
+        source: email-patchsets
+        target: /var/lib/email/patchsets
         read_only: false
     networks:
       - smtp
@@ -230,6 +235,7 @@ volumes:
   email-mail:
   email-logs:
   email-journal:
+  email-patchsets:
   orbit-db:
   submissions-db:
   submatrix-data:
