@@ -114,6 +114,7 @@ ALL_SYMBOLS(VERIFY_ENCODING)
 
 _Static_assert(__BYTE_ORDER__ == __LITTLE_ENDIAN, "Big endian byte order not supported");
 
+_Static_assert('\x01\x02\x03\x04' == 0x01020304, "Multichar characters are in the wrong order");
 
 #define SEND(STR) send(STR "\r\n", sizeof(STR "\r\n") - 1)
 static void send(const char *msg, size_t size)
