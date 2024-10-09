@@ -14,6 +14,8 @@
 #include <uchar.h>
 #include <unistd.h>
 
+#include "journal/email.h"
+
 #ifndef HOSTNAME
 #error "you must #define HOSTNAME"
 #define HOSTNAME
@@ -422,11 +424,12 @@ static char *now(void)
 
 #define CURR_EMAIL_FD 10
 #define CURR_SESSION_FD 11
+#define CURR_PATCHSET_FD 12
 static char message_id[256];
 static char session_id[256];
 
 
-static int mail_dir_fd, log_dir_fd;
+static int mail_dir_fd, log_dir_fd, patchset_dir_fd;
 static char line_buff[LINE_LIMIT + 1];
 static size_t line_size;
 static char from_address[LINE_LIMIT + 1];
@@ -440,13 +443,22 @@ static void close_log_session(void)
 {
 	if(0 > fdatasync(CURR_SESSION_FD))
 		warn("Unable to sync session log to disk");
+	if(0 > fdatasync(CURR_PATCHSET_FD))
+		warn("Unable to sync patchset to disk");
 #ifdef LINKAT_NOT_BROKEN
 	if(0 > linkat(CURR_SESSION_FD, "", log_dir_fd, session_id, AT_EMPTY_PATH))
 #else
 	if(0 > linkat(AT_FDCWD, "/proc/self/fd/" STRINGIZE(CURR_SESSION_FD), log_dir_fd, session_id, AT_SYMLINK_FOLLOW))
 #endif
 		warn("Unable to link existing session into filesystem");
+#ifdef LINKAT_NOT_BROKEN
+	if(0 > linkat(CURR_PATCHSET_FD, "", patchset_dir_fd, session_id, AT_EMPTY_PATH))
+#else
+	if(0 > linkat(AT_FDCWD, "/proc/self/fd/" STRINGIZE(CURR_PATCHSET_FD), patchset_dir_fd, session_id, AT_SYMLINK_FOLLOW))
+#endif
+		warn("Unable to link existing patchset into filesystem");
 	close(CURR_SESSION_FD);
+	close(CURR_PATCHSET_FD);
 }
 
 static void open_log_session(void)
@@ -462,6 +474,16 @@ static void open_log_session(void)
 			warn("Unable dup descriptor for log into CURR_SESSION_FD");
 		close(fd);
 	}
+	fd = openat(patchset_dir_fd, ".", O_TMPFILE | O_RDWR, 0640);
+	if(0 > fd)
+		warn("Unable allocate descriptor to store patchset");
+	if(CURR_PATCHSET_FD != fd)
+	{
+		if(0 > dup3(fd, CURR_PATCHSET_FD, O_CLOEXEC))
+			warn("Unable dup descriptor for patchset into CURR_PATCHSET_FD");
+		close(fd);
+	}
+
 }
 
 enum state
@@ -632,6 +654,7 @@ static void handle_rcpt(enum state *state)
 
 static void handle_data(enum state *state)
 {
+	struct email email = {.active = true};
 	if(!read_line(line_buff, &line_size))
 		REPLY("500 Parameters too long")
 	if(*state != RCPT)
@@ -667,8 +690,11 @@ static void handle_data(enum state *state)
 	for(enum data_state dstate = HEADERS, last_state = HEADERS; dstate != FINISHED;)
 	{
 		if(dstate == BODY && last_state == HEADERS)
+		{
 			if(0 > fsetxattr(CURR_EMAIL_FD, "user.top_limit", &curr_size, sizeof curr_size, 0))
 				ERROR_ISE("unable to set xattr on message")
+			email.top_limit = curr_size;
+		}
 		last_state = dstate;
 		line_size = read_line_chunk(line_buff);
 		switch(dstate)
@@ -779,6 +805,13 @@ static void handle_data(enum state *state)
 	}
 	close(CURR_EMAIL_FD);
 	dprintf(CURR_SESSION_FD, "%s\n", message_id);
+	email.size = curr_size;
+	size_t name_size = strlen(message_id) + 1;
+	if(name_size > sizeof email.name)
+		REPLY("451 Local error in processing")
+	memcpy(email.name, message_id, name_size);
+	if(!retry_write((void *)&email, sizeof email, CURR_PATCHSET_FD))
+		REPLY("451 Local error in processing")
 	REPLY("250 OK")
 }
 
@@ -791,9 +824,11 @@ int main(int argc, char **argv)
 		errx(1, "File descriptor needed for current email (number " STRINGIZE(CURR_EMAIL_FD) ") is already in use");
 	if(0 <= fcntl(CURR_SESSION_FD, F_GETFD) || errno != EBADF)
 		errx(1, "File descriptor needed for current session log (number " STRINGIZE(CURR_SESSION_FD) ") is already in use");
+	if(0 <= fcntl(CURR_PATCHSET_FD, F_GETFD) || errno != EBADF)
+		errx(1, "File descriptor needed for current patchset (number " STRINGIZE(CURR_PATCHSET_FD) ") is already in use");
 
-	if(argc != 3)
-		errx(1, "Usage: %s <mail directory> <log directory>", argv[0]);
+	if(argc != 4)
+		errx(1, "Usage: %s <mail directory> <log directory> <patchset directory>", argv[0]);
 
 	mail_dir_fd = openat(AT_FDCWD, argv[1], O_CLOEXEC | O_DIRECTORY | O_PATH);
 	if(0 > mail_dir_fd)
@@ -802,6 +837,10 @@ int main(int argc, char **argv)
 	log_dir_fd = openat(AT_FDCWD, argv[2], O_CLOEXEC | O_DIRECTORY | O_PATH);
 	if(0 > log_dir_fd)
 		err(1, "Unable to open logs directory: %s", argv[2]);
+
+	patchset_dir_fd = openat(AT_FDCWD, argv[3], O_CLOEXEC | O_DIRECTORY | O_PATH);
+	if(0 > patchset_dir_fd)
+		err(1, "Unable to open patchset directory: %s", argv[3]);
 
 	SEND("220 SMTP server ready");
 	for(enum state state = START; state != QUIT;)

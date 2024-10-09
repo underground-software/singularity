@@ -8,6 +8,7 @@ COPY --from=tcp_server_source . /tcp_server
 ARG LISTEN_PORT=465
 RUN make -C /tcp_server CC='clang -static' DEFAULT_PORT=${LISTEN_PORT}
 
+COPY --from=journal_source . /journal
 COPY . /smtp
 
 ARG hostname
@@ -29,4 +30,4 @@ USER 100:100
 
 ARG LISTEN_PORT=465
 EXPOSE ${LISTEN_PORT}
-ENTRYPOINT ["/usr/local/bin/tcp_server", "/usr/local/bin/smtp", "smtp", "/var/lib/email/mail", "/var/lib/email/logs"]
+ENTRYPOINT ["/usr/local/bin/tcp_server", "/usr/local/bin/smtp", "smtp", "/var/lib/email/mail", "/var/lib/email/logs", "/var/lib/email/patchsets"]
