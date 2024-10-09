@@ -734,15 +734,13 @@ static void handle_data(enum state *state)
 				break;
 			{
 				int bytes = dprintf(CURR_EMAIL_FD, "%.*s\r\n", (int)line_size, line_buff);
-				if(0 > bytes)
-					ERROR_NES("not enough space %d", __LINE__)
+				CHECK_WRITE_FAIL(bytes)
 			}
 			while(line_size == LINE_LIMIT)
 			{
 				line_size = read_line_chunk(line_buff);
 				int bytes = dprintf(CURR_EMAIL_FD, "%.*s\r\n", (int)line_size, line_buff);
-				if(0 > bytes)
-					ERROR_NES("not enough space %d", __LINE__)
+				CHECK_WRITE_FAIL(bytes)
 			}
 			break;
 		case FINISHED:
