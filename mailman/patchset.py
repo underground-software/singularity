@@ -79,7 +79,7 @@ def do_check(repo_path, cover_letter, patches):
         return ('whitespace error patch(es) '
                 f'{",".join(whitespace_errors)}')
     else:
-        return 'pathchset applies'
+        return 'patchset applies'
 
 
 def check(cover_letter, patches, submission_id):
