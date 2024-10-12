@@ -64,6 +64,7 @@ services:
       target: smtp
       args:
         hostname: ${SINGULARITY_HOSTNAME}
+        coverage: 1
         LISTEN_PORT: 1465
     volumes:
       - type: volume
