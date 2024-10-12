@@ -308,6 +308,7 @@ curl --url "smtps://$SINGULARITY_HOSTNAME" \
   --upload-file - \
   --user "user:${REGISTER_PASS}" <<EOF
 Subject: Message Subject$CR
+To: "other@$SINGULARITY_HOSTNAME" <other@$SINGULARITY_HOSTNAME>$CR
 $CR
 To whom it may concern,$CR
 $CR
@@ -316,6 +317,47 @@ EOF
 ) | tee test/smtp_send_email \
   | diff <(printf "") /dev/stdin
 
+# Check that the user can send an email to multiple recipients
+(
+curl --url "smtps://$SINGULARITY_HOSTNAME" \
+  --unix-socket ./socks/smtps.sock \
+  "${CURL_OPTS[@]}" \
+  --mail-from "user@$SINGULARITY_HOSTNAME" \
+  --mail-rcpt "other@$SINGULARITY_HOSTNAME" \
+  --mail-rcpt "other1@$SINGULARITY_HOSTNAME" \
+  --upload-file - \
+  --user "user:${REGISTER_PASS}" <<EOF
+Subject: Message Subject$CR
+To: "other@$SINGULARITY_HOSTNAME" <other@$SINGULARITY_HOSTNAME>$CR
+To: "other1@$SINGULARITY_HOSTNAME" <other1@$SINGULARITY_HOSTNAME>$CR
+$CR
+To whom it may concern,$CR
+$CR
+Bottom text$CR
+EOF
+) | tee test/smtp_send_email_multi_recipients \
+  | diff <(printf "") /dev/stdin
+
+# Check that the user can send an email with Cc (carbon copy) recipients
+(
+curl --url "smtps://$SINGULARITY_HOSTNAME" \
+  --unix-socket ./socks/smtps.sock \
+  "${CURL_OPTS[@]}" \
+  --mail-from "user@$SINGULARITY_HOSTNAME" \
+  --mail-rcpt "other@$SINGULARITY_HOSTNAME" \
+  --mail-rcpt "other1@$SINGULARITY_HOSTNAME" \
+  --upload-file - \
+  --user "user:${REGISTER_PASS}" <<EOF
+Subject: Message Subject$CR
+To: "other@$SINGULARITY_HOSTNAME" <other@$SINGULARITY_HOSTNAME>$CR
+Cc: "other1@$SINGULARITY_HOSTNAME" <other1@$SINGULARITY_HOSTNAME>$CR
+$CR
+To whom it may concern,$CR
+$CR
+Bottom text$CR
+EOF
+) | tee test/smtp_send_email_multi_recipients \
+  | diff <(printf "") /dev/stdin
 
 # Verify that no email shows up without the journal being updated
 curl --url "pop3s://$SINGULARITY_HOSTNAME" \
