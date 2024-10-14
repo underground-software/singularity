@@ -89,7 +89,7 @@ class Session:
         if username:
             self.username = username
             self.token = self.mk_hash(username)
-            self.expiry = datetime.utcnow() + timedelta(minutes=min_per_ses)
+            self.expiry = datetime.now() + timedelta(minutes=min_per_ses)
             # creates a new session if one does not exist
             (db.Session
              .replace(username=self.username,
@@ -123,7 +123,7 @@ class Session:
         return secrets.token_hex()
 
     def expired(self):
-        if (expiry := self.expiry) is None or datetime.utcnow() > expiry:
+        if (expiry := self.expiry) is None or datetime.now() > expiry:
             self.end()
             return True
         else:
@@ -138,9 +138,9 @@ class Session:
     def mk_cookie_header(self):
         if self.token is None:
             return [('Set-Cookie', 'auth=')]
-        cookie_fmt = 'auth={}; Expires={}; Max-Age={}; Path=/'
+        cookie_fmt = 'auth={}; Max-Age={}; Path=/'
         max_age = sec_per_min * min_per_ses
-        cookie_val = cookie_fmt.format(self.token, self.expiry_fmt(), max_age)
+        cookie_val = cookie_fmt.format(self.token, max_age)
 
         return [('Set-Cookie', cookie_val)]
 
