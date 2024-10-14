@@ -1,5 +1,5 @@
-#ifndef POP_TYPES_H
-#define POP_TYPES_H
+#ifndef JOURNAL_EMAIL_H
+#define JOURNAL_EMAIL_H
 struct email
 {
 	off_t size;
@@ -8,4 +8,4 @@ struct email
 	char name[31];
 };
 _Static_assert(sizeof(struct email) == 48, "size of struct email should be 48");
-#endif//POP_TYPES_H
+#endif//JOURNAL_EMAIL_H
