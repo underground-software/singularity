@@ -107,7 +107,7 @@ services:
       - type: volume
         source: email-journal
         target: /var/lib/email/journal
-        read_only: false
+        read_only: true
     depends_on:
       - smtp
       - denis
@@ -185,6 +185,14 @@ services:
         source: email-journal
         target: /var/lib/email/journal
         read_only: false
+      - type: volume
+        source: email-logs
+        target: /var/lib/email/logs
+        read_only: true
+      - type: volume
+        source: email-mail
+        target: /var/lib/email/mail
+        read_only: true
       - type: volume
         source: orbit-db
         target: /var/lib/orbit

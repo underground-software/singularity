@@ -9,7 +9,6 @@ ARG LISTEN_PORT=995
 RUN make -C /tcp_server CC='clang -static' DEFAULT_PORT=${LISTEN_PORT}
 
 COPY --from=journal_source . /journal
-RUN make -C /journal CC='clang -static'
 
 COPY . /pop
 
@@ -19,8 +18,6 @@ FROM scratch as pop
 
 COPY --from=build /tcp_server/tcp_server /usr/local/bin/tcp_server
 COPY --from=build /pop/pop3 /usr/local/bin/pop3
-COPY --from=build /journal/init_journal /usr/local/bin/init_journal
-COPY --from=build /journal/restrict_access /usr/local/bin/restrict_access
 
 USER 100:100
 
