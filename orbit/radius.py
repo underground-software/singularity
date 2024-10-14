@@ -417,6 +417,10 @@ class AsmtTable:
         self.assignment = assignment
         self.name = assignment.name
 
+    def oopsie_button(self):
+        return f'''<button type="submit" name="oopsie"
+                   value="{self.name}">Oopsie!</button>'''
+
     def __str__(self):
         return f"""
         <table>
@@ -425,7 +429,7 @@ class AsmtTable:
             <th>Request an 'Oopsie'</th>
           </tr>
           <tr>
-            <th><button type="submit" name="oopsie" value="{self.name}">Oopsie!</button></th>
+            <th>{self.oopsie_button()}</th>
           </tr>
         </table>
         <br>
