@@ -11,7 +11,12 @@ RUN make -C /run-at CC='clang -static'
 
 COPY --from=journal_source . /journal
 
-RUN make -C /journal CC='clang -static' restrict_access
+RUN make -C /journal CC='clang -static'
+
+RUN mkdir -p /var/lib/email/journal && \
+	/journal/init_journal /var/lib/email/journal/journal && \
+	chown -R 100:100 /var/lib/email/journal && \
+	:
 
 WORKDIR /usr/local/share/denis
 COPY . .
@@ -44,6 +49,9 @@ RUN chown -R 100:100 /var/lib/denis
 
 COPY --from=build /run-at/run-at /usr/local/bin/run-at
 COPY --from=build /journal/restrict_access /usr/local/bin/restrict_access
+COPY --from=build /journal/init_journal /usr/local/bin/init_journal
+COPY --from=build /var/lib/email/ /var/lib/email/
+
 
 USER 100:100
 

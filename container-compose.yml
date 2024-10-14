@@ -110,6 +110,7 @@ services:
         read_only: false
     depends_on:
       - smtp
+      - denis
     networks:
       - pop
   submatrix:
