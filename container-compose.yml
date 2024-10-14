@@ -205,6 +205,7 @@ services:
       - type: volume
         source: git-repos
         target: /var/lib/git/
+        read_only: false
     ports:
       - "8000"
 networks:
