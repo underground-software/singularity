@@ -150,10 +150,10 @@ curl --url "pop3s://$SINGULARITY_HOSTNAME" \
 orbit/warpdrive.sh -u resu -p ssap -n
 
 # Limit `resu`'s access to the empty inbox
-${DOCKER_COMPOSE} exec pop /usr/local/bin/restrict_access /var/lib/email/journal/journal -d resu
+${DOCKER_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -d resu
 
 # Update list of email to include new message
-${DOCKER_COMPOSE} exec pop /usr/local/bin/init_journal /var/lib/email/journal/journal /var/lib/email/journal/temp /var/lib/email/mail
+${DOCKER_COMPOSE} exec denis /usr/local/bin/init_journal /var/lib/email/journal/journal /var/lib/email/journal/temp /var/lib/email/mail
 
 # Check that the user can get the most recent message sent to the server
 curl --url "pop3s://$SINGULARITY_HOSTNAME/1" \
@@ -173,7 +173,7 @@ curl --url "pop3s://$SINGULARITY_HOSTNAME" \
 
 
 # Remove limit on `resu`'s access to the inbox
-${DOCKER_COMPOSE} exec pop /usr/local/bin/restrict_access /var/lib/email/journal/journal -a resu
+${DOCKER_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -a resu
 
 # Check that `resu` can now get the most recent message sent to the server
 curl --url "pop3s://$SINGULARITY_HOSTNAME/1" \
