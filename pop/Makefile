@@ -8,16 +8,10 @@ endif
 
 .PHONY: all clean
 
-all: pop3 init_journal restrict_access
+all: pop3
 
-pop3: pop3.c types.h
-	$(CC) $(CFLAGS) -o $@ $<
-
-init_journal: init_journal.c types.h
-	$(CC) $(CFLAGS) -o $@ $<
-
-restrict_access: restrict_access.c
+pop3: pop3.c journal/types.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
-	-rm pop3 init_journal restrict_access
+	-rm pop3

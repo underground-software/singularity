@@ -95,6 +95,7 @@ services:
       dockerfile: Containerfile
       additional_contexts:
         - tcp_server_source=./tcp_server
+        - journal_source=./journal
       target: pop
       args:
         LISTEN_PORT: 1995
@@ -169,7 +170,7 @@ services:
       dockerfile: Containerfile
       additional_contexts:
         - run_at_source=./run-at
-        - pop_source=./pop
+        - journal_source=./journal
         - mailman_source=./mailman
         - orbit_source=./orbit
       args:
