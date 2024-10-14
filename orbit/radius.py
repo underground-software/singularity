@@ -464,6 +464,11 @@ class AsmtTable:
          </button>
         """
 
+    def body(self):
+        return f"""
+          {self.gradeable_row('Initial Submission', self.oopsie_button())}
+        """
+
     def __str__(self):
         return f"""
         <table>
@@ -474,7 +479,7 @@ class AsmtTable:
             <th>Submission ID</th>
             <th>Request an 'Oopsie'</th>
           </tr>
-          {self.gradeable_row('Initial Submission', self.oopsie_button())}
+          {self.body()}
         </table>
         <br>
         """
