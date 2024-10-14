@@ -30,8 +30,6 @@ COPY --from=build /watcher/watcher /usr/local/bin/watcher
 COPY --from=denis_source . ./denis
 COPY --from=orbit_source . ./orbit
 
-VOLUME /var/lib/email/
-
 USER 100:100
 
 ENTRYPOINT ["/usr/local/bin/watcher", "/var/lib/email/logs", "submit.py"]

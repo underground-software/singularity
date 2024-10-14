@@ -76,6 +76,4 @@ COPY --from=nginx_webroot_content . /var/www/html
 COPY --from=build nginx.conf /etc/nginx/
 COPY --from=build /etc/ssl/nginx /etc/ssl/nginx
 
-VOLUME /etc/ssl/nginx
-
 ENTRYPOINT ["/usr/sbin/nginx", "-g", "daemon off;"]
