@@ -465,6 +465,14 @@ class AsmtTable:
         """
 
     def body(self):
+        if self.oopsieness == OopsStatus.USED_HERE:
+            return f"""
+              {self.gradeable_row('Final Submission', self.oopsie_button())}
+              <tr>
+                <th>Comments</th>
+                <td colspan="3">-</td>
+              </tr>
+            """
         return f"""
           {self.gradeable_row('Initial Submission', self.oopsie_button())}
           <tr>
