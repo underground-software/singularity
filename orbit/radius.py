@@ -467,6 +467,23 @@ class AsmtTable:
     def body(self):
         return f"""
           {self.gradeable_row('Initial Submission', self.oopsie_button())}
+          <tr>
+            <th>Automated Feedback</th>
+            <td colspan="3">-</td>
+          </tr>
+          <tr>
+            <th></th>
+            <th>Timestamp</th>
+            <th>Submission ID</th>
+            <th>Score</th>
+          </tr>
+          {self.gradeable_row('Peer Review 1', '-')}
+          {self.gradeable_row('Peer Review 2', '-')}
+          {self.gradeable_row('Final Submission', '-')}
+          <tr>
+            <th>Comments</th>
+            <td colspan="3">-</td>
+          </tr>
         """
 
     def __str__(self):
