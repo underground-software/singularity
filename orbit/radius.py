@@ -130,7 +130,7 @@ class Session:
             return False
 
     def expiry_fmt(self):
-        return self.expiry.strftime('%a, %d %b %Y %H:%M:%S GMT')
+        return self.expiry.astimezone().isoformat()
 
     def expiry_ts(self):
         return self.expiry.timestamp()
@@ -388,7 +388,7 @@ def handle_dashboard(rocket):
                    .order_by(- mailman.db.Submission.timestamp))
 
     def submission_fields(sub):
-        return (datetime.fromtimestamp(sub.timestamp).isoformat(),
+        return (datetime.fromtimestamp(sub.timestamp).astimezone().isoformat(),
                 sub.recipient, sub.email_count, sub.in_reply_to or '-',
                 sub.submission_id, )
 

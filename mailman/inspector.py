@@ -44,7 +44,7 @@ def submissions(assignment, username):
         query = query.where(db.Submission.user == username)
     for sub in query:
         print(sub.submission_id,
-              datetime.fromtimestamp(sub.timestamp).isoformat(),
+              datetime.fromtimestamp(sub.timestamp).astimezone().isoformat(),
               sub.user, sub.recipient)
 
 
