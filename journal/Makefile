@@ -9,7 +9,7 @@ endif
 
 all: init_journal restrict_access
 
-init_journal: init_journal.c types.h
+init_journal: init_journal.c email.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 restrict_access: restrict_access.c

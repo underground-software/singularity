@@ -10,7 +10,7 @@
 #include <sys/xattr.h>
 #include <unistd.h>
 
-#include "types.h"
+#include "email.h"
 
 //despite being in linux since 3.15 (2014) and glibc since 2.28 (2018) musl still
 //does not have support for the renameat2 system call (though at time of writing,

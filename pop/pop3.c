@@ -16,7 +16,7 @@
 #include <uchar.h>
 #include <unistd.h>
 
-#include "journal/types.h"
+#include "journal/email.h"
 
 #define SEND(STR) send(STR "\r\n", sizeof(STR "\r\n") - 1)
 static void send(const char *msg, size_t size)

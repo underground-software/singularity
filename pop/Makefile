@@ -10,7 +10,7 @@ endif
 
 all: pop3
 
-pop3: pop3.c journal/types.h
+pop3: pop3.c journal/email.h
 	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
