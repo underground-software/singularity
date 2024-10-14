@@ -481,6 +481,16 @@ class AsmtTable:
                 <td colspan="3">-</td>
               </tr>
             """
+        if (not self.init or
+            (int(datetime.now().timestamp())
+             < self.assignment.initial_due_date)):
+            return f"""
+              {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
+              <tr>
+                <th>Automated Feedback</th>
+                <td colspan="3">-</td>
+              </tr>
+            """
         return f"""
           {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
           <tr>
