@@ -437,6 +437,24 @@ class AsmtTable:
             case OopsStatus.UNAVAILABLE:
                 return "You have already used your oopsie"
 
+    def gradeable_row(self, item_name, rightmost_col):
+        return f"""
+        <tr>
+          <th>
+            {item_name}
+          </th>
+          <td>
+            -
+          </td>
+          <td>
+            -
+          </td>
+          <th>
+            {rightmost_col}
+          </th>
+        </tr>
+        """
+
     def oopsie_button(self):
         return f"""
         <button {'disabled' if self.oopsieness != OopsStatus.AVAILABLE else ''}
@@ -451,11 +469,12 @@ class AsmtTable:
         <table>
           <caption><h3>{self.name}</h3></caption>
           <tr>
+            <th>Total Score: -</th>
+            <th>Timestamp</th>
+            <th>Submission ID</th>
             <th>Request an 'Oopsie'</th>
           </tr>
-          <tr>
-            <th>{self.oopsie_button()}</th>
-          </tr>
+          {self.gradeable_row('Initial Submission', self.oopsie_button())}
         </table>
         <br>
         """
