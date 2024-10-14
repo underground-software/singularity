@@ -19,8 +19,6 @@ ARG MATRIX_HOSTNAME=localhost
 
 RUN envsubst '$MATRIX_HOSTNAME' < /etc/synapse/homeserver.yaml.template > /etc/synapse/homeserver.yaml
 
-VOLUME /var/synapse
-
 USER 100:100
 
 ENTRYPOINT ["/usr/local/share/submatrix/start.sh"]

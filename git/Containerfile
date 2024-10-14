@@ -47,8 +47,6 @@ RUN chown -R 100:100 .
 
 USER 100:100
 
-VOLUME /var/lib/git/
-
 WORKDIR /usr/local/share/git
 
 CMD trap exit TERM; python -m http.server --directory /var/lib/git/ --cgi & wait
