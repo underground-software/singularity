@@ -2,7 +2,6 @@ FROM alpine:3.20 AS build
 RUN apk add \
 	clang \
 	make \
-	envsubst \
 	;
 
 COPY --from=run_at_source . /run-at
@@ -18,26 +17,15 @@ RUN mkdir -p /var/lib/email/journal && \
 	chown -R 100:100 /var/lib/email/journal && \
 	:
 
-WORKDIR /usr/local/share/denis
-COPY . .
-
-ARG CHRONUS_HOSTNAME
-RUN test -n "$CHRONUS_HOSTNAME " || (echo 'CHRONUS_HOSTNAME is not set' && false) && \
-	mv config.py config.py.template && \
-	envsubst '$CHRONUS_HOSTNAME' < config.py.template > config.py && \
-	rm config.py.template \
-	;
-
 FROM alpine:3.20 AS denis
 
 RUN apk add \
 	py3-peewee \
-	py3-curl \
 	;
 
 WORKDIR /usr/local/share/denis
+COPY . .
 
-COPY --from=build /usr/local/share/denis .
 COPY --from=mailman_source . ./mailman
 COPY --from=orbit_source . ./orbit
 

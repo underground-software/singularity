@@ -179,8 +179,6 @@ services:
         - journal_source=./journal
         - mailman_source=./mailman
         - orbit_source=./orbit
-      args:
-        CHRONUS_HOSTNAME: ${SINGULARITY_HOSTNAME}
     volumes:
       - type: volume
         source: denis-db
@@ -208,7 +206,6 @@ services:
         read_only: true
     networks:
       - denis
-      - smtp
   git:
     build:
       context: git
