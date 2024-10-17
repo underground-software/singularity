@@ -22,6 +22,10 @@ RUN mkdir /var/lib/git/
 
 WORKDIR /var/lib/git/
 
+RUN mkdir -p course_repos
+
+WORKDIR course_repos
+
 RUN mkdir singularity
 
 COPY --from=git_singularity_git_dir . singularity/
@@ -40,6 +44,7 @@ RUN for dir in $(ls); \
 	done
 
 
+WORKDIR ..
 
 COPY ./cgi-bin ./cgi-bin
 

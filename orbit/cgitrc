@@ -21,4 +21,4 @@ mimetype.svg=image/svg+xml
 virtual-root=/cgit
 
 enable-index-owner=0
-scan-path=/var/lib/git
+scan-path=/var/lib/git/course_repos
