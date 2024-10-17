@@ -27,6 +27,7 @@ class Gradeable(BaseModel):
     user = peewee.TextField()
     assignment = peewee.TextField()
     component = peewee.TextField()
+    status = peewee.TextField(null=True)
 
 
 if __name__ == '__main__':
