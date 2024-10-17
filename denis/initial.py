@@ -5,19 +5,22 @@ import random
 import sys
 
 import db
-import mailman.db
-import orbit.db
+import utilities
 
 # this is passed from start.py via run-at
 assignment = sys.argv[1]
 
-students_who_submitted = [user.username for user in orbit.db.User.select()
-                          if mailman.db.Submission.get_or_none((mailman.db.Submission.user == user.username) &  # NOQA: E501
-                                                               (mailman.db.Submission.recipient == assignment)) is not None]  # NOQA: E501
 
-# let them see emails that have been sent since last final due date
-for student in students_who_submitted:
-    os.system(f'restrict_access /var/lib/email/journal/journal -a {student}')
+usernames_to_subs = utilities.user_to_sub(assignment, 'initial')
+
+students_who_submitted = [username for username, sub_id in
+                          usernames_to_subs.items() if sub_id is not None]
+
+# restrict future email access for students who didnt make an initial sub
+for student, sub_id in usernames_to_subs.items():
+    if sub_id:
+        continue
+    os.system(f'restrict_access /var/lib/email/journal/journal -d {student}')
 
 
 # We want peer review assignments where everyone gives two reviews
@@ -49,3 +52,8 @@ try:
              for [reviewer, *reviewees] in reviews]).execute()
 except db.peewee.IntegrityError as e:
     print(e)
+
+
+utilities.release_subs([sub for sub in usernames_to_subs.values() if sub])
+
+print(f'initial subs for {assignment} released')

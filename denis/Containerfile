@@ -38,6 +38,7 @@ RUN chown -R 100:100 /var/lib/denis
 COPY --from=build /run-at/run-at /usr/local/bin/run-at
 COPY --from=build /journal/restrict_access /usr/local/bin/restrict_access
 COPY --from=build /journal/init_journal /usr/local/bin/init_journal
+COPY --from=build /journal/append_journal /usr/local/bin/append_journal
 COPY --from=build /var/lib/email/ /var/lib/email/
 
 

@@ -197,6 +197,10 @@ services:
         target: /var/lib/email/mail
         read_only: true
       - type: volume
+        source: email-patchsets
+        target: /var/lib/email/patchsets
+        read_only: true
+      - type: volume
         source: orbit-db
         target: /var/lib/orbit
         read_only: true
