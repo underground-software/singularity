@@ -1,2 +1,2 @@
 [core]
-	hooksPath=/var/lib/git/hooks/
+	hooksPath=/usr/local/share/git/hooks/
