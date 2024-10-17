@@ -92,8 +92,7 @@ def main(argv):
             case _:
                 return set_status('reviewed wrong submission')
         gr_db.create(submission_id=logfile, timestamp=timestamp,
-                     user=user, assignment=asn_name, component=typ,
-                     comments=None)
+                     user=user, assignment=asn_name, component=typ)
         return set_status(f'{asn_name}: {typ}')
 
     return set_status('Not a recognized recipient')
