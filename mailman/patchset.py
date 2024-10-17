@@ -38,7 +38,7 @@ def do_check(repo_path, cover_letter, patches):
     whitespace_errors = []
 
     def am_cover_letter(keep_empty=True):
-        args = git_am_args
+        args = git_am_args.copy()
         if keep_empty:
             args.append("--empty=keep")
         repo.git.execute([*args, str(maildir/cover_letter.msg_id)])
