@@ -49,4 +49,4 @@ USER 100:100
 
 WORKDIR /usr/local/share/git
 
-CMD trap exit TERM; python -m http.server --directory /var/lib/git/ --cgi & wait
+CMD trap 'kill -INT $!' TERM; python -m http.server --directory /var/lib/git/ --cgi & wait
