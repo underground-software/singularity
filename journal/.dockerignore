@@ -1,2 +1,3 @@
 init_journal
 restrict_access
+append_journal

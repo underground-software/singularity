@@ -7,7 +7,7 @@ endif
 
 .PHONY: all clean
 
-all: init_journal restrict_access
+all: init_journal restrict_access append_journal
 
 init_journal: init_journal.c email.h
 	$(CC) $(CFLAGS) -o $@ $<
@@ -15,5 +15,8 @@ init_journal: init_journal.c email.h
 restrict_access: restrict_access.c
 	$(CC) $(CFLAGS) -o $@ $<
 
+append_journal: append_journal.c
+	$(CC) $(CFLAGS) -o $@ $<
+
 clean:
-	-rm init_journal restrict_access
+	-rm init_journal restrict_access append_journal
