@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
+import sys
 
-import os
+import utilities
 
-import orbit.db
+assignment = sys.argv[1]
 
-# Block all students from seeing emails sent until
-# we allow again after initial sub deadline
-for user in orbit.db.User.select():
-    os.system(f'restrict_access /var/lib/email/journal/journal -d {user.username}')  # NOQA: 501
+utilities.release_subs([sub for sub in
+                        utilities.user_to_sub(assignment, 'final').values()
+                        if sub])
+
+print(f'final subs for {assignment} released')
