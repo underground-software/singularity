@@ -3,7 +3,8 @@ import pathlib
 import sys
 import tempfile
 
-REMOTE_URL = "http://host.containers.internal:3366/cgi-bin/git-receive-pack/grading.git"  # NOQA: E501
+REMOTE_PUSH_URL = 'http://git:8000/cgi-bin/git-receive-pack/grading.git'
+REMOTE_PULL_URL = 'http://git:8000/grading.git'
 
 MAIL_DIR_ABSPATH = "/var/lib/email/mail"
 
@@ -21,20 +22,22 @@ def tag_and_push(repo_path, tag_name):
     try:
         repo = git.Repo(repo_path)
         repo.create_tag(tag_name)
-        repo.create_remote("origin", REMOTE_URL)
-        repo.git.push("origin", tags=True)
+        repo.create_remote('grading', REMOTE_PUSH_URL)
+        repo.git.push('grading', tags=True)
         return True
     except git.GitCommandError as e:
         print(e, file=sys.stderr)
         return False
 
 
+author_args = ['-c', 'user.name=mailman', '-c',
+               'user.email=mailman@mailman']
+git_am_args = ['git', *author_args, 'am', '--keep']
+
+
 def do_check(repo_path, cover_letter, patches):
     repo = git.Repo.init(repo_path)
     maildir = pathlib.Path(MAIL_DIR_ABSPATH)
-    author_args = ["-c", "user.name=Denis", "-c",
-                   "user.email=daemon@mailman.d"]
-    git_am_args = ["git", *author_args, "am", "--keep"]
     whitespace_errors = []
 
     def am_cover_letter(keep_empty=True):
@@ -86,4 +89,26 @@ def check(cover_letter, patches, submission_id):
     with tempfile.TemporaryDirectory() as repo_path:
         status = do_check(repo_path, cover_letter, patches)
         tag_and_push(repo_path, submission_id)
+    return status
+
+
+def apply_peer_review(email, submission_id, review_id):
+    maildir = pathlib.Path(MAIL_DIR_ABSPATH)
+    args = [*git_am_args, '--empty=keep']
+    patch_abspath = str(maildir / email.msg_id)
+
+    status = 'sucessfully stored peer review'
+
+    with tempfile.TemporaryDirectory() as repo_path:
+        repo = git.Repo.clone_from(REMOTE_PULL_URL, repo_path,
+                                   multi_options=[f'--branch={review_id}',
+                                                  '--single-branch',
+                                                  '--no-tags'])
+        try:
+            repo.git.execute([*args, patch_abspath])
+            tag_and_push(repo_path, submission_id)
+        except git.GitCommandError as e:
+            print(e, file=sys.stderr)
+            status = 'failed to apply peer review'
+
     return status

@@ -6,6 +6,7 @@ import sys
 
 import db
 import denis.db
+import patchset
 
 
 Email = collections.namedtuple('Email', ['rcpt', 'msg_id'])
@@ -66,8 +67,10 @@ def main(argv):
                else 'final' if timestamp < asn.final_due_date else None)
         if not typ:
             return set_status(f'{asn.name} past due')
+        cover_letter, *patches = emails
+        status = patchset.check(cover_letter, patches, logfile)
         gr_db.create(submission_id=logfile, timestamp=timestamp, user=user,
-                     assignment=asn.name, component=typ)
+                     assignment=asn.name, component=typ, status=status)
         return set_status(f'{asn.name}: {typ}')
 
     if reply_id:
@@ -91,8 +94,10 @@ def main(argv):
                 typ = 'review2'
             case _:
                 return set_status('reviewed wrong submission')
+        status = patchset.apply_peer_review(emails[0], logfile, reply_id)
         gr_db.create(submission_id=logfile, timestamp=timestamp,
-                     user=user, assignment=asn_name, component=typ)
+                     user=user, assignment=asn_name, component=typ,
+                     status=status)
         return set_status(f'{asn_name}: {typ}')
 
     return set_status('Not a recognized recipient')

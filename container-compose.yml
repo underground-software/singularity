@@ -170,6 +170,7 @@ services:
       - denis
     networks:
       - mailman
+      - git
   denis:
     build:
       context: denis
@@ -222,6 +223,8 @@ services:
         source: git-repos
         target: /var/lib/git/
         read_only: false
+    networks:
+      - git
     ports:
       - "8000"
 networks:
@@ -231,6 +234,7 @@ networks:
   submatrix:
   mailman:
   denis:
+  git:
 volumes:
   ssl-certs:
   email-mail:

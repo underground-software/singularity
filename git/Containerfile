@@ -22,6 +22,8 @@ RUN mkdir /var/lib/git/
 
 WORKDIR /var/lib/git/
 
+RUN git init --bare grading.git && /usr/local/share/git/setup-repo.sh grading.git
+
 RUN mkdir -p course_repos
 
 WORKDIR course_repos
