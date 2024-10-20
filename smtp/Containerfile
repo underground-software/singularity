@@ -1,8 +1,18 @@
-FROM alpine:3.20 AS build
+FROM alpine:3.20 AS smtp
 RUN apk add \
 	clang \
+	git \
 	make \
 	;
+
+RUN if [ "$COVERAGE" -eq 1 ]; then \
+	apk add \
+		clang-dev \
+		compiler-rt \
+		llvm-dev \
+		bash \
+		; \
+fi
 
 COPY --from=tcp_server_source . /tcp_server
 ARG LISTEN_PORT=465
@@ -14,18 +24,31 @@ COPY . /smtp
 ARG hostname
 RUN test -n "$hostname" || (echo 'hostname is not set' && false)
 
-RUN make -C /smtp CC='clang -static' SRVNAME=$hostname
+# RUN make -C /smtp CC='clang -static' SRVNAME=$hostname
+
+RUN if [ "$COVERAGE" -eq 1 ]; then \
+        make -C /smtp CC='clang -static' SRVNAME=$hostname COVERAGE=1; \
+    else \
+        make -C /smtp CC='clang -static' SRVNAME=$hostname; \
+    fi
 
 RUN mkdir -p /var/lib/email/mail /var/lib/email/logs && \
 	chown 100:100 /var/lib/email/mail /var/lib/email/logs && \
 	:
 
-FROM scratch as smtp
+RUN cp /tcp_server/tcp_server /usr/local/bin/tcp_server
 
-COPY --from=build /var/lib/email /var/lib/email
-COPY --from=build /tcp_server/tcp_server /usr/local/bin/tcp_server
-COPY --from=build /smtp/smtp /usr/local/bin/smtp
+RUN if [ "$COVERAGE" -eq 1 ]; then \
+		cp /smtp/smtp_wrapper /usr/local/bin/smtp; \
+		cp /smtp/smtp /usr/local/bin/smtp_; \
+		mkdir -p /coverage; \
+		chown 100:100 /coverage; \
+		cp /smtp/smtp.c /coverage/smtp.c; \
+	else \
+		cp /smtp/smtp /usr/local/bin/smtp; \
+	fi
 
+RUN rm -rf /smtp /tcp_server
 USER 100:100
 
 ARG LISTEN_PORT=465
