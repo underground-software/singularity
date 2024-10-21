@@ -32,6 +32,11 @@ def main(argv):
     if not emails:
         return 0
 
+    sub = db.Submission(submission_id=logfile, timestamp=timestamp,
+                        user=user, recipient=emails[0].rcpt,
+                        email_count=len(emails))
+    sub.save()
+
     irt_header = 'In-Reply-To: <'
     reply_id = None
     with open(f'/var/lib/email/mail/{emails[0].msg_id}') as f:
@@ -47,11 +52,9 @@ def main(argv):
 
             # "clear the lower 16 bits" to get the reviewee patchset id
             reply_id = reply_email_id[:-4] + '0000'
+            sub.in_reply_to = reply_id
+            sub.save()
             break
-
-    sub = db.Submission(submission_id=logfile, timestamp=timestamp,
-                        user=user, recipient=emails[0].rcpt,
-                        email_count=len(emails), in_reply_to=reply_id)
 
     def set_status(status):
         sub.status = status
