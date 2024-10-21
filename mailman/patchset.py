@@ -32,7 +32,8 @@ def tag_and_push(repo_path, tag_name):
 
 author_args = ['-c', 'user.name=mailman', '-c',
                'user.email=mailman@mailman']
-git_am_args = ['git', *author_args, 'am', '--keep']
+git_am_args = ['git', '-c', 'advice.mergeConflict=false',
+               *author_args, 'am', '--keep']
 
 
 def do_check(repo_path, cover_letter, patches):
