@@ -32,6 +32,11 @@ def main(argv):
     if not emails:
         return 0
 
+    sub = db.Submission(submission_id=logfile, timestamp=timestamp,
+                        user=user, recipient=emails[0].rcpt,
+                        email_count=len(emails))
+    sub.save()
+
     irt_header = 'In-Reply-To: <'
     reply_id = None
     with open(f'/var/lib/email/mail/{emails[0].msg_id}') as f:
@@ -47,11 +52,9 @@ def main(argv):
 
             # "clear the lower 16 bits" to get the reviewee patchset id
             reply_id = reply_email_id[:-4] + '0000'
+            sub.in_reply_to = reply_id
+            sub.save()
             break
-
-    sub = db.Submission(submission_id=logfile, timestamp=timestamp,
-                        user=user, recipient=emails[0].rcpt,
-                        email_count=len(emails), in_reply_to=reply_id)
 
     def set_status(status):
         sub.status = status
@@ -61,19 +64,20 @@ def main(argv):
     asn_db = denis.db.Assignment
     gr_db = db.Gradeable
     if asn := asn_db.get_or_none(asn_db.name == emails[0].rcpt):
+        cover_letter, *patches = emails
+        status = patchset.check(cover_letter, patches, logfile)
         if len(emails) < 2:
             return set_status('missing patches')
         typ = ('initial' if timestamp < asn.initial_due_date
                else 'final' if timestamp < asn.final_due_date else None)
         if not typ:
             return set_status(f'{asn.name} past due')
-        cover_letter, *patches = emails
-        status = patchset.check(cover_letter, patches, logfile)
         gr_db.create(submission_id=logfile, timestamp=timestamp, user=user,
                      assignment=asn.name, component=typ, status=status)
         return set_status(f'{asn.name}: {typ}')
 
     if reply_id:
+        status = patchset.apply_peer_review(emails[0], logfile, reply_id)
         if not (orig := gr_db.get_or_none(gr_db.submission_id == reply_id)):
             return set_status('not a reply to a submission')
         asn_name = orig.assignment
@@ -94,7 +98,6 @@ def main(argv):
                 typ = 'review2'
             case _:
                 return set_status('reviewed wrong submission')
-        status = patchset.apply_peer_review(emails[0], logfile, reply_id)
         gr_db.create(submission_id=logfile, timestamp=timestamp,
                      user=user, assignment=asn_name, component=typ,
                      status=status)
