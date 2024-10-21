@@ -1,8 +1,18 @@
-FROM alpine:3.20 AS build
+FROM alpine:3.20 AS pop
 RUN apk add \
 	clang \
 	make \
 	;
+
+RUN if [ "$COVERAGE" -eq 1 ]; then \
+		apk add \
+			clang-dev \
+			compiler-rt \
+			llvm-dev \
+			gettext \
+			bash \
+			; \
+	fi
 
 COPY --from=tcp_server_source . /tcp_server
 ARG LISTEN_PORT=995
@@ -14,10 +24,26 @@ COPY . /pop
 
 RUN make -C /pop CC='clang -static'
 
-FROM scratch as pop
+RUN if [ "$COVERAGE" -eq 1 ]; then \
+        make -C /pop CC='clang -static' SRVNAME=$hostname COVERAGE=1; \
+    else \
+        make -C /pop CC='clang -static' SRVNAME=$hostname; \
+    fi
 
-COPY --from=build /tcp_server/tcp_server /usr/local/bin/tcp_server
-COPY --from=build /pop/pop3 /usr/local/bin/pop3
+# FROM scratch as pop
+
+RUN cp /tcp_server/tcp_server /usr/local/bin/tcp_server
+RUN if [ "$COVERAGE" -eq 1 ]; then \
+		cp /pop/pop3 /usr/local/bin/pop3_; \
+		cp /pop/pop_wrapper /usr/local/bin/pop3; \
+		mkdir -p /coverage; \
+		chown 100:100 /coverage; \
+		cp /pop/pop3.c /coverage/pop3.c; \
+    else \
+		cp /pop/pop3 /usr/local/bin/pop3; \
+    fi
+
+RUN rm -rf /tcp_server /pop /journal /pop
 
 USER 100:100
 

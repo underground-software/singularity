@@ -4,6 +4,16 @@ RUN apk add \
 	make \
 	;
 
+RUN if [ "$COVERAGE" -eq 1 ]; then \
+		apk add \
+			clang-dev \
+			compiler-rt \
+			llvm-dev \
+			gettext \
+			bash \
+			; \
+	fi
+
 COPY --from=run_at_source . /run-at
 
 RUN make -C /run-at CC='clang -static'
