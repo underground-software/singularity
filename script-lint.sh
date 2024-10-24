@@ -9,6 +9,7 @@ shellcheck script-lint.sh
 shellcheck test.sh
 shellcheck orbit/warpdrive.sh
 shellcheck denis/configure.sh
+shellcheck denis/remote_update_tags.sh
 shellcheck mailman/inspector.sh
 shellcheck git/admin.sh
 shellcheck git/create-repo.sh
