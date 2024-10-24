@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 
+import update_tags
 import utilities
 
 assignment = sys.argv[1]
@@ -13,3 +14,6 @@ ids += [sub for sub in utilities.user_to_sub(assignment, 'review2').values() if 
 utilities.release_subs(ids)
 
 print(f'peer review subs for {assignment} released')
+
+update_tags.update_tags(assignment, 'review1')
+update_tags.update_tags(assignment, 'review2')

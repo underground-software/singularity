@@ -5,6 +5,7 @@ import random
 import sys
 
 import db
+import update_tags
 import utilities
 
 # this is passed from start.py via run-at
@@ -57,3 +58,5 @@ except db.peewee.IntegrityError as e:
 utilities.release_subs([sub for sub in usernames_to_subs.values() if sub])
 
 print(f'initial subs for {assignment} released')
+
+update_tags.update_tags(assignment, 'initial')
