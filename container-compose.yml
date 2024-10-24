@@ -211,6 +211,7 @@ services:
         read_only: true
     networks:
       - denis
+      - git
   git:
     build:
       context: git
