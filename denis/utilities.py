@@ -29,3 +29,7 @@ def release_subs(sub_ids):
     subprocess.run(['/usr/local/bin/append_journal',
                     '/var/lib/email/journal/journal'],
                    input=journal_data, check=True)
+
+
+def update_tags(assignment, component):
+    print(f'Update tags for {assignment} {component} submissions')
