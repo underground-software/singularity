@@ -13,3 +13,6 @@ ids += [sub for sub in utilities.user_to_sub(assignment, 'review2').values() if 
 utilities.release_subs(ids)
 
 print(f'peer review subs for {assignment} released')
+
+utilities.update_tags(assignment, 'review1')
+utilities.update_tags(assignment, 'review2')

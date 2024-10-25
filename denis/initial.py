@@ -57,3 +57,5 @@ except db.peewee.IntegrityError as e:
 utilities.release_subs([sub for sub in usernames_to_subs.values() if sub])
 
 print(f'initial subs for {assignment} released')
+
+utilities.update_tags(assignment, 'initial')

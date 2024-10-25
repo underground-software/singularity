@@ -10,3 +10,5 @@ utilities.release_subs([sub for sub in
                         if sub])
 
 print(f'final subs for {assignment} released')
+
+utilities.update_tags(assignment, 'final')
