@@ -50,6 +50,10 @@ def update_tags(assignment, component):
         repo.config_writer().set_value('user', 'name', 'denis').release()
         (repo.config_writer().set_value('user', 'email', 'denis@denis')
                              .release())
+        if 'EMPTY' not in repo.tags:
+            repo.git.commit('--allow-empty', '-m', 'No gradeable submission.')
+            repo.create_tag('EMPTY')
+
         for user in orbit.db.User.select():
             new_tag_name = f'{assignment}_{component}_{user.username}'
             if new_tag_name in repo.tags:
@@ -58,9 +62,11 @@ def update_tags(assignment, component):
                 continue
             user_sub = subs.where(grd_tbl.user == user.username).first()
             if not user_sub:
-                continue
-            msg = user_sub.status
-            to_promote = repo.tags[user_sub.submission_id]
+                msg = 'No gradeable submission'
+                to_promote = repo.tags['EMPTY']
+            else:
+                msg = user_sub.status
+                to_promote = repo.tags[user_sub.submission_id]
             repo.create_tag(new_tag_name, ref=to_promote.commit, message=msg)
 
         repo.git.push(REMOTE_NAME, tags=True)
