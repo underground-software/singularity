@@ -32,4 +32,13 @@ def release_subs(sub_ids):
 
 
 def update_tags(assignment, component):
-    print(f'Update tags for {assignment} {component} submissions')
+    grd_tbl = mailman.db.Gradeable
+    subs = (grd_tbl.select()
+                   .order_by(-grd_tbl.timestamp)
+                   .where(grd_tbl.assignment == assignment)
+                   .where(grd_tbl.component == component))
+    for user in orbit.db.User.select():
+        user_sub = subs.where(grd_tbl.user == user.username).first()
+        tag_id = user_sub.submission_id if user_sub else None
+        print(f'update tag called on {user.username}\'s {component} '
+              f'{assignment} submission with tag id {tag_id}')
