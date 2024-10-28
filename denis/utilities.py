@@ -1,7 +1,14 @@
+import git
 import subprocess
+import tempfile
 
 import orbit.db
 import mailman.db
+
+
+PUSH_URL = 'http://git:8000/cgi-bin/git-receive-pack/grading.git'
+PULL_URL = 'http://git:8000/grading.git'
+REMOTE_NAME = 'grading'
 
 
 def user_to_sub(assignment, component):
@@ -37,8 +44,23 @@ def update_tags(assignment, component):
                    .order_by(-grd_tbl.timestamp)
                    .where(grd_tbl.assignment == assignment)
                    .where(grd_tbl.component == component))
-    for user in orbit.db.User.select():
-        user_sub = subs.where(grd_tbl.user == user.username).first()
-        tag_id = user_sub.submission_id if user_sub else None
-        print(f'update tag called on {user.username}\'s {component} '
-              f'{assignment} submission with tag id {tag_id}')
+    with tempfile.TemporaryDirectory() as repo_path:
+        repo = git.Repo.clone_from(PULL_URL, repo_path)
+        repo.create_remote(REMOTE_NAME, PUSH_URL)
+        repo.config_writer().set_value('user', 'name', 'denis').release()
+        (repo.config_writer().set_value('user', 'email', 'denis@denis')
+                             .release())
+        for user in orbit.db.User.select():
+            new_tag_name = f'{assignment}_{component}_{user.username}'
+            if new_tag_name in repo.tags:
+                print('Potential issue? Attempted to create duplicate tag '
+                      f'{new_tag_name}')
+                continue
+            user_sub = subs.where(grd_tbl.user == user.username).first()
+            if not user_sub:
+                continue
+            msg = user_sub.status
+            to_promote = repo.tags[user_sub.submission_id]
+            repo.create_tag(new_tag_name, ref=to_promote.commit, message=msg)
+
+        repo.git.push(REMOTE_NAME, tags=True)
