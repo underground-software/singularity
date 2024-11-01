@@ -61,12 +61,12 @@ def update_tags(assignment, component):
                       f'{new_tag_name}')
                 continue
             user_sub = subs.where(grd_tbl.user == user.username).first()
-            if not user_sub:
+            if not user_sub or (id := user_sub.submission_id) not in repo.tags:
                 msg = 'No gradeable submission'
                 to_promote = repo.tags['EMPTY']
             else:
                 msg = user_sub.status
-                to_promote = repo.tags[user_sub.submission_id]
+                to_promote = repo.tags[id]
             repo.create_tag(new_tag_name, ref=to_promote.commit, message=msg)
 
         repo.git.push(REMOTE_NAME, tags=True)
