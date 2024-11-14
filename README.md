@@ -63,7 +63,7 @@ You will need the host program socat. On Fedora it can be obtained by running `s
  - Make sure to specify the protocol (https, smtps, pop3s) and port (443 or 1443, 465 or 1465, 995 or 1995) explicitly or your client may
 try to use the wrong port or the unencrypted version of the protocol.
 
- - There is no web content by default so the homepage of the website will give a 404 error, however the links  to the course
+ - There is no web content by default so the homepage of the website will give a 404 error, however the links to the course
 services in the navigation bar should work once signed in.
 
  - Once finished:
