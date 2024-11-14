@@ -30,7 +30,7 @@ Section 3: Testing and basic functionality
  - In order to verify that singularity is behaving correctly, you should run the test suite.
 
  - You will need to install some host packages needed by the testing script: flake8, shellcheck, jq, and curl.
-On Fedora these packages can be obtained by running `sudo dnf install -y flake8 shellcheck jq curl`.
+On Fedora these packages can be obtained by running `sudo dnf install -y python3-flake8 shellcheck jq curl`.
 
  - Now you can run `./test.sh`. If you followed the directions, the tests should pass.
 
