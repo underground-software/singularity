@@ -293,7 +293,12 @@ def mk_form_welcome(session):
     </div>
     <div class="logout_buttons">
         <form id="logout">
-            <input class="logout" type="button" onclick="location.href='/logout';" value="Logout" />
+            <input
+                class="logout"
+                type="button"
+                onclick="location.href='/logout';"
+                value="Logout"
+            />
         </form>
     </div>'''
 
@@ -452,7 +457,12 @@ class AsmtTable:
             {item_name}
           </th>
           <td>
-            {datetime.fromtimestamp(gradeable.timestamp).astimezone().isoformat() if gradeable else '-'}
+            {(
+                datetime.fromtimestamp(gradeable.timestamp)
+                .astimezone()
+                .isoformat()
+                if gradeable else '-'
+            )}
           </td>
           <td>
             {gradeable.submission_id if gradeable else '-'}
@@ -475,7 +485,13 @@ class AsmtTable:
     def body(self):
         if self.oopsieness == OopsStatus.USED_HERE:
             return f"""
-              {self.gradeable_row('Final Submission', self.final, self.oopsie_button())}
+              {(
+                self.gradeable_row(
+                    'Final Submission',
+                    self.final,
+                    self.oopsie_button()
+                )
+              )}
               <tr>
                 <th>Comments</th>
                 <td colspan="3">-</td>
@@ -485,14 +501,26 @@ class AsmtTable:
             (int(datetime.now().timestamp())
              < self.assignment.initial_due_date)):
             return f"""
-              {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
+              {(
+                self.gradeable_row(
+                    'Initial Submission',
+                    self.init,
+                    self.oopsie_button()
+                )
+              )}
               <tr>
                 <th>Automated Feedback</th>
                 <td colspan="3">-</td>
               </tr>
             """
         return f"""
-          {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
+          {(
+            self.gradeable_row(
+                'Initial Submission',
+                self.init,
+                self.oopsie_button()
+            )
+          )}
           <tr>
             <th>Automated Feedback</th>
             <td colspan="3">-</td>
@@ -503,9 +531,19 @@ class AsmtTable:
             <th>Submission ID</th>
             <th>Score</th>
           </tr>
-          {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, '-') if self.peer1 else ''}
-          {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, '-') if self.peer2 else ''}
-          {self.gradeable_row('Final Submission', self.final, '-')}
+          {(
+            self.gradeable_row(
+                self.peer1 + ' Peer Review',
+                self.review1, '-') if self.peer1 else ''
+          )}
+          {(
+            self.gradeable_row(
+                self.peer2 + ' Peer Review',
+                self.review2, '-') if self.peer2 else ''
+          )}
+          {(
+            self.gradeable_row('Final Submission', self.final, '-')
+          )}
           <tr>
             <th>Comments</th>
             <td colspan="3">-</td>
@@ -631,7 +669,10 @@ def handle_register(rocket):
     username, password = creds
     rocket.msg('welcome to the classroom')
     return rocket.respond(f'''
-    <h1>Save these credentials, you will not be able to access them again</h1><br>
+    <h1>
+        Save these credentials, you will not be able to access them again
+    </h1>
+    <br>
     <h3>Username: {username}</h3><br>
     <h3>Password: {password}</h3><br>''')
 
