@@ -36,7 +36,7 @@ COPY --from=mailman_source . ./mailman
 COPY --from=denis_source . ./denis
 
 RUN mkdir -p /var/lib/orbit/ && \
-	./db.py \
+	./db.py && \
 	:
 
 COPY cgitrc /etc/cgitrc
