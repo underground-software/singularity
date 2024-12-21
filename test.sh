@@ -32,7 +32,7 @@ mkdir -p test
 # Reset the test directory
 rm -f test/*
 
-HOSTNAME_FROM_DOTENV="$(env -i sh -c '
+HOSTNAME_FROM_DOTENV="$(sh -c '
 set -o allexport
 . ./.env
 exec jq -r -n "env.SINGULARITY_HOSTNAME"
