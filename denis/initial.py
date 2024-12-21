@@ -37,7 +37,7 @@ random.shuffle(students_who_submitted)
 # is the situation where there are fewer than 3 students total and it is
 # impossible to have any triplets. In that case we can form two pairs,
 # one singleton, or the empty list which is why we have min(len, 3)
-reviews = [[students_who_submitted[i+j]
+reviews = [[students_who_submitted[i + j]
             for j in range(-min(len(students_who_submitted), 3), 0)]
            for i in range(len(students_who_submitted))]
 
