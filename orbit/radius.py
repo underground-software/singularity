@@ -252,10 +252,11 @@ class Rocket:
         self._session.end()
         self.headers += self._session.mk_cookie_header()
 
-    def format_html(self, doc):
+    def format_html(self, doc, title):
         # loads cookie if exists
         self.session
-        return html_header + doc + f"""
+        page_header = html_header.format(title=title)
+        return page_header + doc + f"""
         <hr>
         <code>msg = {self._msg}</code><br>
         <code>whoami = {self.username}</code><br>
@@ -270,9 +271,11 @@ class Rocket:
                              self.headers)
         return [body]
 
-    def respond(self, response_document):
+    def respond(self, response_document, title=None):
+        if title is None:
+            title = 'KDLP'
         self.headers += [('Content-Type', 'text/html')]
-        response_document = self.format_html(response_document)
+        response_document = self.format_html(response_document, title)
         return self.raw_respond(HTTPStatus.OK, response_document.encode())
 
 
@@ -329,11 +332,11 @@ def handle_login(rocket):
             rocket.headers += [('Location', target)]
             return rocket.raw_respond(HTTPStatus.SEE_OTHER)
         elif target:
-            return rocket.respond(login_form(target_location=target))
+            return rocket.respond(login_form(target_location=target), 'Login')
         elif welcome:
-            return rocket.respond(mk_form_welcome(rocket.session))
+            return rocket.respond(mk_form_welcome(rocket.session), 'Welcome')
         else:
-            return rocket.respond(login_form())
+            return rocket.respond(login_form(), 'Login')
 
     if rocket.session:
         rocket.msg(f'{rocket.username} authenticated by token')
@@ -410,7 +413,7 @@ def handle_activity(rocket):
     </tr>
     <tr>{table_content}</tr>
     </table>
-    """)
+    """, "Activity Log")
 
 
 class OopsStatus:
@@ -560,7 +563,7 @@ def handle_dashboard(rocket):
                 <button type="submit" name="confirm" value="y">Confirm</button>
                 <br><br>
                 </form>
-            ''')
+            ''', 'Are you sure?')
         try:
             db.Oopsie.create(user=rocket.session.username, assignment=asn,
                              timestamp=int(now))
@@ -592,7 +595,7 @@ def handle_dashboard(rocket):
         final = asn_gradeables.where(grd_tbl.component == 'final').first()
         ret += str(AsmtTable(assignment, oopsieness, peer1, peer2, init, rev1,
                              rev2, final))
-    return rocket.respond(ret + '</form>')
+    return rocket.respond(ret + '</form>', 'Dashboard')
 
 
 def find_creds_for_registration(student_id):
@@ -618,7 +621,7 @@ def handle_register(rocket):
         <label for="student_id">Student ID:</label>
         <input name="student_id" type="text" id="student_id" /><br />
         <button type="submit">Submit</button>
-    </form>''')
+    </form>''', 'Register')
 
     if rocket.method != 'POST':
         return form_respond()
@@ -633,7 +636,7 @@ def handle_register(rocket):
     return rocket.respond(f'''
     <h1>Save these credentials, you will not be able to access them again</h1><br>
     <h3>Username: {username}</h3><br>
-    <h3>Password: {password}</h3><br>''')
+    <h3>Password: {password}</h3><br>''', 'Welcome to the classroom')
 
 
 def extract_basic_auth(rocket):
@@ -716,7 +719,7 @@ def handle_cgit(rocket):
         if raw_return:
             return rocket.raw_respond(status, raw_body)
         outstring = raw_body.decode()
-        return rocket.respond(outstring)
+        return rocket.respond(outstring, 'CGit')  # TODO: get real title? (file issue upstream)
     except (UnicodeDecodeError, ValueError, IndexError) as ex:
         return cgit_internal_server_error(type(ex))
 
@@ -817,7 +820,7 @@ def handle_error(rocket):
         return rocket.raw_respond(HTTPStatus.INTERNAL_SERVER_ERROR)
     error_description = (f'<h1>HTTP ERROR {error.value}: '
                          f'{error.name.upper().replace("_", " ")}</h1>')
-    return rocket.respond(error_description)
+    return rocket.respond(error_description, f'ERROR {error.value}')
 
 
 def handle_try_md(rocket):
@@ -830,7 +833,12 @@ def handle_try_md(rocket):
         md = file.read()
     html = markdown.markdown(md, extensions=['tables', 'fenced_code',
                                              'footnotes', 'toc'])
-    return rocket.respond(html)
+    # Use the first line of the document as the title, sans #
+    if (title_end := md.find('\n')) != -1:
+        title = md[0:title_end].lstrip('#').strip()
+    else:
+        title = 'KDLP'
+    return rocket.respond(html, title)
 
 
 def application(env, SR):
