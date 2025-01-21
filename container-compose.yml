@@ -47,6 +47,7 @@ services:
         orbit_version_info: "singularity ${SINGULARITY_VERSION} ${SINGULARITY_DEPLOYMENT_STATUS} https://github.com/underground-software/singularity"
     environment:
       TZ: ${SINGULARITY_TIMEZONE}
+      HOSTNAME: ${SINGULARITY_HOSTNAME}
     volumes:
       - type: volume
         source: orbit-db
