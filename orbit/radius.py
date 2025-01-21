@@ -722,6 +722,9 @@ def handle_cgit(rocket):
 
 
 def handle_containerfile(rocket):
+    nano_default_editor = 'nano-default-editor' \
+            if not rocket.queries_query('vim') else ''
+
     hostname = os.getenv("HOSTNAME")
     if creds := extract_basic_auth(rocket):
         username, password = creds
@@ -751,7 +754,7 @@ dwarves \
 git-email \
 vim \
 nano \
-nano-default-editor \
+{nano_default_editor} \
 mutt \
 cpio \
 strace
