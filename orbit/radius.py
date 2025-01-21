@@ -751,6 +751,7 @@ dwarves \
 git-email \
 vim \
 nano \
+nano-default-editor \
 mutt \
 cpio \
 strace
