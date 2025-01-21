@@ -756,6 +756,11 @@ strace
 dnf clean all
 DNF
 
+RUN useradd {username} -U
+VOLUME /home/{username}/
+USER {username}:{username}
+WORKDIR /home/{username}/
+
 RUN cat <<'MUTTRC' > ~/.muttrc
 set realname="Your Name Here"
 set my_username="{username}"
@@ -784,10 +789,6 @@ smtpserverport = 465
 smtpencryption = ssl
 GITCONFIG
 
-RUN useradd {username} -U
-VOLUME /home/{username}/
-USER {username}:{username}
-WORKDIR /home/{username}/
 ENTRYPOINT ["/usr/bin/bash", "-l", "-i"]
     '''.encode())
 
