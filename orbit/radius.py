@@ -636,6 +636,17 @@ def handle_register(rocket):
     <h3>Password: {password}</h3><br>''')
 
 
+def extract_basic_auth(rocket):
+    if (auth_str := rocket.env.get('HTTP_AUTHORIZATION')) is None:
+        return
+    if not auth_str.startswith('Basic '):
+        return
+    cred_str = base64.b64decode(auth_str.removeprefix('Basic '))
+    username, password = cred_str.decode().split(':', maxsplit=1)
+
+    return username, password
+
+
 def determine_cache_entry(cred_str):
     import hashlib
     import time
@@ -647,15 +658,12 @@ def determine_cache_entry(cred_str):
 
 def http_basic_auth(rocket):
     import authcache
-    if (auth_str := rocket.env.get('HTTP_AUTHORIZATION')) is None:
+    if not (creds := extract_basic_auth(rocket)):
         return
-    if not auth_str.startswith('Basic '):
-        return
-    cred_str = base64.b64decode(auth_str.removeprefix('Basic '))
-    cache_entry = determine_cache_entry(cred_str)
+    username, password = creds
+    cache_entry = determine_cache_entry(':'.join(creds))
     if authcache.entry_exists(cache_entry):
         return True
-    username, password = cred_str.decode().split(':', maxsplit=1)
     if not check_credentials(username, password):
         return
     authcache.add_entry(cache_entry)
@@ -713,6 +721,52 @@ def handle_cgit(rocket):
         return cgit_internal_server_error(type(ex))
 
 
+def handle_containerfile(rocket):
+    hostname = os.getenv("HOSTNAME")
+    if creds := extract_basic_auth(rocket):
+        username, password = creds
+    if not creds or not check_credentials(username, password):
+        rocket.headers.append(('WWW-Authenticate', 'Basic realm="podman"'))
+        return rocket.raw_respond(HTTPStatus.UNAUTHORIZED)
+    return rocket.raw_respond(HTTPStatus.OK, f'''
+FROM fedora:41
+
+RUN dnf -y update && dnf install -y strace && dnf clean all
+RUN dnf -y install --setopt=install_weak_deps=False git tar make gcc qemu-system-riscv binutils-riscv64-linux-gnu gcc-riscv64-linux-gnu bc flex bison openssl-devel elfutils-libelf-devel ncurses-devel dwarves git-email vim mutt cpio
+
+RUN cat <<'MUTTRC' > ~/.muttrc
+set realname="Your Name Here"
+set my_username="{username}"
+set my_password="{password}"
+set course_domain="{hostname}"
+set spoolfile=
+set record=
+set folder=
+set sort=threads
+set from="$my_username@$course_domain"
+set header_cache=~/.cache/mutt
+set smtp_url="smtps://$my_username:$my_password@$course_domain:465"
+push "&lt;change-folder&gt;pops://$my_username:$my_password@$course_domain:995"\n
+macro index l "|git am -s"\n
+MUTTRC
+
+RUN cat <<'GITCONFIG' > ~/.gitconfig
+[core]
+editor = vim # Or which ever editor you prefer
+
+[user]
+name = Your Name Here
+email = {username}@{hostname}
+[sendemail]
+smtpUser = {username}
+smtpPass = {password}
+smtpserver = {hostname}
+smtpserverport = 465
+smtpencryption = ssl
+GITCONFIG
+    '''.encode())
+
+
 def handle_error(rocket):
     error_num_str = rocket.queries_query('num')
     try:
@@ -762,6 +816,8 @@ def application(env, SR):
             return handle_logout(rocket)
         case '/mail_auth':
             return handle_mail_auth(rocket)
+        case '/Containerfile':
+            return handle_containerfile(rocket)
         case '/activity':
             return handle_activity(rocket)
         case '/error':
