@@ -750,6 +750,7 @@ ncurses-devel \
 dwarves \
 git-email \
 vim \
+nano \
 mutt \
 cpio \
 strace
