@@ -764,6 +764,12 @@ smtpserver = {hostname}
 smtpserverport = 465
 smtpencryption = ssl
 GITCONFIG
+
+RUN useradd {username} -U
+VOLUME /home/{username}/
+USER {username}:{username}
+WORKDIR /home/{username}/
+ENTRYPOINT ["/usr/bin/bash", "-l", "-i"]
     '''.encode())
 
 
