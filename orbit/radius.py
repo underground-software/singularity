@@ -731,8 +731,30 @@ def handle_containerfile(rocket):
     return rocket.raw_respond(HTTPStatus.OK, f'''
 FROM fedora:41
 
-RUN dnf -y update && dnf install -y strace && dnf clean all
-RUN dnf -y install --setopt=install_weak_deps=False git tar make gcc qemu-system-riscv binutils-riscv64-linux-gnu gcc-riscv64-linux-gnu bc flex bison openssl-devel elfutils-libelf-devel ncurses-devel dwarves git-email vim mutt cpio
+RUN <<DNF
+dnf -y update
+dnf install -y --setopt=install_weak_deps=False \
+git \
+tar \
+make \
+gcc \
+qemu-system-riscv \
+binutils-riscv64-linux-gnu \
+gcc-riscv64-linux-gnu \
+bc \
+flex \
+bison \
+openssl-devel \
+elfutils-libelf-devel \
+ncurses-devel \
+dwarves \
+git-email \
+vim \
+mutt \
+cpio \
+strace
+dnf clean all
+DNF
 
 RUN cat <<'MUTTRC' > ~/.muttrc
 set realname="Your Name Here"
@@ -746,14 +768,11 @@ set sort=threads
 set from="$my_username@$course_domain"
 set header_cache=~/.cache/mutt
 set smtp_url="smtps://$my_username:$my_password@$course_domain:465"
-push "&lt;change-folder&gt;pops://$my_username:$my_password@$course_domain:995"\n
+push "<change-folder>pops://$my_username:$my_password@$course_domain:995"\n
 macro index l "|git am -s"\n
 MUTTRC
 
 RUN cat <<'GITCONFIG' > ~/.gitconfig
-[core]
-editor = vim # Or which ever editor you prefer
-
 [user]
 name = Your Name Here
 email = {username}@{hostname}
