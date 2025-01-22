@@ -793,7 +793,7 @@ smtpserverport = 465
 smtpencryption = ssl
 GITCONFIG
 
-VOLUME /home/{username}/
+VOLUME /home
 
 ENTRYPOINT ["/usr/bin/bash", "-l", "-i"]
     '''.strip().encode())
