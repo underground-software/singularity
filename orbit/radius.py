@@ -757,6 +757,7 @@ nano \
 {nano_default_editor} \
 mutt \
 cpio \
+wget \
 strace
 dnf clean all
 DNF
