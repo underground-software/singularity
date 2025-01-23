@@ -731,6 +731,10 @@ def handle_containerfile(rocket):
     if not creds or not check_credentials(username, password):
         rocket.headers.append(('WWW-Authenticate', 'Basic realm="podman"'))
         return rocket.raw_respond(HTTPStatus.UNAUTHORIZED)
+    tbl = db.User
+    if (not (user := tbl.get_or_none(tbl.username == username)) or
+            not (fullname := user.fullname)):
+        fullname = 'Unknown'
     return rocket.raw_respond(HTTPStatus.OK, f'''
 FROM fedora:41
 
@@ -768,7 +772,7 @@ USER {username}:{username}
 WORKDIR /home/{username}/
 
 RUN cat <<'MUTTRC' > ~/.muttrc
-set realname="Your Name Here"
+set realname="{fullname}"
 set my_username="{username}"
 set my_password="{password}"
 set my_course_domain="{hostname}"
@@ -785,7 +789,7 @@ MUTTRC
 
 RUN cat <<'GITCONFIG' > ~/.gitconfig
 [user]
-name = Your Name Here
+name = '{fullname}'
 email = {username}@{hostname}
 [sendemail]
 smtpUser = {username}

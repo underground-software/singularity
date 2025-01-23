@@ -81,7 +81,7 @@ def do_newuser(args):
         new_hash = do_bcrypt_hash(args)
     try:
         db.User.create(username=args.username, pwdhash=new_hash,
-                       student_id=args.studentid)
+                       student_id=args.studentid, fullname=args.fullname)
     except db.peewee.IntegrityError as e:
         errx(f'cannot create user with duplicate field: "{e}"')
 
@@ -107,6 +107,7 @@ def hyperspace_main(raw_args):
     parser.add_argument('-u', '--username', help='Username to operate with')
     parser.add_argument('-p', '--password', help='Password to operate with')
     parser.add_argument('-i', '--studentid', help='Student ID to operate with')
+    parser.add_argument('-f', '--fullname', help='Student full name')
 
     actions = parser.add_mutually_exclusive_group()
     actions.add_argument('-r', '--roster', action='store_const',
