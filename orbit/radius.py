@@ -758,6 +758,7 @@ nano \
 mutt \
 cpio \
 wget \
+cyrus-sasl-plain \
 strace
 dnf clean all
 DNF
