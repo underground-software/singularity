@@ -661,7 +661,7 @@ def http_basic_auth(rocket):
     if not (creds := extract_basic_auth(rocket)):
         return
     username, password = creds
-    cache_entry = determine_cache_entry(':'.join(creds))
+    cache_entry = determine_cache_entry((':'.join(creds)).encode())
     if authcache.entry_exists(cache_entry):
         return True
     if not check_credentials(username, password):
