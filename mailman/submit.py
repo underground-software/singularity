@@ -3,11 +3,14 @@
 import collections
 from pathlib import Path
 import sys
+from datetime import timedelta
+import os
 
 import db
 import denis.db
 import patchset
 
+DEFAULT_BUFFER_MINUTES = 7
 
 Email = collections.namedtuple('Email', ['rcpt', 'msg_id'])
 
@@ -61,6 +64,19 @@ def main(argv):
         sub.save()
         return 0
 
+    # buffer defaults to 7 if value is unset or invalid
+    env_mins = os.getenv('DEADLINE_BUFFER_MINUTES', DEFAULT_BUFFER_MINUTES)
+    try:
+        env_mins = int(env_mins)
+    except ValueError:
+        print(
+                f'Invalid DEADLINE_BUFFER_MINUTES value: {env_mins}. '
+                f'DEADLINE_BUFFER_MINUTES set to {DEFAULT_BUFFER_MINUTES}.',
+                file=sys.stderr
+        )
+        env_mins = DEFAULT_BUFFER_MINUTES
+
+    deadline_buffer = timedelta(minutes=env_mins)
     asn_db = denis.db.Assignment
     gr_db = db.Gradeable
     if asn := asn_db.get_or_none(asn_db.name == emails[0].rcpt):
@@ -68,8 +84,10 @@ def main(argv):
         status = patchset.check(cover_letter, patches, logfile)
         if len(emails) < 2:
             return set_status('missing patches')
-        typ = ('initial' if timestamp < asn.initial_due_date
-               else 'final' if timestamp < asn.final_due_date else None)
+        typ = ('initial' if timestamp < (asn.initial_due_date
+                                         + deadline_buffer)
+               else 'final' if timestamp < (asn.final_due_date
+                                            + deadline_buffer) else None)
         if not typ:
             return set_status(f'{asn.name} past due')
         gr_db.create(submission_id=logfile, timestamp=timestamp, user=user,
@@ -84,7 +102,7 @@ def main(argv):
         asn = asn_db.get_or_none(asn_name == asn_db.name)
         if not asn:
             raise RuntimeError('invalid assignment name in gradeable DB')
-        if timestamp > asn.peer_review_due_date:
+        if timestamp > (asn.peer_review_due_date + deadline_buffer):
             return set_status(f'{asn.name} review past due')
         rev_db = denis.db.PeerReviewAssignment
         rev = rev_db.get_or_none((rev_db.assignment == asn_name) &
