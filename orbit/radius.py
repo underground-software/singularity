@@ -764,6 +764,7 @@ cpio \
 wget \
 cyrus-sasl-plain \
 gdb \
+diffutils \
 strace
 dnf clean all
 DNF
