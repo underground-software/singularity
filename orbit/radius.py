@@ -763,6 +763,7 @@ mutt \
 cpio \
 wget \
 cyrus-sasl-plain \
+gdb \
 strace
 dnf clean all
 DNF
