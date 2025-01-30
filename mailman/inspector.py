@@ -26,6 +26,11 @@ def main():
                                 help='Select the assignment',
                                 required=True)
 
+    oopsie_parser = command_parsers.add_parser('oopsie')
+    oopsie_parser.add_argument('-u', '--username',
+                               help='Check if a student used an Oopsie',
+                               required=True)
+
     # Dictionary containing the desired command and all flags with their values
     kwargs = vars(parser.parse_args())
     # Subparsers store their name in the destination `'command'`
@@ -54,6 +59,15 @@ def missing(assignment):
     for user in orbit.db.User.select():
         if user.username not in submitted:
             print(user.username)
+
+def oopsie(username):
+    try:
+        query = db.Oopsie.get(db.Oopsie.user == username)
+        time = datetime.fromtimestamp(query.timestamp).astimezone().isoformat()
+        print(f'{username} has used an oopsie on assignment: '
+              f'{query.assignment} at {time}.')
+    except peewee.DoesNotExist:
+        print(f'{username} has not used an oopsie.')
 
 
 if __name__ == '__main__':
