@@ -40,7 +40,7 @@ def main():
                 print(f'skipping initial for {name}', file=sys.stderr)
 
             if in_the_future(peer_review):
-                procs.append(spawn_waiter(str(peer_review), name, './peer_review.py'))  # NOQA: E501
+                procs.append(spawn_waiter(str(peer_review), name, './peer_review.py'))
             else:
                 print(f'skipping peer review for {name}', file=sys.stderr)
 

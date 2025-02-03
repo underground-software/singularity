@@ -105,7 +105,7 @@ class Session:
                 cok.load(raw)
                 res = cok.get('auth', cookies.Morsel()).value
 
-                if (ses_found := db.Session.get_or_none(db.Session.token == res)):  # NOQA: E501
+                if (ses_found := db.Session.get_or_none(db.Session.token == res)):
                     self.token = ses_found.token
                     self.username = ses_found.username
                     self.expiry = datetime.fromtimestamp(ses_found.expiry)
@@ -388,7 +388,7 @@ def handle_activity(rocket):
         return rocket.raw_respond(HTTPStatus.FORBIDDEN)
 
     submissions = (mailman.db.Submission.select()
-                   .where(mailman.db.Submission.user == rocket.session.username)  # NOQA: E501
+                   .where(mailman.db.Submission.user == rocket.session.username)
                    .order_by(- mailman.db.Submission.timestamp))
 
     def submission_fields(sub):
