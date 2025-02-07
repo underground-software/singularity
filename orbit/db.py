@@ -15,7 +15,7 @@ class User(BaseModel):
     username = peewee.TextField(unique=True)
     pwdhash = peewee.TextField(null=True)
     student_id = peewee.TextField(unique=True, null=True)
-    fullname = peewee.TextField()
+    fullname = peewee.TextField(null=True)
 
 
 class Session(BaseModel):
