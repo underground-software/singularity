@@ -21,6 +21,17 @@ def main():
                                     help='Restrict results by username',
                                     required=False)
 
+    gradables_parser = command_parsers.add_parser('gradables')
+    gradables_parser.add_argument('-a', '--assignment',
+                                  help='Restrict results by assignment',
+                                  required=False)
+    gradables_parser.add_argument('-u', '--username',
+                                  help='Restrict results by username',
+                                  required=False)
+    gradables_parser.add_argument('-c', '--component',
+                                  help='Restrict results by component',
+                                  required=False)
+
     missing_parser = command_parsers.add_parser('missing')
     missing_parser.add_argument('-a', '--assignment',
                                 help='Select the assignment',
@@ -54,6 +65,20 @@ def submissions(assignment, username):
         print(sub.submission_id,
               datetime.fromtimestamp(sub.timestamp).astimezone().isoformat(),
               sub.user, sub.recipient, sub.status)
+
+
+def gradables(assignment, username, component):
+    query = db.Gradeable.select().order_by(-db.Gradeable.timestamp)
+    if assignment:
+        query = query.where(db.Gradeable.assignment == assignment)
+    if username:
+        query = query.where(db.Gradeable.user == username)
+    if component:
+        query = query.where(db.Gradeable.component == component)
+    for gbl in query:
+        print(gbl.submission_id,
+              datetime.fromtimestamp(gbl.timestamp).astimezone().isoformat(),
+              gbl.assignment, gbl.user, gbl.component, gbl.status)
 
 
 def missing(assignment):
