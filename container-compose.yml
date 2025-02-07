@@ -145,6 +145,8 @@ services:
         - watcher_source=./watcher
         - denis_source=./denis
         - orbit_source=./orbit
+    environment:
+      TZ: ${SINGULARITY_TIMEZONE}
     volumes:
       - type: volume
         source: email-mail
