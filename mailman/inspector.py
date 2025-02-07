@@ -64,7 +64,7 @@ def submissions(assignment, username):
     for sub in query:
         print(sub.submission_id,
               datetime.fromtimestamp(sub.timestamp).astimezone().isoformat(),
-              sub.user, sub.recipient, sub.status)
+              sub.recipient, sub.user, sub.status)
 
 
 def gradables(assignment, username, component):
