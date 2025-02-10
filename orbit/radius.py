@@ -738,7 +738,7 @@ def handle_containerfile(rocket):
     if (not (user := tbl.get_or_none(tbl.username == username)) or
             not (fullname := user.fullname)):
         fullname = 'Unknown'
-    return rocket.raw_respond(HTTPStatus.OK, f'''
+    return rocket.raw_respond(HTTPStatus.OK, rf'''
 FROM fedora:41
 
 RUN <<DNF
