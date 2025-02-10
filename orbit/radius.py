@@ -776,6 +776,8 @@ RUN useradd {username} -U
 USER {username}:{username}
 WORKDIR /home/{username}/
 
+RUN mkdir .cache
+
 RUN cat <<'MUTTRC' > ~/.muttrc
 set realname="{fullname}"
 set my_username="{username}"
