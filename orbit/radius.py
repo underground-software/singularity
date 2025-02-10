@@ -809,7 +809,7 @@ GITCONFIG
 VOLUME /home
 
 ENTRYPOINT ["/usr/bin/bash", "-l", "-i"]
-    '''.strip().encode())
+'''.encode())
 
 
 def handle_error(rocket):
