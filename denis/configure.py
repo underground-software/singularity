@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from datetime import datetime
 from argparse import ArgumentParser as ap
 
 import db
@@ -97,12 +98,15 @@ def remove(assignment):
 
 
 def dump():
+    def timestamp_to_formatted(timestamp):
+        return datetime.fromtimestamp(timestamp).astimezone().isoformat()
+
     print(' --- Assignments ---')
     for asn in db.Assignment.select():
         print(f'''{asn.name}:
-\tInitial: {asn.initial_due_date}
-\tPeer Review: {asn.peer_review_due_date}
-\tFinal: {asn.final_due_date}''')
+\tInitial:\t{timestamp_to_formatted(asn.initial_due_date)}
+\tPeer Review:\t{timestamp_to_formatted(asn.peer_review_due_date)}
+\tFinal:\t\t{timestamp_to_formatted(asn.final_due_date)}''')
 
 
 def reload():

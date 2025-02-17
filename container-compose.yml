@@ -183,6 +183,8 @@ services:
         - journal_source=./journal
         - mailman_source=./mailman
         - orbit_source=./orbit
+    environment:
+      TZ: ${SINGULARITY_TIMEZONE}
     volumes:
       - type: volume
         source: denis-db
