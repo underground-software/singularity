@@ -49,7 +49,12 @@ def main():
     remove_parser = command_parsers.add_parser('remove')
     add_assignment(remove_parser)
 
-    command_parsers.add_parser('dump')
+    dump_parser = command_parsers.add_parser('dump')
+    dump_parser.add_argument('-i', '--iso',
+                             action='store_true',
+                             dest='fmt_iso',
+                             help='Dump dates in ISO format')
+
     command_parsers.add_parser('reload')
 
     # Dictionary containing the desired command and all flags with their values
@@ -97,9 +102,10 @@ def remove(assignment):
         print(f'no such assignment {assignment}')
 
 
-def dump():
+def dump(fmt_iso):
     def timestamp_to_formatted(timestamp):
-        return datetime.fromtimestamp(timestamp).astimezone().isoformat()
+        dt = datetime.fromtimestamp(timestamp).astimezone()
+        return dt.isoformat() if fmt_iso else dt.strftime('%a %b %d %Y %T %Z (%z)')
 
     print(' --- Assignments ---')
     for asn in db.Assignment.select():
