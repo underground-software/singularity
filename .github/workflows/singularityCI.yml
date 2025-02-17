@@ -1,0 +1,55 @@
+name: Singularity CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: fedora-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python (if your tests require Python)
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install Podman and Podman Compose
+      run: |
+        sudo dnf install -y podman podman-compose
+        podman --version  # Verify Podman installation
+        podman-compose --version  # Verify Podman Compose installation
+
+    - name: Install dependencies
+      run: |
+        sudo dnf install -y python3-flake8 ShellCheck
+        
+    - name: Container preparation
+      run: |
+        podman-compose build
+        podman-compose up -d
+        # wait until synapse is done initializing
+        podman-compose logs -f submatrix 2>&1 | sed '/Synapse now listening on TCP port 8008/ q'
+
+    - name: Run test script
+      id: run_tests
+      run: |
+        chmod +x test.sh
+        ./test.sh
+
+    - name: Report test results
+      if: always()  # This step will run even if the previous step fails
+      run: |
+        if [ ${{ steps.run_tests.outcome }} == 'success' ]; then
+          echo "PASS"
+        else
+          echo "FAIL"
+          exit 1
+        fi
