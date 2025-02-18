@@ -1,0 +1,38 @@
+name: Circumference Test Container CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install Podman and Podman Compose
+      run: |
+        sudo apt update
+        sudo apt install -y podman
+        podman --version
+
+    - name: Clone circumference and start PINPing
+      id: run_tests
+      run: |
+        git clone https://github.com/underground-software/circumference
+        cd circumference
+        podman build -t singularity-test .
+        podman run --rm --privileged localhost/singularity-test:latest
+
+    - name: Report test results
+      if: always()
+      run: |
+        if [ ${{ steps.run_tests.outcome }} == 'success' ]; then
+          echo "PASS"
+        else
+          echo "FAIL"
+          exit 1
+        fi
