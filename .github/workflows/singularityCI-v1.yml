@@ -34,6 +34,7 @@ jobs:
         
     - name: Container preparation
       run: |
+        mkdir docs repos
         podman-compose build
         podman-compose up -d
         # wait until synapse is done initializing
