@@ -3,18 +3,19 @@ from email.message import EmailMessage
 from pathlib import Path
 from diameter import run_shell_command, RocketCrew, RocketRadio, SINGULARITY_HOSTNAME, DOCKER_COMPOSE, DOCKER, CERT_PATH
 
-# The RocketCrew pilots the rocket into orbit
-crew = RocketCrew()
-
 
 def setup_module():
     """Setup before any tests run."""
     run_shell_command("flake8")
     run_shell_command("./script-lint.sh")
     os.makedirs("test/artifacts", exist_ok=True)
-    for file in Path("artifacts").glob("*"):
+    for file in Path("test/artifacts").glob("*"):
         file.unlink()
     run_shell_command(f'{DOCKER} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem {CERT_PATH}')
+
+
+# The RocketCrew pilots the rocket into orbit
+crew = RocketCrew()
 
 
 def test_registration_fails_before_user_creation():
@@ -88,7 +89,7 @@ def test_email_empty_list_before_journal_update():
 def test_restricted_user_cannot_access_messages():
     run_shell_command("orbit/warpdrive.sh -u resu -p ssap -n")
     run_shell_command(f'{DOCKER_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -d resu')
-    run_shell_command(f'{DOCKER_COMPOSE} exec denis /usr/local/bin/init_journal /var/lib/email/journal/journal /var/lib/email/journal/temp /var/lib/email/mail')
+    run_shell_command(f'{DOCKER_COMPOSE} exec denis sh -c "cat /var/lib/email/patchsets/* | append_journal /var/lib/email/journal/journal"')
 
     mailbox = RocketRadio('resu', 'ssap', recv=True).pop
 
