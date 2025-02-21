@@ -29,14 +29,10 @@ Section 3: Testing and basic functionality
 
  - In order to verify that singularity is behaving correctly, you should run the test suite.
 
- - You will need to install some host packages needed by the testing script: flake8, shellcheck, jq, and curl.
-On Fedora these packages can be obtained by running `sudo dnf install -y python3-flake8 shellcheck jq curl`.
+ - You will need to install some host packages needed by the testing script: pytest, flake8, shellcheck, jq.
+On Fedora these packages can be obtained by running `sudo dnf install -y python-flake8 python-pytest python-requests-unixsocket shellcheck jq which`.
 
- - Now you can run `./test.sh`. If you followed the directions, the tests should pass.
-
- - Note that recent versions of Fedora ship with `curl-minimal` rather than `curl`, and that the former does not support pop3s.
-If, when running the tests, you encounter an error like `"pop3s: protocol not supported"` you can first try `dnf swap libcurl-minimal libcurl`--
-failing that, you may need to run `dnf download libcurl.$(uname -m) && sudo dnf install --allowerasing ./libcurl*.rpm && rm libcurl*.rpm`.
+ - Now you can run `pytest`. If you followed the directions, the tests should pass.
 
  - You will not be able to access the services using a normal web browser or email client without one more step as the
 services listening on unix sockets instead of TCP ports.
