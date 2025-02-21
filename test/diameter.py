@@ -128,6 +128,10 @@ PODMAN_COMPOSE = os.getenv("PODMAN_COMPOSE", "podman-compose")
 
 class RocketCrew():
     def __init__(self):
+        """Setup before any tests run."""
+        run_shell_command("flake8")
+        run_shell_command("./script-lint.sh")
+
         self.list = {}
         self.session = requests_unixsocket.Session()
         self.session.mount("http+unix://", SSLUnixSocketAdapter(HTTPS_SOCKET_PATH))

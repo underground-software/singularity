@@ -1,12 +1,8 @@
 from email.message import EmailMessage
-from diameter import RocketCrew, run_shell_command, execute_denis, SINGULARITY_HOSTNAME
+from diameter import RocketCrew, execute_denis, SINGULARITY_HOSTNAME
 
 
 def setup_module():
-    """Setup before any tests run."""
-    run_shell_command("flake8")
-    run_shell_command("./script-lint.sh")
-
     # The RocketCrew pilots the rocket into orbit
     global crew
     crew = RocketCrew()
