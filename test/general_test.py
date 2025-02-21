@@ -39,7 +39,7 @@ class SSLUnixSocketConnection(HTTPConnection):
         """Create a new wrapped SSL connection over a Unix domain socket."""
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.connect(self.unix_socket_path)
-        return self.ssl_context.wrap_socket(sock, server_hostname="localhost")
+        return self.ssl_context.wrap_socket(sock, server_hostname="localhost.localdomain")
 
 
 class SSLUnixSocketConnectionPool(HTTPConnectionPool):
