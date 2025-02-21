@@ -1,29 +1,25 @@
-import os
 from email.message import EmailMessage
-from pathlib import Path
-from diameter import run_shell_command, RocketCrew, RocketRadio, SINGULARITY_HOSTNAME, DOCKER_COMPOSE, DOCKER, CERT_PATH
+from diameter import run_shell_command, RocketCrew,  SINGULARITY_HOSTNAME, DOCKER_COMPOSE
+
+crew = None
 
 
 def setup_module():
     """Setup before any tests run."""
     run_shell_command("flake8")
     run_shell_command("./script-lint.sh")
-    os.makedirs("test/artifacts", exist_ok=True)
-    for file in Path("test/artifacts").glob("*"):
-        file.unlink()
-    run_shell_command(f'{DOCKER} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem {CERT_PATH}')
 
-
-# The RocketCrew pilots the rocket into orbit
-crew = RocketCrew()
+    # The RocketCrew pilots the rocket into orbit
+    global crew
+    crew = RocketCrew()
 
 
 def test_registration_fails_before_user_creation():
-    assert "msg = no such student" in crew.pilot('/register', data={"student_id": "1234"}).text
+    assert "msg = no such student" in crew.post('/register', data={"student_id": "1234"}).text
 
 
 def test_login_fails_before_user_creation():
-    assert "msg = authentication failure" in crew.pilot('/login', data={"username": "user", "password": "pass"}).text
+    assert "msg = authentication failure" in crew.post('/login', data={"username": "user", "password": "pass"}).text
 
 
 def test_create_user():
@@ -31,30 +27,30 @@ def test_create_user():
 
 
 def test_registration_fails_with_wrong_id():
-    assert "msg = no such student" in crew.pilot('/register', data={"student_id": "123"}).text
+    assert "msg = no such student" in crew.post('/register', data={"student_id": "123"}).text
 
 
 def test_registration_succeeds():
-    response = crew.pilot('/register', data={"student_id": "1234"})
+    response = crew.post('/register', data={"student_id": "1234"})
     assert "msg = welcome to the classroom" in response.text
     global REGISTER_PASS
     REGISTER_PASS = response.text.split("Password: ")[1].split("<")[0].strip()
 
 
 def test_registration_fails_when_id_used_again():
-    assert "msg = no such student" in crew.pilot('/register', data={"student_id": "1234"}).text
+    assert "msg = no such student" in crew.post('/register', data={"student_id": "1234"}).text
 
 
 def test_login_fails_when_credentials_invalid():
-    assert "msg = authentication failure" in crew.pilot('/login', data={"username": "user", "invalid": REGISTER_PASS}).text
+    assert "msg = authentication failure" in crew.post('/login', data={"username": "user", "invalid": REGISTER_PASS}).text
 
 
 def test_login_succeeds():
-    assert "msg = user authenticated by password" in crew.pilot('/login', data={"username": "user", "password": REGISTER_PASS}).text
+    assert "msg = user authenticated by password" in crew.post('/login', data={"username": "user", "password": REGISTER_PASS}).text
 
 
 def test_email_empty_list():
-    mailbox = RocketRadio('user', REGISTER_PASS, recv=True).pop
+    mailbox = crew.mkpop('user', REGISTER_PASS)
 
     lst = mailbox.list()[1]
     num_messages = len(lst[1:])
@@ -64,7 +60,7 @@ def test_email_empty_list():
 
 
 def test_send_email():
-    smtp = RocketRadio('user', REGISTER_PASS, send=True).smtp
+    smtp = crew.mksmtp('user', REGISTER_PASS)
 
     msg = EmailMessage()
     msg.set_content("To whom it may concern,\n\nBottom text")
@@ -77,7 +73,7 @@ def test_send_email():
 
 
 def test_email_empty_list_before_journal_update():
-    mailbox = RocketRadio('user', REGISTER_PASS, recv=True).pop
+    mailbox = crew.mkpop('user', REGISTER_PASS)
 
     lst = mailbox.list()[1]
     num_messages = len(lst[1:])
@@ -91,7 +87,7 @@ def test_restricted_user_cannot_access_messages():
     run_shell_command(f'{DOCKER_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -d resu')
     run_shell_command(f'{DOCKER_COMPOSE} exec denis sh -c "cat /var/lib/email/patchsets/* | append_journal /var/lib/email/journal/journal"')
 
-    mailbox = RocketRadio('resu', 'ssap', recv=True).pop
+    mailbox = crew.mkpop('resu', 'ssap')
 
     lst = mailbox.list()[1]
     num_messages = len(lst[1:])
@@ -101,7 +97,7 @@ def test_restricted_user_cannot_access_messages():
 
 
 def test_email_retrieval():
-    mailbox = RocketRadio('user', REGISTER_PASS, recv=True).pop
+    mailbox = crew.mkpop('user', REGISTER_PASS)
 
     lst = mailbox.list()[1]
     assert len(lst[1:]) > 0
@@ -113,7 +109,7 @@ def test_email_retrieval():
 def test_freshly_unrestricted_user_obtains_access_to_messages():
     run_shell_command(f'{DOCKER_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -a resu')
 
-    mailbox = RocketRadio('resu', 'ssap', recv=True).pop
+    mailbox = crew.mkpop('resu', 'ssap')
 
     lst = mailbox.list()[1]
     num_messages = len(lst[1:])
@@ -123,10 +119,10 @@ def test_freshly_unrestricted_user_obtains_access_to_messages():
 
 
 def test_matrix_login_success():
-    response = crew.pilot('/_matrix/client/r0/login', json={"type": "m.login.password", "user": f"@user:{SINGULARITY_HOSTNAME}", "password": REGISTER_PASS})
+    response = crew.post('/_matrix/client/r0/login', json={"type": "m.login.password", "user": f"@user:{SINGULARITY_HOSTNAME}", "password": REGISTER_PASS})
     assert "access_token" in response.text
 
 
 def test_matrix_login_invalid():
-    response = crew.pilot('/_matrix/client/r0/login', json={"type": "m.login.password", "user": f"@user:{SINGULARITY_HOSTNAME}", "password": "wrongpass"})
+    response = crew.post('/_matrix/client/r0/login', json={"type": "m.login.password", "user": f"@user:{SINGULARITY_HOSTNAME}", "password": "wrongpass"})
     assert "errcode" in response.text and "M_FORBIDDEN" in response.text

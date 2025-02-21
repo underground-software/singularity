@@ -9,6 +9,7 @@ import poplib
 import urllib.parse
 import requests_unixsocket
 from requests.adapters import HTTPAdapter
+from pathlib import Path
 from urllib3.connection import HTTPConnection
 from urllib3.connectionpool import HTTPConnectionPool
 from urllib3.util.ssl_ import create_urllib3_context
@@ -62,17 +63,6 @@ class SSLUnixSocketAdapter(HTTPAdapter):
         return SSLUnixSocketConnectionPool(self.socket_path)
 
 
-class RocketCrew():
-    def __init__(self):
-        self.session = requests_unixsocket.Session()
-        self.session.mount("http+unix://", SSLUnixSocketAdapter(HTTPS_SOCKET_PATH))
-
-    def pilot(self, destination, data=None, json=None):
-        """Make a post request to $destnation with optional data cargo (dict)"""
-        url = f"http+unix://{urllib.parse.quote_plus(HTTPS_SOCKET_PATH)}{destination}"
-        return self.session.post(url, data=data, json=json, **CREW_OPTS)
-
-
 class UnixSocketInstaller():
     def __init__(self, socket_path, certfile, timeout=30):
         self.timeout = timeout
@@ -106,10 +96,26 @@ class UnixPOP3(UnixSocketInstaller, poplib.POP3):
         self.pass_(pass_)
 
 
-class RocketRadio():
-    def __init__(self, user, pass_, send=False, recv=False):
-        self.smtp = UnixSMTP(user, pass_) if send else None
-        self.pop = UnixPOP3(user, pass_) if recv else None
+class RocketCrew():
+    def __init__(self):
+        self.session = requests_unixsocket.Session()
+        self.session.mount("http+unix://", SSLUnixSocketAdapter(HTTPS_SOCKET_PATH))
+
+        os.makedirs("test/artifacts", exist_ok=True)
+        for file in Path("test/artifacts").glob("*"):
+            file.unlink()
+        run_shell_command(f'{DOCKER} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem {CERT_PATH}')
+
+    def post(self, destination, data=None, json=None):
+        """Make a post request to $destnation with optional data cargo (dict)"""
+        url = f"http+unix://{urllib.parse.quote_plus(HTTPS_SOCKET_PATH)}{destination}"
+        return self.session.post(url, data=data, json=json, **CREW_OPTS)
+
+    def mkpop(self, user, pass_):
+        return UnixPOP3(user, pass_)
+
+    def mksmtp(self, user, pass_):
+        return UnixSMTP(user, pass_)
 
 
 def require(command):
