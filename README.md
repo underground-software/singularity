@@ -29,8 +29,15 @@ Section 3: Testing and basic functionality
 
  - In order to verify that singularity is behaving correctly, you should run the test suite.
 
- - You will need to install some host packages needed by the testing script: pytest, flake8, shellcheck, jq.
-On Fedora these packages can be obtained by running `sudo dnf install -y python-flake8 python-pytest python-requests-unixsocket shellcheck jq which`.
+ - You will need to install some host packages needed by the tests: shellcheck and jq
+
+ On Fedora these packages can be obtained by running `sudo dnf install -y ShellCheck jq`
+
+ - You will need to install some python packages needed by the tests
+
+ - Use a python virtual environment to obtain the correct versions: `virtualenv . && pip install -r requirements.txt`, assuming you have both `virtualenv` and `pip` installed
+
+On Fedora the packages needed to run those last two commands can be obtained by running `sudo dnf install -y python-virtualenv python-pip`
 
  - Now you can run `pytest`. If you followed the directions, the tests should pass.
 

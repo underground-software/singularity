@@ -2,3 +2,7 @@ cert*
 .*.sw*
 /docs
 /repos
+bin/
+lib*/
+pyvenv.cfg
+CACHEDIR.TAG
