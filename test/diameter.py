@@ -104,7 +104,7 @@ class RocketCrew():
         os.makedirs("test/artifacts", exist_ok=True)
         for file in Path("test/artifacts").glob("*"):
             file.unlink()
-        run_shell_command(f'{DOCKER} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem {CERT_PATH}')
+        run_shell_command(f'{PODMAN} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem {CERT_PATH}')
 
     def post(self, destination, data=None, json=None):
         """Make a post request to $destnation with optional data cargo (dict)"""
@@ -144,5 +144,5 @@ def get_hostname():
 
 
 SINGULARITY_HOSTNAME = os.getenv("SINGULARITY_HOSTNAME", get_hostname())
-DOCKER = os.getenv("DOCKER", "podman")
-DOCKER_COMPOSE = os.getenv("DOCKER_COMPOSE", "podman-compose")
+PODMAN = os.getenv("PODMAN", "podman")
+PODMAN_COMPOSE = os.getenv("PODMAN_COMPOSE", "podman-compose")

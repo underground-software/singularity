@@ -1,5 +1,5 @@
 from email.message import EmailMessage
-from diameter import run_shell_command, RocketCrew,  SINGULARITY_HOSTNAME, DOCKER_COMPOSE
+from diameter import run_shell_command, RocketCrew,  SINGULARITY_HOSTNAME, PODMAN_COMPOSE
 
 crew = None
 
@@ -84,8 +84,8 @@ def test_email_empty_list_before_journal_update():
 
 def test_restricted_user_cannot_access_messages():
     run_shell_command("orbit/warpdrive.sh -u resu -p ssap -n")
-    run_shell_command(f'{DOCKER_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -d resu')
-    run_shell_command(f'{DOCKER_COMPOSE} exec denis sh -c "cat /var/lib/email/patchsets/* | append_journal /var/lib/email/journal/journal"')
+    run_shell_command(f'{PODMAN_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -d resu')
+    run_shell_command(f'{PODMAN_COMPOSE} exec denis sh -c "cat /var/lib/email/patchsets/* | append_journal /var/lib/email/journal/journal"')
 
     mailbox = crew.mkpop('resu', 'ssap')
 
@@ -107,7 +107,7 @@ def test_email_retrieval():
 
 
 def test_freshly_unrestricted_user_obtains_access_to_messages():
-    run_shell_command(f'{DOCKER_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -a resu')
+    run_shell_command(f'{PODMAN_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -a resu')
 
     mailbox = crew.mkpop('resu', 'ssap')
 
