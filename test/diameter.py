@@ -96,28 +96,6 @@ class UnixPOP3(UnixSocketInstaller, poplib.POP3):
         self.pass_(pass_)
 
 
-class RocketCrew():
-    def __init__(self):
-        self.session = requests_unixsocket.Session()
-        self.session.mount("http+unix://", SSLUnixSocketAdapter(HTTPS_SOCKET_PATH))
-
-        os.makedirs("test/artifacts", exist_ok=True)
-        for file in Path("test/artifacts").glob("*"):
-            file.unlink()
-        run_shell_command(f'{PODMAN} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem {CERT_PATH}')
-
-    def post(self, destination, data=None, json=None):
-        """Make a post request to $destnation with optional data cargo (dict)"""
-        url = f"http+unix://{urllib.parse.quote_plus(HTTPS_SOCKET_PATH)}{destination}"
-        return self.session.post(url, data=data, json=json, **CREW_OPTS)
-
-    def mkpop(self, user, pass_):
-        return UnixPOP3(user, pass_)
-
-    def mksmtp(self, user, pass_):
-        return UnixSMTP(user, pass_)
-
-
 def require(command):
     """Ensure a required command is available."""
     if subprocess.call(["which", command], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) != 0:
@@ -146,3 +124,38 @@ def get_hostname():
 SINGULARITY_HOSTNAME = os.getenv("SINGULARITY_HOSTNAME", get_hostname())
 PODMAN = os.getenv("PODMAN", "podman")
 PODMAN_COMPOSE = os.getenv("PODMAN_COMPOSE", "podman-compose")
+
+
+class RocketCrew():
+    def __init__(self):
+        self.list = {}
+        self.session = requests_unixsocket.Session()
+        self.session.mount("http+unix://", SSLUnixSocketAdapter(HTTPS_SOCKET_PATH))
+
+        os.makedirs("test/artifacts", exist_ok=True)
+        for file in Path("test/artifacts").glob("*"):
+            file.unlink()
+        run_shell_command(f'{PODMAN} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem {CERT_PATH}')
+
+    def post(self, destination, data=None, json=None):
+        """Make a post request to $destnation with optional data cargo (dict)"""
+        url = f"http+unix://{urllib.parse.quote_plus(HTTPS_SOCKET_PATH)}{destination}"
+        return self.session.post(url, data=data, json=json, **CREW_OPTS)
+
+    def mkpop(self, user, pass_=None):
+        return UnixPOP3(user, pass_ if pass_ is not None else self.list.get(user, ''))
+
+    def mksmtp(self, user, pass_=None):
+        return UnixSMTP(user, pass_ if pass_ is not None else self.list.get(user, ''))
+
+    def create_user(self, user, pass_=None, id=None):
+        assert user is not None
+
+        append = f' -u {user}'
+        if pass_ is not None:
+            append += f' -p {pass_}'
+            self.list[user] = pass_
+        if id is not None:
+            append += f' -i {id}'
+
+        run_shell_command(f'orbit/warpdrive.sh -n{append}')
