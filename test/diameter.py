@@ -159,3 +159,7 @@ class RocketCrew():
             append += f' -i {id}'
 
         run_shell_command(f'orbit/warpdrive.sh -n{append}')
+
+
+def execute_denis(command):
+    run_shell_command(f'{PODMAN_COMPOSE} exec denis sh -c "{command}"')

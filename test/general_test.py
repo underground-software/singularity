@@ -1,7 +1,5 @@
 from email.message import EmailMessage
-from diameter import run_shell_command, RocketCrew,  SINGULARITY_HOSTNAME, PODMAN_COMPOSE
-
-crew = None
+from diameter import RocketCrew, run_shell_command, execute_denis, SINGULARITY_HOSTNAME
 
 
 def setup_module():
@@ -83,8 +81,8 @@ def test_email_empty_list_before_journal_update():
 
 def test_restricted_user_cannot_access_messages():
     crew.create_user('resu', pass_='ssap')
-    run_shell_command(f'{PODMAN_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -d resu')
-    run_shell_command(f'{PODMAN_COMPOSE} exec denis sh -c "cat /var/lib/email/patchsets/* | append_journal /var/lib/email/journal/journal"')
+    execute_denis('/usr/local/bin/restrict_access /var/lib/email/journal/journal -d resu')
+    execute_denis('cat /var/lib/email/patchsets/* | append_journal /var/lib/email/journal/journal')
 
     mailbox = crew.mkpop('resu')
 
@@ -106,7 +104,7 @@ def test_email_retrieval():
 
 
 def test_freshly_unrestricted_user_obtains_access_to_messages():
-    run_shell_command(f'{PODMAN_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -a resu')
+    execute_denis('/usr/local/bin/restrict_access /var/lib/email/journal/journal -a resu')
 
     mailbox = crew.mkpop('resu')
 
