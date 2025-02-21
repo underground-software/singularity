@@ -95,6 +95,12 @@ class UnixPOP3(UnixSocketInstaller, poplib.POP3):
         self.user(user)
         self.pass_(pass_)
 
+    def __len__(self):
+        lst = self.list()[1]
+        print(lst)
+        msg_count = len(lst[1:])
+        return msg_count
+
 
 def require(command):
     """Ensure a required command is available."""

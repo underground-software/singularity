@@ -43,13 +43,7 @@ def test_login_succeeds():
 
 
 def test_email_empty_list():
-    mailbox = crew.mkpop('user')
-
-    lst = mailbox.list()[1]
-    num_messages = len(lst[1:])
-    mailbox.quit()
-
-    assert num_messages == 0
+    assert len(crew.mkpop('user')) == 0
 
 
 def test_send_email():
@@ -60,19 +54,13 @@ def test_send_email():
     msg["Subject"] = "Message Subject"
     msg["From"] = f"user@{SINGULARITY_HOSTNAME}"
     msg["To"] = f"other@{SINGULARITY_HOSTNAME}"
+
     smtp.send_message(msg)
-    # print(smtp.sendmail('user@localhost.localdomain', 'recipient@localhost.localdomain', 'Subject: Test Email\n\nThis is a test email.'))
     smtp.quit()
 
 
 def test_email_empty_list_before_journal_update():
-    mailbox = crew.mkpop('user')
-
-    lst = mailbox.list()[1]
-    num_messages = len(lst[1:])
-    mailbox.quit()
-
-    assert num_messages == 0
+    assert len(crew.mkpop('user')) == 0
 
 
 def test_restricted_user_cannot_access_messages():
@@ -80,35 +68,19 @@ def test_restricted_user_cannot_access_messages():
     execute_denis('/usr/local/bin/restrict_access /var/lib/email/journal/journal -d resu')
     execute_denis('cat /var/lib/email/patchsets/* | append_journal /var/lib/email/journal/journal')
 
-    mailbox = crew.mkpop('resu')
-
-    lst = mailbox.list()[1]
-    num_messages = len(lst[1:])
-    mailbox.quit()
-
-    assert num_messages == 0
+    assert len(crew.mkpop('resu')) == 0
 
 
 def test_email_retrieval():
-    mailbox = crew.mkpop('user')
-
-    lst = mailbox.list()[1]
-    assert len(lst[1:]) > 0
-
-    msg = mailbox.retr(1)
-    assert "Bottom text" in str(msg[1][-1])
+    pop = crew.mkpop('user')
+    assert len(pop) > 0
+    # Check the last line of the first message, whici will be returned in the second entry of an array from POP3.retr()
+    assert "Bottom text" in str(pop.retr(1)[1][-1])
 
 
 def test_freshly_unrestricted_user_obtains_access_to_messages():
     execute_denis('/usr/local/bin/restrict_access /var/lib/email/journal/journal -a resu')
-
-    mailbox = crew.mkpop('resu')
-
-    lst = mailbox.list()[1]
-    num_messages = len(lst[1:])
-    mailbox.quit()
-
-    assert num_messages == 1
+    assert len(crew.mkpop('resu')) == 1
 
 
 def test_matrix_login_success():
