@@ -1,25 +1,34 @@
-FROM alpine:3.20 as submatrix
+FROM alpine:3.20 as build
 
 RUN apk update && \
 	apk add \
-		synapse \
 		envsubst \
-		py3-curl \
-		tzdata \
 	&& \
 	:
 
 COPY homeserver.yaml.template /etc/synapse/homeserver.yaml.template
+
+ARG MATRIX_HOSTNAME
+
+RUN envsubst '$MATRIX_HOSTNAME' < /etc/synapse/homeserver.yaml.template > /etc/synapse/homeserver.yaml
+
+FROM alpine:3.20 as submatrix
+
+COPY --from=build /etc/synapse/homeserver.yaml /etc/synapse/homeserver.yaml
+
+RUN apk update && \
+	apk add \
+		synapse \
+		py3-curl \
+		tzdata \
+	&& \
+	:
 
 COPY homeserver.log.config /etc/synapse/homeserver.log.config
 
 COPY orbit_auth.py /usr/local/share/submatrix/
 
 COPY start.sh /usr/local/share/submatrix/
-
-ARG MATRIX_HOSTNAME=localhost
-
-RUN envsubst '$MATRIX_HOSTNAME' < /etc/synapse/homeserver.yaml.template > /etc/synapse/homeserver.yaml
 
 USER 100:100
 
