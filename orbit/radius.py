@@ -749,6 +749,7 @@ tar \
 make \
 gcc \
 qemu-system-riscv \
+qemu-user-static-ricsv \
 binutils-riscv64-linux-gnu \
 gcc-riscv64-linux-gnu \
 bc \
@@ -769,6 +770,8 @@ cyrus-sasl-plain \
 gdb \
 diffutils \
 strace \
+man \
+man-pages \
 ;
 dnf clean all
 DNF
