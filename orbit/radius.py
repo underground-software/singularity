@@ -768,7 +768,8 @@ wget \
 cyrus-sasl-plain \
 gdb \
 diffutils \
-strace
+strace \
+;
 dnf clean all
 DNF
 
