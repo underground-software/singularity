@@ -748,7 +748,7 @@ git \
 tar \
 make \
 gcc \
-qemu-system-ricsv \
+qemu-system-riscv \
 qemu-user-static-ricsv \
 binutils-riscv64-linux-gnu \
 gcc-riscv64-linux-gnu \
