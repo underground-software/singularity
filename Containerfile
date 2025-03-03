@@ -16,8 +16,6 @@ RUN sed -i 's/log_driver = "journald"/log_driver = "json-file"/' /usr/share/cont
 
 COPY --from=singularity_git_repo . ./singularity
 
-RUN mkdir -p singularity/{repos,docs}
-
 COPY start.sh .
 
 WORKDIR singularity
