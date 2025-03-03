@@ -4,6 +4,12 @@ set -ex
 
 mkdir -p /var/lib/containers/storage
 mount -t tmpfs tmpfs /var/lib/containers/storage
+
+mkdir -p \
+	repos \
+	docs \
+	;
+
 podman-compose build
 podman-compose up -d
 # wait until synapse is done initializing
