@@ -22,12 +22,10 @@ jobs:
         sudo apt install -y podman
         podman --version
 
-    - name: Clone circumference and start PINPing
+    - name: Start PINPing
       id: run_tests
       run: |
-        git clone https://github.com/underground-software/circumference ../circumference
-        cd ../circumference
-        podman build --build-context=singularity_git_repo=$OLDPWD -t singularity-test .
+        podman build --build-context=singularity_git_repo=. -t singularity-test .
         podman run --rm --privileged localhost/singularity-test:latest
 
     - name: Report test results
