@@ -2,9 +2,6 @@
 
 set -ex
 
-mkdir -p /var/lib/containers/storage
-mount -t tmpfs tmpfs /var/lib/containers/storage
-
 mkdir -p \
 	repos \
 	docs \
