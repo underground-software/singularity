@@ -12,7 +12,10 @@ RUN dnf update -y && \
 	python-pip \
 	git
 
-RUN sed -i 's/log_driver = "journald"/log_driver = "json-file"/' /usr/share/containers/containers.conf
+RUN sed -i 's/log_driver = "journald"/log_driver = "json-file"/' /usr/share/containers/containers.conf && \
+	mkdir /run/storage && \
+	ln -s /run/storage /var/lib/containers/storage && \
+	:
 
 COPY --from=singularity_git_repo . ./singularity
 
