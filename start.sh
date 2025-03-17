@@ -7,6 +7,8 @@ mkdir -p \
 	docs \
 	;
 
+ln -s .git gitdir
+
 podman-compose build
 podman-compose up -d
 # wait until synapse is done initializing

@@ -3,3 +3,4 @@ cert*
 .*.sw*
 /docs
 /repos
+/gitdir
