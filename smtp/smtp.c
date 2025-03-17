@@ -21,6 +21,11 @@
 #define HOSTNAME
 #endif
 
+//default to 64k limit for incoming mail. Override with `-DEMAIL_SIZE_LIMIT=whatever` if desired
+#ifndef EMAIL_SIZE_LIMIT
+#define EMAIL_SIZE_LIMIT 65536
+#endif
+
 #define UPPERCASE_LETTERS(MACRO) \
 	MACRO('A') \
 	MACRO('B') \
@@ -686,7 +691,7 @@ static void handle_data(enum state *state)
 	#define ERROR_NES(...) { warnx(__VA_ARGS__); error = NOT_ENOUGH_SPACE; last_state = dstate = BODY; break; }
 	#define ERROR_USI(...) { warnx(__VA_ARGS__); error = USER_SYNTAX_ISSUE; last_state = dstate = BODY; break; }
 	#define ERROR_ISE(...) { warnx(__VA_ARGS__); error = INTERNAL_SERVER_ERROR; last_state = dstate = BODY; break; }
-	#define CHECK_WRITE_FAIL(VARNAME) { if(0 > VARNAME) ERROR_NES("not enough space %d", __LINE__) else curr_size += (off_t)VARNAME; }
+	#define CHECK_WRITE_FAIL(VARNAME) { if(curr_size > EMAIL_SIZE_LIMIT || 0 > VARNAME) ERROR_NES("not enough space %d", __LINE__) else curr_size += (off_t)VARNAME; }
 	for(enum data_state dstate = HEADERS, last_state = HEADERS; dstate != FINISHED;)
 	{
 		if(dstate == BODY && last_state == HEADERS)
