@@ -222,7 +222,7 @@ services:
       context: git
       dockerfile: Containerfile
       additional_contexts:
-        - git_singularity_git_dir=./.git
+        - git_singularity_git_dir=./gitdir
         - git_course_repositories=repos
     volumes:
       - type: volume
