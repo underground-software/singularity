@@ -21,4 +21,4 @@ else
 	pip install -r requirements.txt
 	pytest
 fi
-podman-compose down
+podman-compose down -v
