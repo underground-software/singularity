@@ -5,6 +5,9 @@ RUN apk update && apk upgrade && apk add \
     openssl \
     ;
 
+
+ARG NGINX_HOSTNAME=localhost
+
 RUN mkdir /etc/ssl/nginx && \
 	cd /etc/ssl/nginx && \
 	openssl \
@@ -12,23 +15,25 @@ RUN mkdir /etc/ssl/nginx && \
 		-genparam \
 		-algorithm DH \
 		-pkeyopt dh_paramgen_prime_len:2048 \
-		-out ssl-dhparams.pem \
+		-out ssl-dhparams.pem && \
+	 printf "[req]\n \
+distinguished_name=req\n \
+[ v3_ext ]\n \
+subjectAltName=DNS:${NGINX_HOSTNAME},IP:127.0.0.1\n" > openssl.cnf \
 	&& \
 	:
 
-ARG NGINX_HOSTNAME=localhost
-
 RUN cd /etc/ssl/nginx && \
-	openssl \
-		req \
-		-sha256 \
-		-newkey rsa:4096 \
+	openssl req \
 		-x509 \
+		-nodes \
 		-days 133337 \
-		-subj "/CN=${NGINX_HOSTNAME}" \
-		-noenc \
+		-newkey rsa:2048 \
 		-keyout privkey.pem \
 		-out fullchain.pem \
+		-subj "/CN=${NGINX_HOSTNAME}" \
+		-extensions v3_ext \
+		-config openssl.cnf \
 	&& \
 	:
 
