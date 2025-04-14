@@ -79,6 +79,7 @@ services:
       target: smtp
       args:
         hostname: ${SINGULARITY_HOSTNAME}
+        coverage: 1
         LISTEN_PORT: 1465
     volumes:
       - type: volume
@@ -93,6 +94,12 @@ services:
         source: email-patchsets
         target: /var/lib/email/patchsets
         read_only: false
+      - type: volume
+        source: smtp_coverage
+        target: /coverage
+        read_only: false
+    environment:
+      COVERAGE: ${COVERAGE-0}
     networks:
       - smtp
   pop:
@@ -114,9 +121,15 @@ services:
         source: email-journal
         target: /var/lib/email/journal
         read_only: true
+      - type: volume
+        source: pop_coverage
+        target: /coverage
+        read_only: false
     depends_on:
       - smtp
       - denis
+    environment:
+      COVERAGE: ${COVERAGE-0}
     networks:
       - pop
   submatrix:
@@ -252,3 +265,5 @@ volumes:
   submatrix-data:
   denis-db:
   git-repos:
+  smtp_coverage:
+  pop_coverage:
