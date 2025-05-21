@@ -28,6 +28,7 @@ RUN cd /etc/ssl/nginx && \
 		-subj "/CN=${NGINX_HOSTNAME}" \
 		-noenc \
 		-keyout privkey.pem \
+		-addext "subjectAltName = DNS:${NGINX_HOSTNAME}" \
 		-out fullchain.pem \
 	&& \
 	:
