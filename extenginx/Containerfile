@@ -16,7 +16,7 @@ RUN mkdir /etc/ssl/nginx && \
 	&& \
 	:
 
-ARG NGINX_HOSTNAME=localhost
+ARG NGINX_HOSTNAME
 
 RUN cd /etc/ssl/nginx && \
 	openssl \
