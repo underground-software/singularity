@@ -13,8 +13,8 @@ assignment = sys.argv[1]
 
 usernames_to_subs = utilities.user_to_sub(assignment, 'initial')
 
-students_who_submitted = [username for username, sub_id in
-                          usernames_to_subs.items() if sub_id is not None]
+students_who_submitted = [username for username, sub in
+                          usernames_to_subs.items() if sub is not None]
 
 # restrict future email access for students who didnt make an initial sub
 for student, sub_id in usernames_to_subs.items():
@@ -54,10 +54,10 @@ except db.peewee.IntegrityError as e:
     print(e)
 
 
-utilities.release_subs([sub for sub in usernames_to_subs.values() if sub])
+utilities.release_subs([sub.submission_id for sub in usernames_to_subs.values() if sub])
 
 print(f'initial subs for {assignment} released')
 
 tags = utilities.update_tags(assignment, 'initial')
 
-utilities.run_automated_checks(tags)
+utilities.run_automated_checks(tags, usernames_to_subs)
