@@ -19,9 +19,8 @@ def try_or_false(do, exc):
         return False
 
 
-def tag_and_push(repo_path, tag_name):
+def tag_and_push(repo, tag_name):
     try:
-        repo = git.Repo(repo_path)
         repo.create_tag(tag_name)
         repo.create_remote('grading', REMOTE_PUSH_URL)
         repo.git.push('grading', tags=True)
@@ -37,8 +36,7 @@ git_am_args = ['git', '-c', 'advice.mergeConflict=false',
                *author_args, 'am', '--keep']
 
 
-def do_check(repo_path, cover_letter, patches):
-    repo = git.Repo.init(repo_path)
+def do_check(repo, cover_letter, patches):
     whitespace_errors = []
 
     def am_cover_letter(keep_empty=True):
@@ -88,13 +86,13 @@ def do_check(repo_path, cover_letter, patches):
 
 def check(cover_letter, patches, submission_id):
     with tempfile.TemporaryDirectory() as repo_path:
-        status = do_check(repo_path, cover_letter, patches)
+        repo = git.Repo.init(repo_path)
+        status = do_check(repo, cover_letter, patches)
         if status[-1] == '!':
-            repo = git.Repo(repo_path)
             for patch in patches:
                 patch_abspath = str(maildir / patch.msg_id)
                 repo.git.execute(['git', *author_args, 'commit', '--allow-empty', '-F', patch_abspath])
-        tag_and_push(repo_path, submission_id)
+        tag_and_push(repo, submission_id)
     return status
 
 
@@ -111,7 +109,7 @@ def apply_peer_review(email, submission_id, review_id):
                                                       '--single-branch',
                                                       '--no-tags'])
             repo.git.execute([*args, patch_abspath])
-            tag_and_push(repo_path, submission_id)
+            tag_and_push(repo, submission_id)
         except git.GitCommandError as e:
             print(e, file=sys.stderr)
             status = 'failed to apply peer review'
