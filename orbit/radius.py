@@ -475,6 +475,25 @@ class AsmtTable:
             case _:
                 return '---'
 
+    def get_total_score(self):
+        weighted_sum = 0
+        sum_of_weights = 0
+        try:
+            weighted_sum += 0.8 * int(self.final_grade)
+            sum_of_weights += 0.8
+            if self.peer1 is not None:
+                weighted_sum += 0.1 * int(self.review1_grade)
+                sum_of_weights += 0.1
+            if self.peer2 is not None:
+                weighted_sum += 0.1 * int(self.review2_grade)
+                sum_of_weights += 0.1
+        # if any of the grades are None, attempting to cast to int throws a TypeError
+        except TypeError:
+            return '-'
+        except ValueError:
+            return '???'
+        return f'{weighted_sum/sum_of_weights:.1f}'
+
     def gradeable_row(self, item_name, gradeable, rightmost_col):
         return f"""
         <tr>
@@ -533,9 +552,9 @@ class AsmtTable:
             <th>Submission ID</th>
             <th>Score</th>
           </tr>
-          {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, self.review1_grade) if self.peer1 else ''}
-          {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, self.review2_grade) if self.peer2 else ''}
-          {self.gradeable_row('Final Submission', self.final, self.final_grade)}
+          {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, self.review1_grade if self.review1_grade else '-') if self.peer1 else ''}
+          {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, self.review2_grade if self.review2_grade else '-') if self.peer2 else ''}
+          {self.gradeable_row('Final Submission', self.final, self.final_grade if self.final_grade else '-')}
           <tr>
             <th>Automated Feedback</th>
             <td colspan="3">{self.get_automated_feedback('final')}</td>
@@ -547,7 +566,7 @@ class AsmtTable:
         <table>
           <caption><h3>{self.name}</h3></caption>
           <tr>
-            <th>Total Score: -</th>
+            <th>Total Score: {self.get_total_score()}</th>
             <th>Timestamp</th>
             <th>Submission ID</th>
             <th>Request an 'Oopsie'</th>
@@ -628,7 +647,7 @@ def handle_dashboard(rocket):
             try:
                 grades[component] = repo.git.execute(['git', 'notes', '--ref=grade', 'show', tag])
             except git.GitCommandError:
-                grades[component] = '-'
+                grades[component] = None
 
         ret += str(AsmtTable(assignment, oopsieness, peer1, peer2, init,
                              rev1, grades['review1'], rev2, grades['review2'], final, grades['final']))
