@@ -19,9 +19,9 @@ def try_or_false(do, exc):
         return False
 
 
-def tag_and_push(repo, tag_name):
+def tag_and_push(repo, tag_name, msg=None):
     try:
-        repo.create_tag(tag_name)
+        repo.create_tag(tag_name, message=msg)
         repo.create_remote('grading', REMOTE_PUSH_URL)
         repo.git.push('grading', tags=True)
         return True
@@ -93,7 +93,7 @@ def check(cover_letter, patches, submission_id):
             for patch in patches:
                 patch_abspath = str(maildir / patch.msg_id)
                 repo.git.execute(['git', 'commit', '--allow-empty', '-F', patch_abspath])
-        tag_and_push(repo, submission_id)
+        tag_and_push(repo, submission_id, msg=status)
     return status
 
 
