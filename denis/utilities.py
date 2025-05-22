@@ -80,6 +80,33 @@ def update_tags(assignment, component):
     return updated_tags
 
 
+def check_corrupt_or_missing(repo, tag):
+    [assignment, component, user] = tag.split('_')
+
+    grd_tbl = mailman.db.Gradeable
+    gradable = (grd_tbl.select()
+                .order_by(-grd_tbl.timestamp)
+                .where(grd_tbl.assignment == assignment)
+                .where(grd_tbl.component == component)
+                .where(grd_tbl.user == user)).first()
+
+    msg = 'corruption and existence check'
+    msg += '\n'
+    msg += '------------------------------'
+    msg += '\n\n'
+    if not gradable or gradable.status[-1] == '!':
+        repo.git.execute(['git', 'notes', '--ref=grade', 'add', tag, '-m', '0'])
+        if not gradable:
+            msg += 'automatic 0 due to missing submission!'
+        else:
+            msg += 'automatic 0 due to corrupt submission!'
+    else:
+        msg += 'PATCHSET APPLIES'
+
+    msg += '\n\n'
+    return msg
+
+
 def run_automated_checks(tags):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.clone_from(PULL_URL, repo_path)
@@ -90,6 +117,9 @@ def run_automated_checks(tags):
 
         for tag in tags:
             msg = 'Automated tests by denis'
+            msg += '\n\n'
+            msg += check_corrupt_or_missing(repo, tag)
+            # stop if corrupt (msg[-1] == '!')
             repo.git.execute(['git', 'notes', '--ref=denis', 'add', tag, '-m', msg])
 
         remote.push('refs/notes/*:refs/notes/*')
