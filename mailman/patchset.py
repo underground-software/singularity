@@ -49,13 +49,13 @@ def do_check(repo_path, cover_letter, patches):
 
     if try_or_false(lambda: am_cover_letter(keep_empty=False),
                     git.GitCommandError):
-        return "missing cover letter"
+        return "missing cover letter!"
 
     repo.git.execute(["git", *author_args, "am", "--abort"])
     if not try_or_false(lambda: am_cover_letter(keep_empty=True),
                         git.GitCommandError):
         return ("missing cover letter and "
-                "first patch failed to apply")
+                "first patch failed to apply!")
 
     for i, patch in enumerate(patches):
         patch_abspath = str(maildir / patch.msg_id)
@@ -77,13 +77,13 @@ def do_check(repo_path, cover_letter, patches):
             continue
 
         # If we still fail, the patch does not apply
-        return f'patch {i+1} failed to apply'
+        return f'patch {i+1} failed to apply!'
 
     if whitespace_errors:
         return ('whitespace error patch(es) '
-                f'{",".join(whitespace_errors)}')
+                f'{",".join(whitespace_errors)}?')
     else:
-        return 'patchset applies'
+        return 'patchset applies.'
 
 
 def check(cover_letter, patches, submission_id):
