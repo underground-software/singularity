@@ -30,10 +30,8 @@ def tag_and_push(repo, tag_name):
         return False
 
 
-author_args = ['-c', 'user.name=mailman', '-c',
-               'user.email=mailman@mailman']
 git_am_args = ['git', '-c', 'advice.mergeConflict=false',
-               *author_args, 'am', '--keep']
+               'am', '--keep']
 
 
 def do_check(repo, cover_letter, patches):
@@ -49,7 +47,7 @@ def do_check(repo, cover_letter, patches):
                     git.GitCommandError):
         return "missing cover letter!"
 
-    repo.git.execute(["git", *author_args, "am", "--abort"])
+    repo.git.execute(["git", "am", "--abort"])
     if not try_or_false(lambda: am_cover_letter(keep_empty=True),
                         git.GitCommandError):
         return ("missing cover letter and "
@@ -67,7 +65,7 @@ def do_check(repo, cover_letter, patches):
                         git.GitCommandError):
             continue
 
-        repo.git.execute(["git", *author_args, "am", "--abort"])
+        repo.git.execute(["git", "am", "--abort"])
 
         # Try again, if we succeed, count this patch as a whitespace error
         if try_or_false(lambda: do_git_am(), git.GitCommandError):
@@ -87,12 +85,15 @@ def do_check(repo, cover_letter, patches):
 def check(cover_letter, patches, submission_id):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.init(repo_path)
+        with repo.config_writer() as config:
+            config.set_value('user', 'name', 'mailman')
+            config.set_value('user', 'email', 'mailman@mailman')
         status = do_check(repo, cover_letter, patches)
         if status[-1] == '!':
             for patch in patches:
                 patch_abspath = str(maildir / patch.msg_id)
-                repo.git.execute(['git', *author_args, 'commit', '--allow-empty', '-F', patch_abspath])
-        tag_and_push(repo_path, submission_id)
+                repo.git.execute(['git', 'commit', '--allow-empty', '-F', patch_abspath])
+        tag_and_push(repo, submission_id)
     return status
 
 
@@ -108,6 +109,9 @@ def apply_peer_review(email, submission_id, review_id):
                                        multi_options=[f'--branch={review_id}',
                                                       '--single-branch',
                                                       '--no-tags'])
+            with repo.config_writer() as config:
+                config.set_value('user', 'name', 'mailman')
+                config.set_value('user', 'email', 'mailman@mailman')
             repo.git.execute([*args, patch_abspath])
             tag_and_push(repo, submission_id)
         except git.GitCommandError as e:
