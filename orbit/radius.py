@@ -4,6 +4,7 @@
 
 import base64
 import bcrypt
+import git
 import html
 import markdown
 import os
@@ -471,6 +472,17 @@ class AsmtTable:
             case _:
                 return '---'
 
+    def get_grade(self):
+        if self.final is None:
+            return '-'
+        tag = f'{self.final.assignment}_final_{self.final.user}'
+        repo = git.Repo('/var/lib/git/grading.git')
+        try:
+            grade = repo.git.execute(['git', 'notes', '--ref=grade', 'show', tag])
+            return grade
+        except git.GitCommandError:
+            return '-'
+
     def gradeable_row(self, item_name, gradeable, rightmost_col):
         return f"""
         <tr>
@@ -531,7 +543,7 @@ class AsmtTable:
           </tr>
           {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, '-') if self.peer1 else ''}
           {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, '-') if self.peer2 else ''}
-          {self.gradeable_row('Final Submission', self.final, '-')}
+          {self.gradeable_row('Final Submission', self.final, self.get_grade())}
           <tr>
             <th>Automated Feedback</th>
             <td colspan="3">{self.get_automated_feedback('final')}</td>
