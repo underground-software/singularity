@@ -7,6 +7,7 @@ REMOTE_PUSH_URL = 'http://git:8000/cgi-bin/git-receive-pack/grading.git'
 REMOTE_PULL_URL = 'http://git:8000/grading.git'
 
 MAIL_DIR_ABSPATH = "/var/lib/email/mail"
+maildir = pathlib.Path(MAIL_DIR_ABSPATH)
 
 
 def try_or_false(do, exc):
@@ -38,7 +39,6 @@ git_am_args = ['git', '-c', 'advice.mergeConflict=false',
 
 def do_check(repo_path, cover_letter, patches):
     repo = git.Repo.init(repo_path)
-    maildir = pathlib.Path(MAIL_DIR_ABSPATH)
     whitespace_errors = []
 
     def am_cover_letter(keep_empty=True):
@@ -94,7 +94,6 @@ def check(cover_letter, patches, submission_id):
 
 
 def apply_peer_review(email, submission_id, review_id):
-    maildir = pathlib.Path(MAIL_DIR_ABSPATH)
     args = [*git_am_args, '--empty=keep']
     patch_abspath = str(maildir / email.msg_id)
 
