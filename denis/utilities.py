@@ -23,7 +23,7 @@ def user_to_sub(assignment, component):
         sub = (relevant_gradeables
                .where(grd_tbl.user == username)
                .first())
-        submission_ids[user.username] = sub.submission_id if sub else None
+        submission_ids[user.username] = sub if sub else None
 
     return submission_ids
 
@@ -80,7 +80,29 @@ def update_tags(assignment, component):
     return updated_tags
 
 
-def run_automated_checks(tags):
+def check_corrupt_or_missing(repo, tag, username_to_subs):
+    [assignment, component, user] = tag.split('_')
+
+    gradable = username_to_subs[user]
+
+    msg = 'corruption and existence check'
+    msg += '\n'
+    msg += '------------------------------'
+    msg += '\n\n'
+    if not gradable or gradable.status[-1] == '!':
+        repo.git.execute(['git', 'notes', '--ref=grade', 'add', tag, '-m', '0'])
+        if not gradable:
+            msg += 'automatic 0 due to missing submission!'
+        else:
+            msg += 'automatic 0 due to corrupt submission!'
+    else:
+        msg += 'PATCHSET APPLIES'
+
+    msg += '\n\n'
+    return msg
+
+
+def run_automated_checks(tags, username_to_subs):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.clone_from(PULL_URL, repo_path)
 
@@ -90,6 +112,8 @@ def run_automated_checks(tags):
 
         for tag in tags:
             msg = 'Automated tests by denis'
+            msg += '\n\n'
+            msg += check_corrupt_or_missing(repo, tag, username_to_subs)
             repo.git.execute(['git', 'notes', '--ref=denis', 'add', tag, '-m', msg])
 
         remote.push('refs/notes/*:refs/notes/*')

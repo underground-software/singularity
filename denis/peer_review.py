@@ -7,8 +7,8 @@ assignment = sys.argv[1]
 
 ids = []
 
-ids += [sub for sub in utilities.user_to_sub(assignment, 'review1').values() if sub]
-ids += [sub for sub in utilities.user_to_sub(assignment, 'review2').values() if sub]
+ids += [sub.submission_id for sub in utilities.user_to_sub(assignment, 'review1').values() if sub]
+ids += [sub.submission_id for sub in utilities.user_to_sub(assignment, 'review2').values() if sub]
 
 utilities.release_subs(ids)
 
