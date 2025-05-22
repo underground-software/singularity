@@ -58,4 +58,6 @@ utilities.release_subs([sub for sub in usernames_to_subs.values() if sub])
 
 print(f'initial subs for {assignment} released')
 
-utilities.update_tags(assignment, 'initial')
+tags = utilities.update_tags(assignment, 'initial')
+
+utilities.run_automated_checks(tags)

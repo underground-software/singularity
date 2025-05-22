@@ -38,6 +38,12 @@ def release_subs(sub_ids):
                    input=journal_data, check=True)
 
 
+def configure_repo(repo):
+    with repo.config_writer() as config:
+        config.set_value('user', 'name', 'denis')
+        config.set_value('user', 'email', 'denis@denis')
+
+
 def update_tags(assignment, component):
     grd_tbl = mailman.db.Gradeable
     subs = (grd_tbl.select()
@@ -47,15 +53,15 @@ def update_tags(assignment, component):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.clone_from(PULL_URL, repo_path)
         repo.create_remote(REMOTE_NAME, PUSH_URL)
-        repo.config_writer().set_value('user', 'name', 'denis').release()
-        (repo.config_writer().set_value('user', 'email', 'denis@denis')
-                             .release())
+        configure_repo(repo)
         if 'EMPTY' not in repo.tags:
             repo.git.commit('--allow-empty', '-m', 'No gradeable submission.')
             repo.create_tag('EMPTY')
 
+        updated_tags = []
         for user in orbit.db.User.select():
             new_tag_name = f'{assignment}_{component}_{user.username}'
+            updated_tags.append(new_tag_name)
             if new_tag_name in repo.tags:
                 print('Potential issue? Attempted to create duplicate tag '
                       f'{new_tag_name}')
@@ -70,3 +76,20 @@ def update_tags(assignment, component):
             repo.create_tag(new_tag_name, ref=to_promote.commit, message=msg)
 
         repo.git.push(REMOTE_NAME, tags=True)
+
+    return updated_tags
+
+
+def run_automated_checks(tags):
+    with tempfile.TemporaryDirectory() as repo_path:
+        repo = git.Repo.clone_from(PULL_URL, repo_path)
+
+        remote = repo.create_remote(REMOTE_NAME, PUSH_URL)
+        remote.fetch('refs/notes/*:refs/notes/*')
+        configure_repo(repo)
+
+        for tag in tags:
+            msg = 'Automated tests by denis'
+            repo.git.execute(['git', 'notes', '--ref=denis', 'add', tag, '-m', msg])
+
+        remote.push('refs/notes/*:refs/notes/*')
