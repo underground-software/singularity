@@ -426,7 +426,7 @@ class OopsStatus:
 
 class AsmtTable:
     def __init__(self, assignment, oopsieness, peer1, peer2, init,
-                 review1, review2, final):
+                 review1, review2, final, user):
         self.assignment = assignment
         self.name = assignment.name
         self.oopsieness = oopsieness
@@ -436,6 +436,7 @@ class AsmtTable:
         self.review1 = review1
         self.review2 = review2
         self.final = final
+        self.user = user
         self.review1_grade = None
         self.review2_grade = None
         self.final_grade = None
@@ -476,12 +477,15 @@ class AsmtTable:
                 return '---'
 
     def get_grade(self, attr):
-        if attr not in ['final', 'review1', 'review2'] or (gbl := getattr(self, attr)) is None:
-            return '-'
+        tag = f'{self.name}_{attr}_{self.user}'
+        repo = git.Repo('/var/lib/git/grading.git')
+        if attr not in ['final', 'review1', 'review2'] or getattr(self, attr) is None:
+            try:
+                return repo.git.execute(['git', 'notes', '--ref=grade', 'show', tag])
+            except git.GitCommandError:
+                return '-'
         if (cached_grade := getattr(self, f'{attr}_grade')) is not None:
             return cached_grade
-        tag = f'{gbl.assignment}_{attr}_{gbl.user}'
-        repo = git.Repo('/var/lib/git/grading.git')
         try:
             grade = repo.git.execute(['git', 'notes', '--ref=grade', 'show', tag])
             setattr(self, f'{attr}_grade', grade)
@@ -653,7 +657,7 @@ def handle_dashboard(rocket):
         rev2 = asn_gradeables.where(grd_tbl.component == 'review2').first()
         final = asn_gradeables.where(grd_tbl.component == 'final').first()
         ret += str(AsmtTable(assignment, oopsieness, peer1, peer2, init, rev1,
-                             rev2, final))
+                             rev2, final, rocket.session.username))
     return rocket.respond(ret + '</form>', 'Dashboard')
 
 
