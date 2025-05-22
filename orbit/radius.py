@@ -4,6 +4,7 @@
 
 import base64
 import bcrypt
+import git
 import html
 import markdown
 import os
@@ -425,7 +426,7 @@ class OopsStatus:
 
 class AsmtTable:
     def __init__(self, assignment, oopsieness, peer1, peer2, init,
-                 review1, review2, final):
+                 review1, review1_grade, review2, review2_grade, final, final_grade):
         self.assignment = assignment
         self.name = assignment.name
         self.oopsieness = oopsieness
@@ -433,8 +434,11 @@ class AsmtTable:
         self.peer2 = peer2
         self.init = init
         self.review1 = review1
+        self.review1_grade = review1_grade
         self.review2 = review2
+        self.review2_grade = review2_grade
         self.final = final
+        self.final_grade = final_grade
 
     def oops_button_hover(self):
         match self.oopsieness:
@@ -529,9 +533,9 @@ class AsmtTable:
             <th>Submission ID</th>
             <th>Score</th>
           </tr>
-          {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, '-') if self.peer1 else ''}
-          {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, '-') if self.peer2 else ''}
-          {self.gradeable_row('Final Submission', self.final, '-')}
+          {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, self.review1_grade) if self.peer1 else ''}
+          {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, self.review2_grade) if self.peer2 else ''}
+          {self.gradeable_row('Final Submission', self.final, self.final_grade)}
           <tr>
             <th>Automated Feedback</th>
             <td colspan="3">{self.get_automated_feedback('final')}</td>
@@ -616,8 +620,18 @@ def handle_dashboard(rocket):
         rev1 = asn_gradeables.where(grd_tbl.component == 'review1').first()
         rev2 = asn_gradeables.where(grd_tbl.component == 'review2').first()
         final = asn_gradeables.where(grd_tbl.component == 'final').first()
-        ret += str(AsmtTable(assignment, oopsieness, peer1, peer2, init, rev1,
-                             rev2, final))
+
+        repo = git.Repo('/var/lib/git/grading.git')
+        grades = {}
+        for component in ['review1', 'review2', 'final']:
+            tag = f'{assignment.name}_{component}_{rocket.session.username}'
+            try:
+                grades[component] = repo.git.execute(['git', 'notes', '--ref=grade', 'show', tag])
+            except git.GitCommandError:
+                grades[component] = '-'
+
+        ret += str(AsmtTable(assignment, oopsieness, peer1, peer2, init,
+                             rev1, grades['review1'], rev2, grades['review2'], final, grades['final']))
     return rocket.respond(ret + '</form>', 'Dashboard')
 
 
