@@ -472,10 +472,10 @@ class AsmtTable:
             case _:
                 return '---'
 
-    def get_grade(self):
-        if self.final is None:
+    def get_grade(self, attr):
+        if attr not in ['final', 'review1', 'review2'] or (gbl := getattr(self, attr)) is None:
             return '-'
-        tag = f'{self.final.assignment}_final_{self.final.user}'
+        tag = f'{gbl.assignment}_{attr}_{gbl.user}'
         repo = git.Repo('/var/lib/git/grading.git')
         try:
             grade = repo.git.execute(['git', 'notes', '--ref=grade', 'show', tag])
@@ -541,9 +541,9 @@ class AsmtTable:
             <th>Submission ID</th>
             <th>Score</th>
           </tr>
-          {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, '-') if self.peer1 else ''}
-          {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, '-') if self.peer2 else ''}
-          {self.gradeable_row('Final Submission', self.final, self.get_grade())}
+          {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, self.get_grade('review1')) if self.peer1 else ''}
+          {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, self.get_grade('review2')) if self.peer2 else ''}
+          {self.gradeable_row('Final Submission', self.final, self.get_grade('final'))}
           <tr>
             <th>Automated Feedback</th>
             <td colspan="3">{self.get_automated_feedback('final')}</td>
