@@ -80,7 +80,7 @@ def do_check(repo_path, cover_letter, patches):
         return f'patch {i+1} failed to apply!'
 
     if whitespace_errors:
-        return ('whitespace error patch(es) '
+        return (f'whitespace error patch{"es" if len(whitespace_errors) > 1 else ""} '
                 f'{",".join(whitespace_errors)}?')
     else:
         return 'patchset applies.'

@@ -448,6 +448,29 @@ class AsmtTable:
             case OopsStatus.UNAVAILABLE:
                 return "You have already used your oopsie"
 
+    def get_automated_feedback(self, attr):
+        if attr not in ['init', 'final'] or (gbl := getattr(self, attr)) is None:
+            return 'No submission'
+
+        match attr:
+            case 'init':
+                due_date = int(self.assignment.initial_due_date)
+            case 'final':
+                due_date = int(self.assignment.final_due_date)
+
+        if due_date < int(datetime.now().timestamp()):
+            return gbl.status
+
+        match gbl.status[-1]:
+            case '.':
+                return 'Submission accepted'
+            case '?':
+                return 'Issues detected in patchset'
+            case '!':
+                return 'Submission rejected'
+            case _:
+                return '---'
+
     def gradeable_row(self, item_name, gradeable, rightmost_col):
         return f"""
         <tr>
@@ -480,8 +503,8 @@ class AsmtTable:
             return f"""
               {self.gradeable_row('Final Submission', self.final, self.oopsie_button())}
               <tr>
-                <th>Comments</th>
-                <td colspan="3">-</td>
+                <th>Automated Feedback</th>
+                <td colspan="3">{self.get_automated_feedback('final')}</td>
               </tr>
             """
         if (not self.init or
@@ -491,14 +514,14 @@ class AsmtTable:
               {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
               <tr>
                 <th>Automated Feedback</th>
-                <td colspan="3">-</td>
+                <td colspan="3">{self.get_automated_feedback('init')}</td>
               </tr>
             """
         return f"""
           {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
           <tr>
             <th>Automated Feedback</th>
-            <td colspan="3">-</td>
+            <td colspan="3">{self.get_automated_feedback('init')}</td>
           </tr>
           <tr>
             <th></th>
@@ -510,8 +533,8 @@ class AsmtTable:
           {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, '-') if self.peer2 else ''}
           {self.gradeable_row('Final Submission', self.final, '-')}
           <tr>
-            <th>Comments</th>
-            <td colspan="3">-</td>
+            <th>Automated Feedback</th>
+            <td colspan="3">{self.get_automated_feedback('final')}</td>
           </tr>
         """
 
