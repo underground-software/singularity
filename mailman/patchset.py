@@ -89,6 +89,11 @@ def do_check(repo_path, cover_letter, patches):
 def check(cover_letter, patches, submission_id):
     with tempfile.TemporaryDirectory() as repo_path:
         status = do_check(repo_path, cover_letter, patches)
+        if status[-1] == '!':
+            repo = git.Repo(repo_path)
+            for patch in patches:
+                patch_abspath = str(maildir / patch.msg_id)
+                repo.git.execute(['git', *author_args, 'commit', '--allow-empty', '-F', patch_abspath])
         tag_and_push(repo_path, submission_id)
     return status
 
