@@ -489,6 +489,24 @@ class AsmtTable:
         except git.GitCommandError:
             return '-'
 
+    def get_total_score(self):
+        oopsie_used_here = self.oopsieness == OopsStatus.USED_HERE
+        final_grade = self.get_grade('final')
+
+        if oopsie_used_here:
+            return final_grade
+
+        review1_grade = self.get_grade('review1')
+        review2_grade = self.get_grade('review2')
+
+        if '-' in [final_grade, review1_grade, review2_grade]:
+            return '-'
+
+        try:
+            return format(int(final_grade) * .8 + int(review1_grade) * .1 + int(review2_grade) * .1, '.1f')
+        except ValueError:
+            return "???"
+
     def gradeable_row(self, item_name, gradeable, rightmost_col):
         return f"""
         <tr>
@@ -561,7 +579,7 @@ class AsmtTable:
         <table>
           <caption><h3>{self.name}</h3></caption>
           <tr>
-            <th>Total Score: -</th>
+            <th>Total Score: {self.get_total_score()}</th>
             <th>Timestamp</th>
             <th>Submission ID</th>
             <th>Request an 'Oopsie'</th>
