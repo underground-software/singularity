@@ -436,6 +436,9 @@ class AsmtTable:
         self.review1 = review1
         self.review2 = review2
         self.final = final
+        self.review1_grade = None
+        self.review2_grade = None
+        self.final_grade = None
 
     def oops_button_hover(self):
         match self.oopsieness:
@@ -475,10 +478,13 @@ class AsmtTable:
     def get_grade(self, attr):
         if attr not in ['final', 'review1', 'review2'] or (gbl := getattr(self, attr)) is None:
             return '-'
+        if (cached_grade := getattr(self, f'{attr}_grade')) is not None:
+            return cached_grade
         tag = f'{gbl.assignment}_{attr}_{gbl.user}'
         repo = git.Repo('/var/lib/git/grading.git')
         try:
             grade = repo.git.execute(['git', 'notes', '--ref=grade', 'show', tag])
+            setattr(self, f'{attr}_grade', grade)
             return grade
         except git.GitCommandError:
             return '-'
