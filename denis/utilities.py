@@ -1,3 +1,4 @@
+import os
 import git
 import subprocess
 import tempfile
@@ -102,6 +103,34 @@ def check_corrupt_or_missing(repo, tag, username_to_subs):
     return msg
 
 
+def check_signed_off_by(repo, tag):
+    [_, _, user] = tag.split('_')
+    hostname = os.getenv("SINGULARITY_HOSTNAME")
+
+    msg = 'signed off by check'
+    msg += '\n'
+    msg += '-------------------'
+    msg += '\n\n'
+
+    commits = repo.git.execute(['git', 'rev-list', '--reverse', tag]).split('\n')
+    expected_dco = f'Signed-off-by: {user} <{user}@{hostname}>'
+    nr_flawless = 0
+    for i, commit in enumerate(commits):
+        patch = repo.git.execute(['git', 'show', commit])
+        if expected_dco in patch:
+            nr_flawless += 1
+        elif ('Signed-off-by:' in patch) or ('signed-off-by:' in patch):
+            msg += f'patch {i}: double check Signed-off-by\n'
+        else:
+            msg += f'patch {i}: no Signed-off-by line found\n'
+
+    if len(commits) == nr_flawless:
+        msg += 'All signed off by lines present as expected.\n'
+
+    msg += '\n'
+    return msg
+
+
 def run_automated_checks(tags, username_to_subs):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.clone_from(PULL_URL, repo_path)
@@ -114,6 +143,10 @@ def run_automated_checks(tags, username_to_subs):
             msg = 'Automated tests by denis'
             msg += '\n\n'
             msg += check_corrupt_or_missing(repo, tag, username_to_subs)
+            if msg[-3] != '!':
+                msg += '\n\n'
+                msg += check_signed_off_by(repo, tag)
+
             repo.git.execute(['git', 'notes', '--ref=denis', 'add', tag, '-m', msg])
 
         remote.push('refs/notes/*:refs/notes/*')
