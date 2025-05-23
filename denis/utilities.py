@@ -1,6 +1,7 @@
 import git
 import subprocess
 import tempfile
+import difflib
 
 import orbit.db
 import mailman.db
@@ -107,6 +108,40 @@ def check_corrupt_or_missing(repo, tag):
     return msg
 
 
+def check_diffstat(repo, tag):
+    msg = 'diffstat check'
+    msg += '\n'
+    msg += '--------------'
+    msg += '\n\n'
+
+    root = repo.git.execute(['git', 'rev-list', '--max-parents=0', tag])
+    calculated_diffstat = repo.git.execute(['git', 'diff', '--stat', '--summary', f'{root}..{tag}'])
+    cover = repo.git.execute(['git', 'show', root])
+    cover_lines = [line.strip() for line in cover.split('\n')]
+
+    rev_diffstat = []
+    last = None
+    collect = False
+    for i in reversed(cover_lines):
+        if collect:
+            if len(i) == 0:
+                break
+            rev_diffstat.append(f' {i}')
+        if len(i) == 0 and last == '--':
+            collect = True
+        last = i
+
+    cover_diffstat = '\n'.join(reversed(rev_diffstat))
+    diff_diffstat = '\n'.join(difflib.unified_diff(calculated_diffstat.split(), cover_diffstat.split()))
+
+    msg += 'diffstat diff'
+    msg += '\n'
+    msg += diff_diffstat if len(diff_diffstat) > 0 else 'NO DIFFERENCE: DIFFSTAT VERIFIED'
+    msg += '\n\n'
+
+    return msg
+
+
 def run_automated_checks(tags):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.clone_from(PULL_URL, repo_path)
@@ -119,7 +154,11 @@ def run_automated_checks(tags):
             msg = 'Automated tests by denis'
             msg += '\n\n'
             msg += check_corrupt_or_missing(repo, tag)
-            # stop if corrupt (msg[-1] == '!')
+
+            if msg[-3] != '!':
+                msg += '\n\n'
+                msg += check_diffstat(repo, tag)
+
             repo.git.execute(['git', 'notes', '--ref=denis', 'add', tag, '-m', msg])
 
         remote.push('refs/notes/*:refs/notes/*')
