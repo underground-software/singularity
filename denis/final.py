@@ -11,4 +11,6 @@ utilities.release_subs([sub for sub in
 
 print(f'final subs for {assignment} released')
 
-utilities.update_tags(assignment, 'final')
+tags = utilities.update_tags(assignment, 'final')
+
+utilities.run_automated_checks(tags)

@@ -4,6 +4,7 @@
 
 import base64
 import bcrypt
+import git
 import html
 import markdown
 import os
@@ -425,7 +426,7 @@ class OopsStatus:
 
 class AsmtTable:
     def __init__(self, assignment, oopsieness, peer1, peer2, init,
-                 review1, review2, final):
+                 review1, review2, final, user):
         self.assignment = assignment
         self.name = assignment.name
         self.oopsieness = oopsieness
@@ -435,6 +436,10 @@ class AsmtTable:
         self.review1 = review1
         self.review2 = review2
         self.final = final
+        self.user = user
+        self.review1_grade = None
+        self.review2_grade = None
+        self.final_grade = None
 
     def oops_button_hover(self):
         match self.oopsieness:
@@ -447,6 +452,64 @@ class AsmtTable:
                 return "Oopsie used here!"
             case OopsStatus.UNAVAILABLE:
                 return "You have already used your oopsie"
+
+    def get_automated_feedback(self, attr):
+        if attr not in ['init', 'final'] or (gbl := getattr(self, attr)) is None:
+            return 'No submission'
+
+        match attr:
+            case 'init':
+                due_date = int(self.assignment.initial_due_date)
+            case 'final':
+                due_date = int(self.assignment.final_due_date)
+
+        if due_date < int(datetime.now().timestamp()):
+            return gbl.status
+
+        match gbl.status[-1]:
+            case '.':
+                return 'Submission accepted'
+            case '?':
+                return 'Issues detected in patchset'
+            case '!':
+                return 'Submission rejected'
+            case _:
+                return '---'
+
+    def get_grade(self, attr):
+        tag = f'{self.name}_{attr}_{self.user}'
+        repo = git.Repo('/var/lib/git/grading.git')
+        if attr not in ['final', 'review1', 'review2'] or getattr(self, attr) is None:
+            try:
+                return repo.git.execute(['git', 'notes', '--ref=grade', 'show', tag])
+            except git.GitCommandError:
+                return '-'
+        if (cached_grade := getattr(self, f'{attr}_grade')) is not None:
+            return cached_grade
+        try:
+            grade = repo.git.execute(['git', 'notes', '--ref=grade', 'show', tag])
+            setattr(self, f'{attr}_grade', grade)
+            return grade
+        except git.GitCommandError:
+            return '-'
+
+    def get_total_score(self):
+        oopsie_used_here = self.oopsieness == OopsStatus.USED_HERE
+        final_grade = self.get_grade('final')
+
+        if oopsie_used_here:
+            return final_grade
+
+        review1_grade = self.get_grade('review1')
+        review2_grade = self.get_grade('review2')
+
+        if '-' in [final_grade, review1_grade, review2_grade]:
+            return '-'
+
+        try:
+            return format(int(final_grade) * .8 + int(review1_grade) * .1 + int(review2_grade) * .1, '.1f')
+        except ValueError:
+            return "???"
 
     def gradeable_row(self, item_name, gradeable, rightmost_col):
         return f"""
@@ -480,8 +543,8 @@ class AsmtTable:
             return f"""
               {self.gradeable_row('Final Submission', self.final, self.oopsie_button())}
               <tr>
-                <th>Comments</th>
-                <td colspan="3">-</td>
+                <th>Automated Feedback</th>
+                <td colspan="3">{self.get_automated_feedback('init')}</td>
               </tr>
             """
         if (not self.init or
@@ -491,14 +554,14 @@ class AsmtTable:
               {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
               <tr>
                 <th>Automated Feedback</th>
-                <td colspan="3">-</td>
+                <td colspan="3">{self.get_automated_feedback('init')}</td>
               </tr>
             """
         return f"""
           {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
           <tr>
             <th>Automated Feedback</th>
-            <td colspan="3">-</td>
+            <td colspan="3">{self.get_automated_feedback('init')}</td>
           </tr>
           <tr>
             <th></th>
@@ -506,12 +569,12 @@ class AsmtTable:
             <th>Submission ID</th>
             <th>Score</th>
           </tr>
-          {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, '-') if self.peer1 else ''}
-          {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, '-') if self.peer2 else ''}
-          {self.gradeable_row('Final Submission', self.final, '-')}
+          {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, self.get_grade('review1')) if self.peer1 else ''}
+          {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, self.get_grade('review2')) if self.peer2 else ''}
+          {self.gradeable_row('Final Submission', self.final, self.get_grade('final'))}
           <tr>
-            <th>Comments</th>
-            <td colspan="3">-</td>
+            <th>Automated Feedback</th>
+            <td colspan="3">{self.get_automated_feedback('final')}</td>
           </tr>
         """
 
@@ -520,7 +583,7 @@ class AsmtTable:
         <table>
           <caption><h3>{self.name}</h3></caption>
           <tr>
-            <th>Total Score: -</th>
+            <th>Total Score: {self.get_total_score()}</th>
             <th>Timestamp</th>
             <th>Submission ID</th>
             <th>Request an 'Oopsie'</th>
@@ -594,7 +657,7 @@ def handle_dashboard(rocket):
         rev2 = asn_gradeables.where(grd_tbl.component == 'review2').first()
         final = asn_gradeables.where(grd_tbl.component == 'final').first()
         ret += str(AsmtTable(assignment, oopsieness, peer1, peer2, init, rev1,
-                             rev2, final))
+                             rev2, final, rocket.session.username))
     return rocket.respond(ret + '</form>', 'Dashboard')
 
 
