@@ -185,6 +185,7 @@ services:
         - orbit_source=./orbit
     environment:
       TZ: ${SINGULARITY_TIMEZONE}
+      HOSTNAME: ${SINGULARITY_HOSTNAME}
     volumes:
       - type: volume
         source: denis-db
