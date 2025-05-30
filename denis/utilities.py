@@ -1,6 +1,7 @@
 import re
 import os
 import git
+import copy
 import subprocess
 import tempfile
 
@@ -143,6 +144,71 @@ def check_signed_off_by(repo, tag):
     return msg
 
 
+def check_subject_tag(repo, tag):
+    [_, component, _] = tag.split('_')
+
+    msg = 'subject tag check'
+    msg += '\n'
+    msg += '-----------------'
+    msg += '\n\n'
+
+    commits = reversed(repo.git.execute(['git', 'rev-list', tag]).split('\n'))
+    # from 0/n .. n/n
+    expected_max_index = str(len(list(copy.copy(commits))) - 1)
+
+    rfc_offset = 0
+    found_version = None
+    bad = {}
+    for i, commit in enumerate(commits):
+        patch = repo.git.execute(['git', 'show', commit])
+
+        match = re.search(r'^\s*\[(.*)\].*', patch, re.MULTILINE)
+        if not match:
+            msg += f'patch {i} no tag found!\n'
+            bad[i] = True
+            continue
+        subj_tag = match.group(1)
+        msg += f'patch {i} tag {subj_tag}\n'
+        subj_tag_parts = subj_tag.split(' ')
+        match component:
+            case 'initial' if subj_tag_parts[0] == 'RFC':
+                msg += 'initial submission correctly labeled RFC\n'
+                rfc_offset = 1
+            case 'initial' if subj_tag_parts[0] == 'PATCH':
+                msg += 'initial submission missing RFC!\n'
+                bad[i] = True
+            case 'final' if subj_tag_parts[0] == 'RFC':
+                msg += 'final submission incorrectly labeled RFC!\n'
+                rfc_offset = 1
+                bad[i] = True
+            case 'final' if subj_tag_parts[0] == 'PATCH':
+                msg += 'final submission correctly non RFC\n'
+
+        if subj_tag_parts[rfc_offset] != 'PATCH':
+            msg += 'tag missing "PATCH" in expected place\n'
+            bad[i] = True
+
+        if found_version is None:
+            found_version = subj_tag_parts[rfc_offset+1]
+        elif (this_version := subj_tag_parts[rfc_offset+1]) != found_version:
+            msg += f'tag version mismatch: expected {found_version} found {this_version}!\n'
+            bad[i] = True
+
+        [this_index, max_index] = subj_tag_parts[rfc_offset+2].split('/')
+        if this_index != str(i):
+            msg += f'patch index mismatch: expected {i} found {this_index}'
+            bad[i] = True
+
+        if max_index != expected_max_index:
+            msg += f'patch max index mismatch: expected {expected_max_index} found {max_index}'
+            bad[i] = True
+
+    if not any(bad):
+        msg += 'ALL SUBJECT TAGS IN CORRECT FORMAT\n'
+
+    return msg
+
+
 def run_automated_checks(tags, username_to_subs):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.clone_from(PULL_URL, repo_path)
@@ -158,6 +224,7 @@ def run_automated_checks(tags, username_to_subs):
             if msg[-3] != '!':
                 msg += '\n\n'
                 msg += check_signed_off_by(repo, tag)
+                msg += check_subject_tag(repo, tag)
 
             repo.git.execute(['git', 'notes', '--ref=denis', 'add', tag, '-m', msg])
 
