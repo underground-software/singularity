@@ -131,6 +131,41 @@ def check_signed_off_by(repo, tag):
     return msg
 
 
+def check_subject_tag(repo, tag):
+    [assignment, component, user] = tag.split('_')
+
+    msg = 'subject tag check'
+    msg += '\n'
+    msg += '-----------------'
+    msg += '\n\n'
+
+    commits = repo.git.execute(['git', 'rev-list', '--reverse', tag]).split('\n')
+
+    sub_tbl = mailman.db.Submission
+    relevant_submissions = (sub_tbl.select()
+                            .where(sub_tbl.recipient == assignment)
+                            .where(sub_tbl.user == user)
+                            .order_by(sub_tbl.timestamp.desc()))
+    expected_revision_number = relevant_submissions.count()
+
+    nr_commits = len(commits)
+
+    nr_flawless = 0
+    for i, commit in enumerate(commits):
+        # from 0/n .. n/n
+        expected_tag = f'[{"RFC " if component == "initial" else ""}PATCH v{expected_revision_number} {i}/{nr_commits - 1}]'
+        patch = repo.git.execute(['git', 'show', commit])
+        if expected_tag in patch:
+            nr_flawless += 1
+        else:
+            msg += f'patch {i}: subject tag not detected (expected "{expected_tag}")\n'
+
+    if nr_commits == nr_flawless:
+        msg += 'Found all expected correct subject tags\n'
+
+    return msg
+
+
 def run_automated_checks(tags, username_to_subs):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.clone_from(PULL_URL, repo_path)
@@ -146,6 +181,7 @@ def run_automated_checks(tags, username_to_subs):
             if msg[-3] != '!':
                 msg += '\n\n'
                 msg += check_signed_off_by(repo, tag)
+                msg += check_subject_tag(repo, tag)
 
             repo.git.execute(['git', 'notes', '--ref=denis', 'add', tag, '-m', msg])
 
