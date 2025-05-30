@@ -3,8 +3,10 @@
 from datetime import datetime
 from argparse import ArgumentParser as ap
 import sys
+import os
 
 import db
+import config
 
 #  FIXME: if you are reading this in the year 9999...
 far_future = 253401417420
@@ -133,6 +135,11 @@ def dump(fmt_iso):
         dt = datetime.fromtimestamp(timestamp).astimezone()
         return dt.isoformat() if fmt_iso else dt.strftime('%a %b %d %Y %T %Z (%z)')
 
+    reload_mtime = os.path.getmtime(config.RELOAD_FILE)
+    db_mtime = os.path.getmtime(db.DB_PATH)
+    if (db_mtime > reload_mtime):
+        print('WARNING: Denis database is dirty, reload to update waiters')
+
     print(' --- Assignments ---')
     for asn in db.Assignment.select():
         print(f'''{asn.name}:
@@ -146,6 +153,8 @@ def reload():
     import signal
     try:
         os.kill(1, signal.SIGUSR1)
+        # update mtime/utime with last reload
+        os.utime(config.RELOAD_FILE)
     except OSError as e:
         errx(f'kill: {e}')
 

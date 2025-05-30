@@ -6,6 +6,7 @@ import subprocess
 import sys
 
 import db
+import config
 
 from configure import far_future
 
@@ -61,6 +62,9 @@ def main():
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGUSR1, signal_handler)
     signal.signal(signal.SIGRTMIN, signal_handler)
+
+    # create reload file
+    open(config.RELOAD_FILE, 'w').close()
 
     again = True
     while again:
