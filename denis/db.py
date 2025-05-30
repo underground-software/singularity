@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import peewee
 
-DB = peewee.SqliteDatabase("/var/lib/denis/assignments.db")
+DB_PATH = '/var/lib/denis/assignments.db'
+DB = peewee.SqliteDatabase(DB_PATH)
 
 
 class BaseModel(peewee.Model):
