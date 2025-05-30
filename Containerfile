@@ -11,7 +11,10 @@ RUN dnf update -y && \
 	python-flake8 \
 	python-virtualenv \
 	python-pip \
-	git
+	gawk \
+	socat \
+	git \
+	git-email
 
 # needed because for some reason newuidmap and newgidmap programs
 # lose their xattrs giving them caps when the container image for
