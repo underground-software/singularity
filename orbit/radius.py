@@ -476,6 +476,14 @@ class AsmtTable:
             case _:
                 return '---'
 
+    def get_human_feedback(self):
+        tag = f'{self.name}_final_{self.user}'
+        repo = git.Repo('/var/lib/git/grading.git')
+        try:
+            return repo.git.execute(['git', 'notes', '--ref=feedback', 'show', tag])
+        except git.GitCommandError:
+            return '-'
+
     def get_grade(self, attr):
         tag = f'{self.name}_{attr}_{self.user}'
         repo = git.Repo('/var/lib/git/grading.git')
@@ -546,6 +554,10 @@ class AsmtTable:
                 <th>Automated Feedback</th>
                 <td colspan="3">{self.get_automated_feedback('final')}</td>
               </tr>
+              <tr>
+                <th>Human Feedback</th>
+                <td colspan="3">{self.get_human_feedback()}</td>
+              </tr>
             """
         if (not self.init or
             (int(datetime.now().timestamp())
@@ -575,6 +587,10 @@ class AsmtTable:
           <tr>
             <th>Automated Feedback</th>
             <td colspan="3">{self.get_automated_feedback('final')}</td>
+          </tr>
+          <tr>
+            <th>Human Feedback</th>
+            <td colspan="3">{self.get_human_feedback()}</td>
           </tr>
         """
 
