@@ -65,7 +65,7 @@ def main(argv):
     gr_db = db.Gradeable
     if asn := asn_db.get_or_none(asn_db.name == emails[0].rcpt):
         cover_letter, *patches = emails
-        status = patchset.check(cover_letter, patches, logfile)
+        status = patchset.check(cover_letter, patches, logfile, asn)
         if len(emails) < 2:
             return set_status('missing patches')
         typ = ('initial' if timestamp < asn.initial_due_date
