@@ -10,8 +10,7 @@
 #   of the furthest right failing command or zero if no command failed (o pipefail)
 set -exuo pipefail
 
-PODMAN=${PODMAN:-podman}
-PODMAN_COMPOSE=${PODMAN_COMPOSE:-podman-compose}
+source test-lib
 
 require() { command -v "$1" > /dev/null || { echo "error: $1 command required yet absent" ; exit 1 ; } ; }
 require curl
@@ -26,28 +25,7 @@ require "${PODMAN_COMPOSE}"
 # Check python style compliance
 flake8
 
-# Create test dir if it does not exist yet
-mkdir -p test
-
-# Reset the test directory
-rm -f test/*
-
-HOSTNAME_FROM_DOTENV="$(sh -c '
-set -o allexport
-. ./.env
-exec jq -r -n "env.SINGULARITY_HOSTNAME"
-')"
-
-SINGULARITY_HOSTNAME=${SINGULARITY_HOSTNAME:-"${HOSTNAME_FROM_DOTENV}"}
-
-${PODMAN} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem test/ca_cert.pem
-
-CURL_OPTS=( \
---verbose \
---cacert test/ca_cert.pem \
---fail \
---no-progress-meter \
-)
+setup_testdir
 
 # Check that registration fails before user creation
 curl --url "https://$SINGULARITY_HOSTNAME/register" \

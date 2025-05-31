@@ -1,0 +1,29 @@
+PODMAN=${PODMAN:-podman}
+PODMAN_COMPOSE=${PODMAN_COMPOSE:-podman-compose}
+
+HOSTNAME_FROM_DOTENV="$(sh -c '
+set -o allexport
+. ./.env
+exec jq -r -n "env.SINGULARITY_HOSTNAME"
+')"
+
+SINGULARITY_HOSTNAME=${SINGULARITY_HOSTNAME:-"${HOSTNAME_FROM_DOTENV}"}
+
+setup_testdir() {
+	# Create test dir if it does not exist yet
+	mkdir -p test
+
+	# Reset the test directory
+	rm -f test/*
+
+	# put the cert in there
+	${PODMAN} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem test/ca_cert.pem
+}
+
+CURL_OPTS=( \
+--verbose \
+--cacert test/ca_cert.pem \
+--fail \
+--no-progress-meter \
+)
+
