@@ -56,6 +56,25 @@ def do_check(repo, cover_letter, patches):
     for i, patch in enumerate(patches):
         patch_abspath = str(maildir / patch.msg_id)
 
+        with open(patch_abspath, 'r') as patch_file:
+            patch_content = patch_file.read()
+
+        start = patch_content.find('From: <')+len('From: <')
+        end = patch_content.find('@', start)
+        if start == -1 or end == -1:
+            return f'patch {i+1}: no author found (should be impossible)!'
+        found_author = patch_content[start:end]
+
+        changelines = list(filter(lambda line: line.startswith('--- ') or line.startswith('+++ '), patch_content.split('\n')))
+        for change in changelines:
+            file = change.split(' ')[1].strip()
+            if file == '/dev/null':
+                continue
+            first_dir = file.split('/')[1]
+            if first_dir != found_author:
+                file_fixed = file[2:]
+                return f'illegal patch {i+1}: permission denied for path {file_fixed}!'
+
         # Try and apply and fail if there are whitespace errors
         def do_git_am(extra_args=[]):
             repo.git.execute([*git_am_args, *extra_args, patch_abspath]),
