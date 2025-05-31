@@ -166,7 +166,7 @@ def check_subject_tag(repo, tag):
     return msg
 
 
-def run_automated_checks(tags, username_to_subs):
+def run_automated_checks(tags, username_to_subs, peer=False):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.clone_from(PULL_URL, repo_path)
 
@@ -178,7 +178,8 @@ def run_automated_checks(tags, username_to_subs):
             msg = 'Automated tests by denis'
             msg += '\n\n'
             msg += check_corrupt_or_missing(repo, tag, username_to_subs)
-            if msg[-3] != '!':
+
+            if msg[-3] != '!' and not peer:
                 msg += '\n\n'
                 msg += check_signed_off_by(repo, tag)
                 msg += check_subject_tag(repo, tag)
