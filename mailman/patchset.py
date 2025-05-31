@@ -1,3 +1,4 @@
+import re
 import git
 import pathlib
 import sys
@@ -55,6 +56,24 @@ def do_check(repo, cover_letter, patches):
 
     for i, patch in enumerate(patches):
         patch_abspath = str(maildir / patch.msg_id)
+
+        with open(patch_abspath, 'r') as patch_file:
+            patch_content = patch_file.read()
+        match = re.search(r'^\s+Signed-off-by:\s+.+\s+<(.+)@.+>$', patch_content, re.MULTILINE)
+        if match:
+            found_author = match.group(1)
+        else:
+            return f'illegal patch {i+1}: missing Signed-off-by line!'
+
+        changelines = list(filter(lambda line: line.startswith('--- ') or line.startswith('+++ '), patch_content.split('\n')))
+        for change in changelines:
+            file = change.split(' ')[1].strip()
+            if file == '/dev/null':
+                continue
+            first_dir = file.split('/')[1]
+            if first_dir != found_author:
+                file_fixed = file[2:]
+                return f'illegal patch {i+1}: permission denied for path {file_fixed}!'
 
         # Try and apply and fail if there are whitespace errors
         def do_git_am(extra_args=[]):
