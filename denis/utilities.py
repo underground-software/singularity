@@ -249,7 +249,7 @@ def check_subject_tag(repo, tag):
     return msg
 
 
-def run_automated_checks(tags):
+def run_automated_checks(tags, peer=False):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.clone_from(PULL_URL, repo_path)
 
@@ -262,7 +262,7 @@ def run_automated_checks(tags):
             msg += '\n\n'
             msg += check_corrupt_or_missing(repo, tag)
 
-            if msg[-3] != '!':
+            if msg[-3] != '!' and not peer:
                 msg += '\n\n'
                 msg += check_diffstat(repo, tag)
                 msg += check_signed_off_by(repo, tag)
