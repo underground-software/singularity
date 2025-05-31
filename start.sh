@@ -28,6 +28,7 @@ then
 		git config --global user.name PINP
 		git config --global user.email podman@podman
 		./test-sub.sh
+		./test-sub-check.sh
 
 	fi
 else
