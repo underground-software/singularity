@@ -4,6 +4,6 @@
 
 set -e
 
-DOCKER_COMPOSE=${DOCKER_COMPOSE:-podman-compose}
+PODMAN_COMPOSE=${PODMAN_COMPOSE:-podman-compose}
 
-$DOCKER_COMPOSE exec orbit ./hyperspace.py "$@"
+$PODMAN_COMPOSE exec orbit ./hyperspace.py "$@"

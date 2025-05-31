@@ -10,15 +10,15 @@
 #   of the furthest right failing command or zero if no command failed (o pipefail)
 set -exuo pipefail
 
-DOCKER=${DOCKER:-podman}
-DOCKER_COMPOSE=${DOCKER_COMPOSE:-podman-compose}
+PODMAN=${PODMAN:-podman}
+PODMAN_COMPOSE=${PODMAN_COMPOSE:-podman-compose}
 
 require() { command -v "$1" > /dev/null || { echo "error: $1 command required yet absent" ; exit 1 ; } ; }
 require curl
 require jq
 require flake8
-require "${DOCKER}"
-require "${DOCKER_COMPOSE}"
+require "${PODMAN}"
+require "${PODMAN_COMPOSE}"
 
 # Check for shell script style compliance with shellcheck
 ./script-lint.sh
@@ -40,7 +40,7 @@ exec jq -r -n "env.SINGULARITY_HOSTNAME"
 
 SINGULARITY_HOSTNAME=${SINGULARITY_HOSTNAME:-"${HOSTNAME_FROM_DOTENV}"}
 
-${DOCKER} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem test/ca_cert.pem
+${PODMAN} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem test/ca_cert.pem
 
 CURL_OPTS=( \
 --verbose \
@@ -150,10 +150,10 @@ curl --url "pop3s://$SINGULARITY_HOSTNAME" \
 orbit/warpdrive.sh -u resu -p ssap -n
 
 # Limit `resu`'s access to the empty inbox
-${DOCKER_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -d resu
+${PODMAN_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -d resu
 
 # Update list of email to include new message
-${DOCKER_COMPOSE} exec denis /usr/local/bin/init_journal /var/lib/email/journal/journal /var/lib/email/journal/temp /var/lib/email/mail
+${PODMAN_COMPOSE} exec denis /usr/local/bin/init_journal /var/lib/email/journal/journal /var/lib/email/journal/temp /var/lib/email/mail
 
 # Check that the user can get the most recent message sent to the server
 curl --url "pop3s://$SINGULARITY_HOSTNAME/1" \
@@ -173,7 +173,7 @@ curl --url "pop3s://$SINGULARITY_HOSTNAME" \
 
 
 # Remove limit on `resu`'s access to the inbox
-${DOCKER_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -a resu
+${PODMAN_COMPOSE} exec denis /usr/local/bin/restrict_access /var/lib/email/journal/journal -a resu
 
 # Check that `resu` can now get the most recent message sent to the server
 curl --url "pop3s://$SINGULARITY_HOSTNAME/1" \
