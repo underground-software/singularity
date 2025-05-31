@@ -1,4 +1,4 @@
-name: Circumference Test Container CI
+name: Singularity PINP CI
 
 on:
   push:
