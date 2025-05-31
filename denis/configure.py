@@ -34,6 +34,11 @@ def main():
                             help='Final submission due date timetamp',
                             required=required)
 
+    def add_rubric(parser):
+        parser.add_argument('-r', '--rubric',
+                            type=str,
+                            help='Rubric to enforce on incoming patchsets')
+
     command_parsers = parser.add_subparsers(dest='command', required=True)
 
     create_parser = command_parsers.add_parser('create')
@@ -41,12 +46,14 @@ def main():
     add_initial(create_parser)
     add_peer_review(create_parser)
     add_final(create_parser)
+    add_rubric(create_parser)
 
     alter_parser = command_parsers.add_parser('alter')
     add_assignment(alter_parser)
     add_initial(alter_parser, required=False)
     add_peer_review(alter_parser, required=False)
     add_final(alter_parser, required=False)
+    add_rubric(alter_parser)
 
     remove_parser = command_parsers.add_parser('remove')
     add_assignment(remove_parser)
@@ -73,18 +80,31 @@ def dirty():
     Path('/tmp/dirty').touch()
 
 
-def create(assignment, initial, peer_review, final):
+# since the rubric is copied into the container by the wrapper script,
+# we always place it in /tmp/rubric to simplify things
+def load_rubric():
+    try:
+        with open('/tmp/rubric', 'r') as rubric_file:
+            os.unlink('/tmp/rubric')
+            return rubric_file.read()
+    except FileNotFoundError:
+        return None
+
+
+def create(assignment, initial, peer_review, final, rubric):
+    rubric = load_rubric()
     try:
         db.Assignment.create(name=assignment,
                              initial_due_date=initial,
                              peer_review_due_date=peer_review,
-                             final_due_date=final)
+                             final_due_date=final,
+                             rubric=rubric)
         dirty()
     except db.peewee.IntegrityError:
         print('cannot create assignment with duplicate name')
 
 
-def alter(assignment, initial, peer_review, final):
+def alter(assignment, initial, peer_review, final, rubric):
     alterations = {}
     if initial is not None:
         alterations[db.Assignment.initial_due_date] = initial
@@ -92,6 +112,8 @@ def alter(assignment, initial, peer_review, final):
         alterations[db.Assignment.peer_review_due_date] = peer_review
     if final is not None:
         alterations[db.Assignment.final_due_date] = final
+    if (rubric := load_rubric()) is not None:
+        alterations[db.Assignment.rubric] = rubric
     if not alterations:
         return print('At least one new date must be specified')
     query = (db.Assignment
@@ -126,7 +148,8 @@ def dump(fmt_iso):
         print(f'''{asn.name}:
 \tInitial:\t{timestamp_to_formatted(asn.initial_due_date)}
 \tPeer Review:\t{timestamp_to_formatted(asn.peer_review_due_date)}
-\tFinal:\t\t{timestamp_to_formatted(asn.final_due_date)}''')
+\tFinal:\t\t{timestamp_to_formatted(asn.final_due_date)}
+{"\tRubric:\n" + str(asn.rubric) if asn.rubric else ""}''')
 
 
 def reload():

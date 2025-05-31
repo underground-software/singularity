@@ -2,6 +2,7 @@ import re
 import git
 import pathlib
 import sys
+import ast
 import tempfile
 
 REMOTE_PUSH_URL = 'http://git:8000/cgi-bin/git-receive-pack/grading.git'
@@ -35,7 +36,7 @@ git_am_args = ['git', '-c', 'advice.mergeConflict=false',
                'am', '--keep']
 
 
-def do_check(repo, cover_letter, patches):
+def do_check(repo, cover_letter, patches, asn):
     whitespace_errors = []
 
     def am_cover_letter(keep_empty=True):
@@ -53,6 +54,17 @@ def do_check(repo, cover_letter, patches):
                         git.GitCommandError):
         return ("missing cover letter and "
                 "first patch failed to apply!")
+
+    rubric = None
+    if rubric_text := asn.rubric:
+        try:
+            rubric = ast.literal_eval(rubric_text)
+        except SyntaxError:
+            pass
+
+    # check for correct # of patches in patchset
+    if rubric and (rubric_count := len(rubric)) != (sub_count := len(patches)):
+        return f'patch count {sub_count} violates expected rubric patch count of {rubric_count}!'
 
     for i, patch in enumerate(patches):
         patch_abspath = str(maildir / patch.msg_id)
@@ -74,6 +86,30 @@ def do_check(repo, cover_letter, patches):
             if first_dir != found_author:
                 file_fixed = file[2:]
                 return f'illegal patch {i+1}: permission denied for path {file_fixed}!'
+
+        # we assume first level directory is correct by this point
+        # so we can replace it with some random template value
+        # requirments: file is either being created of modified
+        # therefore we assume some second of a pair contains the template author
+        # rubric is a list of dictionaries mapping changepair tuples
+        # to an integer counting the number of times that changepair is found
+        if rubric:
+            other = list(rubric[0].keys())[0][1].split('/')[1]
+            for j in range(int(len(changelines)/2)):
+                changepair = [changelines[2*j], changelines[2*j+1]]
+                if changepair[0] != '--- /dev/null/':
+                    changepair[0] = changepair[0].replace(found_author, other)
+                if changepair[1] != '+++ /dev/null/':
+                    changepair[1] = changepair[1].replace(found_author, other)
+                try:
+                    rubric[i][tuple(changepair)] += 1
+                except KeyError:
+                    pass
+            # a changepair (e.g. ('--- fromfile', '+++ tofile') may appear
+            # more than in the rubric o if modifications to a file
+            # are more sparse than in the example used to generate the rubric
+            if any(count < 1 for count in rubric[i].values()):
+                return f'patch {i+1} violates the assignment rubric!'
 
         # Try and apply and fail if there are whitespace errors
         def do_git_am(extra_args=[]):
@@ -101,13 +137,13 @@ def do_check(repo, cover_letter, patches):
         return 'patchset applies.'
 
 
-def check(cover_letter, patches, submission_id):
+def check(cover_letter, patches, submission_id, asn):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.init(repo_path)
         with repo.config_writer() as config:
             config.set_value('user', 'name', 'mailman')
             config.set_value('user', 'email', 'mailman@mailman')
-        status = do_check(repo, cover_letter, patches)
+        status = do_check(repo, cover_letter, patches, asn)
         if status[-1] == '!':
             for patch in patches:
                 patch_abspath = str(maildir / patch.msg_id)
