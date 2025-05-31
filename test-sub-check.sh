@@ -15,7 +15,7 @@ set -o allexport
 exec jq -r -n "env.SINGULARITY_HOSTNAME"
 ')"
 
-DOCKER=${DOCKER:-podman}
+PODMAN=${PODMAN:-podman}
 
 SINGULARITY_HOSTNAME=${SINGULARITY_HOSTNAME:-"${HOSTNAME_FROM_DOTENV}"}
 
@@ -25,7 +25,7 @@ mkdir -p test
 # Reset the test directory
 rm -f test/*
 
-${DOCKER} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem test/ca_cert.pem
+${PODMAN} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem test/ca_cert.pem
 
 # login as bob
 curl --url "https://$SINGULARITY_HOSTNAME/login" \
