@@ -1,31 +1,10 @@
 #!/usr/bin/env bash
 
-CURL_OPTS=( \
---verbose \
---cacert test/ca_cert.pem \
---fail \
---no-progress-meter \
-)
-
 set -exuo pipefail
 
-HOSTNAME_FROM_DOTENV="$(sh -c '
-set -o allexport
-. ./.env
-exec jq -r -n "env.SINGULARITY_HOSTNAME"
-')"
+source test-lib
 
-PODMAN=${PODMAN:-podman}
-
-SINGULARITY_HOSTNAME=${SINGULARITY_HOSTNAME:-"${HOSTNAME_FROM_DOTENV}"}
-
-# Create test dir if it does not exist yet
-mkdir -p test
-
-# Reset the test directory
-rm -f test/*
-
-${PODMAN} cp singularity_nginx_1:/etc/ssl/nginx/fullchain.pem test/ca_cert.pem
+setup_testdir
 
 # login as bob
 curl --url "https://$SINGULARITY_HOSTNAME/login" \
