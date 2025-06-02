@@ -5,10 +5,12 @@ require shellcheck
 
 set -ex
 
+# -x needed to make shellcheck follow `source` command
 shellcheck script-lint.sh
 shellcheck -x test.sh
-shellcheck test-sub.sh
+shellcheck -x test-sub.sh
 shellcheck -x test-sub-check.sh
+shellcheck -x test-sub2.sh
 shellcheck orbit/warpdrive.sh
 shellcheck denis/configure.sh
 shellcheck mailman/inspector.sh
@@ -18,6 +20,5 @@ shellcheck git/setup-repo.sh
 shellcheck git/cgi-bin/git-receive-pack
 shellcheck git/hooks/post-update
 
-# -x needed to make shellcheck follow `source` command
 shellcheck -x backup/backup.sh
 shellcheck -x backup/restore.sh

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -exuo pipefail
-
 source test-lib
 
 setup_testdir
