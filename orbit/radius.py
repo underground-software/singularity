@@ -463,9 +463,9 @@ class AsmtTable:
                 due_date = int(self.assignment.final_due_date)
 
         if due_date < int(datetime.now().timestamp()):
-            return gbl.status
+            return gbl.auto_feedback
 
-        match gbl.status[-1]:
+        match gbl.auto_feedback[-1]:
             case '.':
                 return 'Submission accepted'
             case '?':
