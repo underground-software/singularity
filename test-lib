@@ -1,5 +1,15 @@
+# This line:
+# - aborts the script after any pipeline returns nonzero (e)
+# - shows all commands as they are run (x)
+# - sets any dereference of an unset variable to trigger an error (u)
+# - causes the return value of a pipeline to be the nonzero return value
+#   of the furthest right failing command or zero if no command failed (o pipefail)
+set -exuo pipefail
+
 PODMAN=${PODMAN:-podman}
 PODMAN_COMPOSE=${PODMAN_COMPOSE:-podman-compose}
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+WORKDIR=$(mktemp -d)
 
 HOSTNAME_FROM_DOTENV="$(sh -c '
 set -o allexport
@@ -26,4 +36,160 @@ CURL_OPTS=( \
 --fail \
 --no-progress-meter \
 )
+
+
+get_git_port() { ${PODMAN} port singularity_git_1 | awk -F':' '{ print $2 }' ; } ;
+
+# preconditions:
+# - SCRIPT_DIR defined (singularity repo root)
+# - WORKDIR defined (arbitrary) temp directory
+setup_submissions_and_grading_repo() {
+	pushd "$SCRIPT_DIR"
+	# nuke grading repo inside container
+	# shellcheck disable=SC2016
+	${PODMAN_COMPOSE} exec git ash -c 'cd /var/lib/git/grading.git && for t in $(git tag); do git tag -d $t; done'
+	# crete and push fresh submissions repo
+	rm -rf repos/submissions
+	git/admin.sh submissions "course submissions repository"
+	pushd repos
+	git init --bare submissions
+	echo "course submissions repository" > submissions/description
+	# create a temporary workdir to push an initial commit to the submission repo
+	git init submissions_init
+	pushd submissions_init
+	echo "# submissions" > README.md
+	git add README.md
+	git status
+	git -c user.name=singularity -c user.email=singularity@singularity commit -sm 'init submissions repo'
+	git push ../submissions master
+	popd
+	rm -rf submissions_init
+	pushd submissions
+	git push --mirror http://localhost:"$(get_git_port)"/cgi-bin/git-receive-pack/submissions
+	popd
+	popd
+	popd
+
+	pushd "$WORKDIR"
+	mkdir certs
+	pushd certs
+	${PODMAN} volume export singularity_ssl-certs > certs.tar
+	tar xf certs.tar
+	popd
+	git clone http://localhost:"$(get_git_port)"/submissions
+	popd
+}
+
+create_lighting_assignment() {
+	test -n "$1"
+	test -n "$2"
+	test -n "$3"
+	test -n "$4"
+
+	local asn="$1"
+	local i_s="$2"
+	local p_s="$3"
+	local f_s="$4"
+	set +u
+	local rub="$5"
+	set -u
+
+	RUBRIC=
+	if [ -n "$rub" ]
+	then
+		RUBRIC="-r $rub"
+	fi
+
+	pushd "$SCRIPT_DIR"
+	# create or recreate setup assignment
+	if denis/configure.sh dump | grep -q "^$asn:"; then
+		denis/configure.sh remove -a "$asn"
+	fi
+	denis/configure.sh create -a "$asn" -i "$(date -d "$i_s secs" +%s)" -p "$(date -d "$p_s secs" +%s)" -f "$(date -d "$f_s secs" +%s)" ${RUBRIC}
+	denis/configure.sh reload
+	popd
+}
+
+# preconditions:
+# - called after setup_submissions_and_grading_repo
+setup_submissions_for() {
+	test -n "$1"
+	local user="$1"
+
+	pushd "$SCRIPT_DIR"
+	orbit/warpdrive.sh -u "$user" -p builder -n || orbit/warpdrive.sh -u "$user" -p builder -m
+	popd
+
+	pushd "$WORKDIR"/submissions
+	git config user.name "$user"
+	git config user.email "$user"@localhost.localdomain
+	git config sendemail.smtpUser "$user"
+	git config sendemail.smtpPass builder
+	git config sendemail.smtpserver localhost.localdomain
+	git config sendemail.smtpserverport 465
+	git config sendemail.smtpencryption ssl
+	popd
+}
+
+# preconditions:
+# - no non-tracked files in submissions repo
+# - called after setup_submissions_for
+enter_and_checkout() {
+	test -n "$1"
+	local branch="$1"
+
+	pushd "$WORKDIR"/submissions
+	git checkout --orphan "$1"
+	if [ -n "$(ls)" ]
+	then
+		git rm -rf ./*
+	fi
+}
+
+# preconditions:
+# - called after a call to enter_and_checkout
+exit_after_sending() {
+	test -n "$1"
+	local asn="$1"
+
+	git send-email \
+		--confirm=never \
+		--smtp-ssl-cert-path="$WORKDIR"/certs/fullchain.pem \
+		--to "$asn"@localhost.localdomain \
+		./*.patch
+	rm ./*.patch
+	popd
+	sleep 1
+}
+
+# preconditions:
+# - called after a call to enter_and_checkout
+write_commit_to() {
+	test -n "$1" && test -n "$2"
+	local content="$1"
+	local file="$2"
+	set +u # necessary since $3 is unbound in 2 arg case
+	local opt="$3"
+	set -x
+
+	mkdir -p $(dirname "$file")
+
+	if [ "$opt" == "append" ]; then
+		echo "$content" >> "$file"
+	else
+		echo "$content" > "$file"
+	fi
+
+	git add "$file"
+	git commit -sm "add $content to $file"
+}
+
+# preconditions:
+# - called after a call to write_commit_to
+fixup_cover() {
+	test -n "$1"
+	sed -i "s/\*\*\* SUBJECT HERE \*\*\*/$1/g" *0000-cover-letter.patch
+	sed -i "s/\*\*\* BLURB HERE \*\*\*/$1/g" *0000-cover-letter.patch
+	sed -i "\$a\\Signed-off-by: $(git config user.name) <$(git config user.email)>" *0000-cover-letter.patch
+}
 
