@@ -50,7 +50,7 @@ def configure_repo(repo):
 
 def update_tags(assignment, component):
     grd_tbl = mailman.db.Gradeable
-    subs = (grd_tbl.select()
+    gbls = (grd_tbl.select()
                    .order_by(-grd_tbl.timestamp)
                    .where(grd_tbl.assignment == assignment)
                    .where(grd_tbl.component == component))
@@ -70,12 +70,12 @@ def update_tags(assignment, component):
                 print('Potential issue? Attempted to create duplicate tag '
                       f'{new_tag_name}')
                 continue
-            user_sub = subs.where(grd_tbl.user == user.username).first()
-            if not user_sub or (id := user_sub.submission_id) not in repo.tags:
+            user_gbl = gbls.where(grd_tbl.user == user.username).first()
+            if not user_gbl or (id := user_gbl.submission_id) not in repo.tags:
                 msg = 'No gradeable submission'
                 to_promote = repo.tags['EMPTY']
             else:
-                msg = user_sub.status
+                msg = user_gbl.auto_feedback
                 to_promote = repo.tags[id]
             repo.create_tag(new_tag_name, ref=to_promote.commit, message=msg)
 
@@ -93,7 +93,7 @@ def check_corrupt_or_missing(repo, tag, username_to_subs):
     msg += '\n'
     msg += '------------------------------'
     msg += '\n\n'
-    if not gradable or gradable.status[-1] == '!':
+    if not gradable or gradable.auto_feedback[-1] == '!':
         repo.git.execute(['git', 'notes', '--ref=grade', 'add', tag, '-m', '0'])
         if not gradable:
             msg += 'automatic 0 due to missing submission!'
