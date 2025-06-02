@@ -78,7 +78,7 @@ def gradables(assignment, username, component):
     for gbl in query:
         print(gbl.submission_id,
               datetime.fromtimestamp(gbl.timestamp).astimezone().isoformat(),
-              gbl.assignment, gbl.user, gbl.component, gbl.status)
+              gbl.assignment, gbl.user, gbl.component, gbl.auto_feedback)
 
 
 def missing(assignment):
