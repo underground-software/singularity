@@ -22,7 +22,14 @@ then
 		git config --global user.email podman@podman
 		./test-sub.sh
 		./test-sub-check.sh
+		podman-compose down
+		yes | podman volume prune
+		podman-compose up -d
 		./test-sub2.sh
+		podman-compose down
+		yes | podman volume prune
+		podman-compose up -d
+		./test-sub3.sh
 
 	fi
 else
