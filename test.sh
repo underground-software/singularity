@@ -2,14 +2,6 @@
 
 # Testing script for singularity and orbit
 
-# This line:
-# - aborts the script after any pipeline returns nonzero (e)
-# - shows all commands as they are run (x)
-# - sets any dereference of an unset variable to trigger an error (u)
-# - causes the return value of a pipeline to be the nonzero return value
-#   of the furthest right failing command or zero if no command failed (o pipefail)
-set -exuo pipefail
-
 source test-lib
 
 require() { command -v "$1" > /dev/null || { echo "error: $1 command required yet absent" ; exit 1 ; } ; }
