@@ -10,7 +10,10 @@ RUN dnf update -y && \
 	python-flake8 \
 	python-virtualenv \
 	python-pip \
-	git
+	gawk \
+	socat \
+	git \
+	git-email
 
 RUN sed -i 's/log_driver = "journald"/log_driver = "json-file"/' /usr/share/containers/containers.conf
 

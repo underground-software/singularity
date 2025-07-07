@@ -14,5 +14,7 @@ utilities.release_subs(ids)
 
 print(f'peer review subs for {assignment} released')
 
-utilities.update_tags(assignment, 'review1')
-utilities.update_tags(assignment, 'review2')
+tags1 = utilities.update_tags(assignment, 'review1')
+tags2 = utilities.update_tags(assignment, 'review2')
+
+utilities.run_automated_checks(tags1 + tags2, peer=True)
