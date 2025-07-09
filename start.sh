@@ -30,6 +30,10 @@ then
 		yes | podman volume prune
 		podman-compose up -d
 		./test-sub3.sh
+		podman-compose down
+		yes | podman volume prune
+		podman-compose up -d
+		./test-sub4.sh
 
 	fi
 else
