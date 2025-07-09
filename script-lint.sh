@@ -12,6 +12,7 @@ shellcheck -x test-sub.sh
 shellcheck -x test-sub-check.sh
 shellcheck -x test-sub2.sh
 shellcheck -x test-sub3.sh
+shellcheck -x test-sub4.sh
 shellcheck orbit/warpdrive.sh
 shellcheck denis/configure.sh
 shellcheck mailman/inspector.sh
