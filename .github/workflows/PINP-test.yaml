@@ -22,10 +22,13 @@ jobs:
         sudo apt install -y podman
         podman --version
 
+    - name: Build test container
+      run: |
+        podman build --build-context=singularity_git_repo=. -t singularity-test .
+
     - name: Start PINPing
       id: run_tests
       run: |
-        podman build --build-context=singularity_git_repo=. -t singularity-test .
         podman run --rm --privileged localhost/singularity-test:latest
 
     - name: Report test results
