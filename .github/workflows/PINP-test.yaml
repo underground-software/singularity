@@ -16,7 +16,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Install Podman and Podman Compose
+    - name: Install Podman
       run: |
         sudo apt update
         sudo apt install -y podman
