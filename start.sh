@@ -11,6 +11,8 @@ ln -s .git gitdir
 
 podman-compose build
 podman-compose up -d
+trap 'podman-compose down -v' EXIT
+
 # wait until synapse is done initializing
 podman-compose logs -f submatrix 2>&1 | sed '/Synapse now listening on TCP port 8008/ q'
 if [ -f test.sh ]
@@ -21,4 +23,3 @@ else
 	pip install -r requirements.txt
 	pytest
 fi
-podman-compose down -v
