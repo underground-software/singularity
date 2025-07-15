@@ -22,14 +22,35 @@ jobs:
         sudo apt install -y podman
         podman --version
 
+    # garbage needed because otherwise the cache fails to save properly. Suggested by https://github.com/containers/podman/discussions/17868
+    - name: Special tar sauce
+      run: |
+        sudo mv -fv /usr/bin/tar /usr/bin/tar.orig
+        echo -e '#!/bin/sh\n\nsudo /usr/bin/tar.orig --xattrs --xattrs-include='"'"'*'"'"' "$@"' | sudo tee -a /usr/bin/tar
+        sudo chmod +x /usr/bin/tar
+
+    - uses: actions/cache@v4
+      with:
+        path: |
+          ~/.local/share/containers
+        key: podman-in-docker-build-cache
+
     - name: Build test container
       run: |
         podman build --build-context=singularity_git_repo=. -t singularity-test .
 
+    - uses: actions/cache@v4
+      with:
+        path: |
+          ./cache
+        key: podman-in-podman-build-cache
+
     - name: Start PINPing
       id: run_tests
       run: |
-        podman run --rm --privileged localhost/singularity-test:latest
+        mkdir -p ./cache
+        chmod 0777 ./cache
+        podman run --rm -v ./cache:/home/podman/.local/share/containers:z --privileged localhost/singularity-test:latest
 
     - name: Report test results
       if: always()
