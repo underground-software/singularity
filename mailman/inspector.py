@@ -56,7 +56,7 @@ def main():
 
 
 def submissions(assignment, username):
-    query = db.Submission.select().order_by(-db.Submission.timestamp)
+    query = db.Submission.select().order_by(db.Submission.timestamp.desc())
     if assignment:
         query = query.where(db.Submission.recipient == assignment)
     if username:
@@ -68,7 +68,7 @@ def submissions(assignment, username):
 
 
 def gradables(assignment, username, component):
-    query = db.Gradeable.select().order_by(-db.Gradeable.timestamp)
+    query = db.Gradeable.select().order_by(db.Gradeable.timestamp.desc())
     if assignment:
         query = query.where(db.Gradeable.assignment == assignment)
     if username:
