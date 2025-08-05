@@ -390,7 +390,7 @@ def handle_activity(rocket):
 
     submissions = (mailman.db.Submission.select()
                    .where(mailman.db.Submission.user == rocket.session.username)
-                   .order_by(- mailman.db.Submission.timestamp))
+                   .order_by(-mailman.db.Submission.timestamp))
 
     def submission_fields(sub):
         return (datetime.fromtimestamp(sub.timestamp).astimezone().isoformat(),
@@ -623,7 +623,7 @@ def handle_dashboard(rocket):
     grd_tbl = mailman.db.Gradeable
     user_gradeables = (grd_tbl.select()
                        .where(grd_tbl.user == rocket.session.username)
-                       .order_by(grd_tbl.timestamp.desc()))
+                       .order_by(-grd_tbl.timestamp))
     assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
     ret = '<form method="post" action="/dashboard">'
     for assignment in assignments:

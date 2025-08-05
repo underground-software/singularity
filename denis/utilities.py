@@ -17,7 +17,7 @@ def user_to_sub(assignment, component):
     relevant_gradeables = (grd_tbl.select()
                            .where(grd_tbl.assignment == assignment)
                            .where(grd_tbl.component == component)
-                           .order_by(grd_tbl.timestamp.desc()))
+                           .order_by(-grd_tbl.timestamp))
     for user in orbit.db.User.select():
         username = user.username
         sub = (relevant_gradeables
