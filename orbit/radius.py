@@ -390,7 +390,7 @@ def handle_activity(rocket):
 
     submissions = (mailman.db.Submission.select()
                    .where(mailman.db.Submission.user == rocket.session.username)
-                   .order_by(- mailman.db.Submission.timestamp))
+                   .order_by(mailman.db.Submission.timestamp.desc()))
 
     def submission_fields(sub):
         return (datetime.fromtimestamp(sub.timestamp).astimezone().isoformat(),

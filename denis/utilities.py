@@ -47,7 +47,7 @@ def configure_repo(repo):
 def update_tags(assignment, component):
     grd_tbl = mailman.db.Gradeable
     subs = (grd_tbl.select()
-                   .order_by(-grd_tbl.timestamp)
+                   .order_by(grd_tbl.timestamp.desc())
                    .where(grd_tbl.assignment == assignment)
                    .where(grd_tbl.component == component))
     with tempfile.TemporaryDirectory() as repo_path:
