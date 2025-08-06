@@ -7,10 +7,10 @@ RUN apk update && apk upgrade && apk add \
 COPY . /usr/local/share/orbit
 WORKDIR /usr/local/share/orbit
 
-ARG orbit_version_info
-RUN test -n "$orbit_version_info" || (echo 'version info is not set' && false) && \
+ARG singularity_version_info
+RUN test -n "$singularity_version_info" || (echo 'version info is not set' && false) && \
 	mv config.py config.py.template && \
-	envsubst '$orbit_version_info' < config.py.template > config.py && \
+	envsubst '$singularity_version_info' < config.py.template > config.py && \
 	rm config.py.template \
 	;
 

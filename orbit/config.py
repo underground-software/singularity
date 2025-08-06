@@ -1,4 +1,4 @@
-version_info = '${orbit_version_info}'
+version_info = '${singularity_version_info}'
 
 # read these documents from a filesystem path
 doc_root = './docs'

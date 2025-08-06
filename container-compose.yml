@@ -45,7 +45,7 @@ services:
         - denis_source=./denis
       target: orbit
       args:
-        orbit_version_info: "singularity ${SINGULARITY_VERSION} ${SINGULARITY_DEPLOYMENT_STATUS} https://github.com/underground-software/singularity"
+        singularity_version_info: "singularity ${SINGULARITY_VERSION} ${SINGULARITY_DEPLOYMENT_STATUS} https://github.com/underground-software/singularity"
     environment:
       TZ: ${SINGULARITY_TIMEZONE}
       HOSTNAME: ${SINGULARITY_HOSTNAME}
