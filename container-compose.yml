@@ -34,6 +34,7 @@ services:
       - smtp
       - pop
       - submatrix
+      - api
   orbit:
     build:
       context: orbit
@@ -69,6 +70,36 @@ services:
       - git
     networks:
       - orbit
+  api:
+    build:
+      context: api
+      dockerfile: Containerfile
+      additional_contexts:
+        - mailman_source=./mailman
+        - denis_source=./denis
+      target: api
+      args:
+        singularity_version_info: "singularity ${SINGULARITY_VERSION} ${SINGULARITY_DEPLOYMENT_STATUS} https://github.com/underground-software/singularity"
+    environment:
+      TZ: ${SINGULARITY_TIMEZONE}
+      HOSTNAME: ${SINGULARITY_HOSTNAME}
+    volumes:
+      - type: volume
+        source: submissions-db
+        target: /var/lib/mailman
+        read_only: true
+      - type: volume
+        source: denis-db
+        target: /var/lib/denis
+        read_only: true
+      - type: volume
+        source: git-repos
+        target: /var/lib/git
+        read_only: true
+    depends_on:
+      - git
+    networks:
+      - api
   smtp:
     build:
       context: smtp
@@ -242,6 +273,7 @@ networks:
   mailman:
   denis:
   git:
+  api:
 volumes:
   ssl-certs:
   email-mail:
