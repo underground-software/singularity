@@ -19,6 +19,7 @@ FROM alpine:3.20 AS api
 RUN apk update && apk upgrade && apk add \
 	py3-peewee \
 	py3-markdown \
+	py3-requests \
 	uwsgi-python3 \
 	uwsgi-http \
 	tzdata \
@@ -27,6 +28,7 @@ RUN apk update && apk upgrade && apk add \
 WORKDIR /usr/local/share/api
 
 COPY --from=build /usr/local/share/api /usr/local/share/api
+COPY --from=orbit_source . ./orbit
 COPY --from=mailman_source . ./mailman
 COPY --from=denis_source . ./denis
 

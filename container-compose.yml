@@ -75,6 +75,7 @@ services:
       context: api
       dockerfile: Containerfile
       additional_contexts:
+        - orbit_source=./orbit
         - mailman_source=./mailman
         - denis_source=./denis
       target: api
@@ -100,6 +101,7 @@ services:
       - git
     networks:
       - api
+      - orbit
   smtp:
     build:
       context: smtp
