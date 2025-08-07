@@ -4,6 +4,7 @@ import json
 import requests
 from urllib.parse import parse_qs
 import mailman.db
+import denis.db
 
 
 ORBIT_AUTH_URL = 'http://orbit:9098/login?json=yes'
@@ -54,6 +55,21 @@ def activity_log(username):
     return [json.dumps({'timestamp': datetime.now().astimezone().isoformat(),
                         'activity_log': log}).encode()]
 
+def assignments():
+    assignments = denis.db.Assignment.select()
+
+    asn = []
+    if assignments:
+        for a in assignments:
+            asn.append({
+                'name': a.name,
+                'initial_due_date': datetime.fromtimestamp(a.initial_due_date).astimezone().isoformat(),
+                'peer_review_due_date': datetime.fromtimestamp(a.peer_review_due_date).astimezone().isoformat(),
+                'final_due_date': datetime.fromtimestamp(a.final_due_date).astimezone().isoformat(),
+            })
+
+    return [json.dumps({'timestamp': datetime.now().astimezone().isoformat(),
+                        'assignments': asn}).encode()]
 
 def json_error(error):
     return json.dumps({'timestamp': datetime.now().astimezone().isoformat(),
@@ -81,5 +97,7 @@ def application(env, SR):
                 return activity_log(username)
             else:
                 return json_error('invalid credentials')
+        case ['', 'api', 'assignments']:
+            return assignments()
         case _:
             return json_error('Invalid endpoint')
