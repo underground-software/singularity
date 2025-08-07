@@ -6,6 +6,7 @@ import base64
 import bcrypt
 import git
 import html
+import json
 import markdown
 import os
 import subprocess
@@ -82,7 +83,7 @@ class Session:
 
     """
 
-    def __init__(self, env=None, username=None):
+    def __init__(self, env=None, username=None, token=None):
         self.token = None
         self.username = None
         self.expiry = None
@@ -100,16 +101,16 @@ class Session:
              .execute())
 
         # try to load active session from database using user token
-        else:
+        elif env:
             if (raw := env.get("HTTP_COOKIE", None)):
                 cok = cookies.BaseCookie('')
                 cok.load(raw)
-                res = cok.get('auth', cookies.Morsel()).value
+                token = cok.get('auth', cookies.Morsel()).value
 
-                if (ses_found := db.Session.get_or_none(db.Session.token == res)):
-                    self.token = ses_found.token
-                    self.username = ses_found.username
-                    self.expiry = datetime.fromtimestamp(ses_found.expiry)
+        if token and (ses_found := db.Session.get_or_none(db.Session.token == token)):
+            self.token = ses_found.token
+            self.username = ses_found.username
+            self.expiry = datetime.fromtimestamp(ses_found.expiry)
 
     def end(self):
         db.Session.delete().where(db.Session.token == self.token).execute()
@@ -320,7 +321,32 @@ def login_form(target_location=None):
     <h3>Need an account? Register <a href="/register">here</a></h3><br>'''
 
 
+def handle_login_json(rocket):
+    def json_response(body, authenticated=False):
+        rocket.headers += [('Content-Type', 'application/json')]
+        body['authenticated'] = authenticated
+        return rocket.raw_respond(HTTPStatus.OK, body=json.dumps(body).encode())
+    token = rocket.body_args_query('token')
+    if token == '':
+        token = None
+    if token:
+        session = Session(token=token)
+        if session.valid():
+            return json_response({'token': token}, authenticated=True)
+        else:
+            return json_response({'token': token,
+                                  'error': 'Invalid credentials'})
+
+    if rocket.method != 'POST':
+        return json_response({'error': 'POST method is required without token'})
+    if not rocket.launch():
+        return json_response({'error': 'Invalid credentials'})
+    return json_response({'token': rocket.session.token}, authenticated=True)
+
+
 def handle_login(rocket):
+    if rocket.queries_query('json') == 'yes':
+        return handle_login_json(rocket)
     target = rocket.queries_query('target')
 
     # harden the redirect to prevent csrf type attacks
