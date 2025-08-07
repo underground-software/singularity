@@ -322,9 +322,10 @@ def login_form(target_location=None):
 
 
 def handle_login_json(rocket):
-    def json_response(body, authenticated=False):
+    def json_response(body, authenticated=False, username=None):
         rocket.headers += [('Content-Type', 'application/json')]
         body['authenticated'] = authenticated
+        body['username'] = username
         return rocket.raw_respond(HTTPStatus.OK, body=json.dumps(body).encode())
     token = rocket.body_args_query('token')
     if token == '':
@@ -332,7 +333,7 @@ def handle_login_json(rocket):
     if token:
         session = Session(token=token)
         if session.valid():
-            return json_response({'token': token}, authenticated=True)
+            return json_response({'token': token}, authenticated=True, username=session.username)
         else:
             return json_response({'token': token,
                                   'error': 'Invalid credentials'})
@@ -341,7 +342,7 @@ def handle_login_json(rocket):
         return json_response({'error': 'POST method is required without token'})
     if not rocket.launch():
         return json_response({'error': 'Invalid credentials'})
-    return json_response({'token': rocket.session.token}, authenticated=True)
+    return json_response({'token': rocket.session.token}, authenticated=True, username=rocket.session.username)
 
 
 def handle_login(rocket):
