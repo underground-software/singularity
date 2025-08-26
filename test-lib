@@ -126,7 +126,7 @@ setup_submissions_for() {
 	git config sendemail.smtpUser "$user"
 	git config sendemail.smtpPass builder
 	git config sendemail.smtpserver localhost.localdomain
-	git config sendemail.smtpserverport 465
+	git config sendemail.smtpserverport 1465
 	git config sendemail.smtpencryption ssl
 	popd
 }
