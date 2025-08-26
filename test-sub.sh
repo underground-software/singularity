@@ -30,7 +30,7 @@ enter_and_checkout setup_initial_bob_corrupt
 write_commit_to "abc" bob/setup/work
 write_commit_to "def" bob/setup/work "append"
 write_commit_to "ghi" bob/setup/work "append"
-git format-patch --rfc --cover-letter -v1 -3
+git format-patch --rfc --cover-letter -v2 -3
 rm ./*-0002-*.patch
 fixup_cover "Corrupt patchset"
 exit_after_sending setup
@@ -39,7 +39,7 @@ exit_after_sending setup
 enter_and_checkout setup_initial_bob_whitespace
 write_commit_to "abc" bob/setup/work
 write_commit_to "def	" bob/setup/work "append"
-git format-patch --rfc --cover-letter -v1 -2
+git format-patch --rfc --cover-letter -v3 -2
 fixup_cover "Patchset with whitespace errors"
 exit_after_sending setup
 
@@ -47,7 +47,7 @@ exit_after_sending setup
 enter_and_checkout setup_initial_bob_nocover
 write_commit_to "abc" bob/setup/work
 write_commit_to "def" bob/setup/work "append"
-git format-patch --rfc -v1 -2
+git format-patch --rfc -v4 -2
 exit_after_sending setup
 
 # patchset with no cover letter and corrupt first patch
@@ -55,7 +55,7 @@ enter_and_checkout setup_initial_bob_nocover-corrupt
 write_commit_to "abc" bob/setup/work
 write_commit_to "def" bob/setup/work "append"
 write_commit_to "ghi" bob/setup/work "append"
-git format-patch --rfc -v1 -2
+git format-patch --rfc -v5 -2
 exit_after_sending setup
 
 # setup_initial_bab submissions
@@ -150,7 +150,7 @@ setup_submissions_for bob
 enter_and_checkout setup_final_bob_good
 write_commit_to "abc" bob/setup/work
 write_commit_to "def" bob/setup/work "append"
-git format-patch --cover-letter -v2 -2
+git format-patch --cover-letter -v6 -2
 fixup_cover "Good final patchset"
 exit_after_sending setup
 
