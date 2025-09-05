@@ -10,7 +10,7 @@ RUN mkdir /usr/local/share/git
 
 WORKDIR /usr/local/share/git
 
-COPY ./gitconfig ./.gitconfig
+COPY ./gitconfig /etc/gitconfig
 
 COPY ./hooks ./hooks
 
