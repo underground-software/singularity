@@ -15,6 +15,7 @@ class Assignment(BaseModel):
     initial_due_date = peewee.IntegerField()
     peer_review_due_date = peewee.IntegerField()
     final_due_date = peewee.IntegerField()
+    rubric = peewee.TextField(null=True)
 
 
 class PeerReviewAssignment(BaseModel):
