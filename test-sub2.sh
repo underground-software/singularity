@@ -12,7 +12,7 @@ cat << EOF > "$WORKDIR"/coding_rubric
 {('--- /dev/null', '+++ b/user/coding/Makefile'): 0}]
 EOF
 
-create_lighting_assignment coding 25 28 30  "$WORKDIR"/coding_rubric
+create_lighting_assignment coding 25 28 30
 
 setup_submissions_for bob
 

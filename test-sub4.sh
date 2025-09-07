@@ -13,7 +13,7 @@ cat << EOF > "$WORKDIR"/first_rubric
 {('--- a/bob/first/work', '+++ b/bob/first/work'): 0}]
 EOF
 
-create_lighting_assignment first 10 11 20 "$WORKDIR"/first_rubric
+create_lighting_assignment first 10 11 20
 
 setup_submissions_for bob
 
@@ -52,7 +52,7 @@ cat << EOF > "$WORKDIR"/second_rubric
 {('--- a/bob/second/work', '+++ b/bob/second/work'): 0}]
 EOF
 
-create_lighting_assignment second 5 7 10 "$WORKDIR"/second_rubric
+create_lighting_assignment second 5 7 10
 
 setup_submissions_for bob
 
