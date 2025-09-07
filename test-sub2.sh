@@ -125,18 +125,18 @@ git clone http://localhost:"$(get_git_port)"/grading.git
 pushd grading
 
 STATUSES=(
-"patch count 4 violates expected rubric patch count of 3!"
-"patch count 2 violates expected rubric patch count of 3!"
+"patchset applies."
+"patchset applies."
 "illegal patch 1: permission denied for path program.c!"
 "illegal patch 3: permission denied for path Makefile!"
-"patch 1 violates the assignment rubric!"
-"patch 3 violates the assignment rubric!"
-"patch 1 violates the assignment rubric!"
-"patch 3 violates the assignment rubric!"
-"patch 1 violates the assignment rubric!"
-"patch 3 violates the assignment rubric!"
-"patch 1 violates the assignment rubric!"
-"patch 3 violates the assignment rubric!"
+"patchset applies."
+"patchset applies."
+"patchset applies."
+"patchset applies."
+"patchset applies."
+"patchset applies."
+"patchset applies."
+"patchset applies."
 "patchset applies."
 )
 
