@@ -12,7 +12,7 @@ cat << EOF > "$WORKDIR"/setup_rubric
 {('--- a/bob/setup/work', '+++ b/bob/setup/work'): 0}]
 EOF
 
-create_lighting_assignment setup 15 25 30 "$WORKDIR"/setup_rubric
+create_lighting_assignment setup 15 25 30
 
 # setup_intial_bob patchsets
 setup_submissions_for bob
