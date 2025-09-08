@@ -20,8 +20,7 @@ then
 	./test.sh
 	if [ -f test-sub.sh ]
 	then
-		podman-compose down
-		yes | podman volume prune
+		podman-compose down -v
 		podman-compose up -d
 		podman-compose logs -f submatrix 2>&1 | sed '/Synapse now listening on TCP port 8008/ q'
 		./dev_sockets.sh &
@@ -29,16 +28,13 @@ then
 		git config --global user.email podman@podman
 		./test-sub.sh
 		./test-sub-check.sh
-		podman-compose down
-		yes | podman volume prune
+		podman-compose down -v
 		podman-compose up -d
 		./test-sub2.sh
-		podman-compose down
-		yes | podman volume prune
+		podman-compose down -v
 		podman-compose up -d
 		./test-sub3.sh
-		podman-compose down
-		yes | podman volume prune
+		podman-compose down -v
 		podman-compose up -d
 		./test-sub4.sh
 
