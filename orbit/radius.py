@@ -810,7 +810,7 @@ def handle_containerfile(rocket):
             not (fullname := user.fullname)):
         fullname = 'Unknown'
     return rocket.raw_respond(HTTPStatus.OK, rf'''
-FROM fedora:41
+FROM fedora:42
 
 RUN <<DNF
 dnf -y update
