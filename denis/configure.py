@@ -2,6 +2,8 @@
 
 from datetime import datetime
 from argparse import ArgumentParser as ap
+from pathlib import Path
+import os
 
 import db
 
@@ -67,12 +69,17 @@ def main():
     subparser_func(**kwargs)
 
 
+def dirty():
+    Path('/tmp/dirty').touch()
+
+
 def create(assignment, initial, peer_review, final):
     try:
         db.Assignment.create(name=assignment,
                              initial_due_date=initial,
                              peer_review_due_date=peer_review,
                              final_due_date=final)
+        dirty()
     except db.peewee.IntegrityError:
         print('cannot create assignment with duplicate name')
 
@@ -92,6 +99,8 @@ def alter(assignment, initial, peer_review, final):
              .where(db.Assignment.name == assignment))
     if query.execute() < 1:
         print(f'no such assignment {assignment}')
+    else:
+        dirty()
 
 
 def remove(assignment):
@@ -100,12 +109,17 @@ def remove(assignment):
              .where(db.Assignment.name == assignment))
     if query.execute() < 1:
         print(f'no such assignment {assignment}')
+    else:
+        dirty()
 
 
 def dump(fmt_iso):
     def timestamp_to_formatted(timestamp):
         dt = datetime.fromtimestamp(timestamp).astimezone()
         return dt.isoformat() if fmt_iso else dt.strftime('%a %b %d %Y %T %Z (%z)')
+
+    if os.path.exists('/tmp/dirty'):
+        print('WARNING: Denis database is dirty, reload to update waiters')
 
     print(' --- Assignments ---')
     for asn in db.Assignment.select():
@@ -119,6 +133,8 @@ def reload():
     import os
     import signal
     os.kill(1, signal.SIGUSR1)
+    if os.path.exists('/tmp/dirty'):
+        os.remove('/tmp/dirty')
 
 
 if __name__ == '__main__':
