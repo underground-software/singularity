@@ -812,8 +812,7 @@ def handle_containerfile(rocket):
     return rocket.raw_respond(HTTPStatus.OK, rf'''
 FROM fedora:42
 
-RUN <<DNF
-	dnf -y update
+RUN dnf -y update && \
 	dnf install -y --setopt=install_weak_deps=False \
 		git \
 		tar \
@@ -843,9 +842,9 @@ RUN <<DNF
 		strace \
 		man \
 		man-pages \
-	;
-	dnf clean all
-DNF
+	&& \
+	dnf clean all && \
+	:
 
 RUN useradd {username} -U
 USER {username}:{username}
