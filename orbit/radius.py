@@ -879,7 +879,14 @@ RUN cat <<'GITCONFIG' > ~/.gitconfig
 	smtpserver = {hostname}
 	smtpserverport = 465
 	smtpencryption = ssl
+[credential "https://{hostname}"]
+	helper = store
+	username = {username}
 GITCONFIG
+
+RUN cat <<'GITCREDENTIALS' > ~/.git-credentials
+https://{username}:{password}@{hostname}
+GITCREDENTIALS
 
 VOLUME /home
 
