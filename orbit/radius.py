@@ -813,38 +813,38 @@ def handle_containerfile(rocket):
 FROM fedora:42
 
 RUN <<DNF
-dnf -y update
-dnf install -y --setopt=install_weak_deps=False \
-git \
-tar \
-make \
-gcc \
-qemu-system-riscv \
-qemu-user-static-riscv \
-binutils-riscv64-linux-gnu \
-gcc-riscv64-linux-gnu \
-bc \
-flex \
-bison \
-openssl-devel \
-elfutils-libelf-devel \
-ncurses-devel \
-dwarves \
-git-email \
-vim \
-nano \
-{nano_default_editor} \
-mutt \
-cpio \
-wget \
-cyrus-sasl-plain \
-gdb \
-diffutils \
-strace \
-man \
-man-pages \
-;
-dnf clean all
+	dnf -y update
+	dnf install -y --setopt=install_weak_deps=False \
+		git \
+		tar \
+		make \
+		gcc \
+		qemu-system-riscv \
+		qemu-user-static-riscv \
+		binutils-riscv64-linux-gnu \
+		gcc-riscv64-linux-gnu \
+		bc \
+		flex \
+		bison \
+		openssl-devel \
+		elfutils-libelf-devel \
+		ncurses-devel \
+		dwarves \
+		git-email \
+		vim \
+		nano \
+		{nano_default_editor} \
+		mutt \
+		cpio \
+		wget \
+		cyrus-sasl-plain \
+		gdb \
+		diffutils \
+		strace \
+		man \
+		man-pages \
+	;
+	dnf clean all
 DNF
 
 RUN useradd {username} -U
@@ -871,20 +871,20 @@ MUTTRC
 
 RUN cat <<'GITCONFIG' > ~/.gitconfig
 [user]
-name = '{fullname}'
-email = {username}@{hostname}
+	name = '{fullname}'
+	email = {username}@{hostname}
 [sendemail]
-smtpUser = {username}
-smtpPass = {password}
-smtpserver = {hostname}
-smtpserverport = 465
-smtpencryption = ssl
+	smtpUser = {username}
+	smtpPass = {password}
+	smtpserver = {hostname}
+	smtpserverport = 465
+	smtpencryption = ssl
 GITCONFIG
 
 VOLUME /home
 
 ENTRYPOINT ["/usr/bin/bash", "-l", "-i"]
-'''.encode())
+'''.encode())  # NOQA: W191 E101
 
 
 def handle_error(rocket):
