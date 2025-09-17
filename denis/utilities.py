@@ -82,7 +82,7 @@ def update_tags(assignment, component):
 
 
 def check_corrupt_or_missing(repo, tag, username_to_subs):
-    [assignment, component, user] = tag.split('_')
+    [assignment, component, user] = tag.split('_', 2)
 
     gradable = username_to_subs[user]
 
@@ -104,7 +104,7 @@ def check_corrupt_or_missing(repo, tag, username_to_subs):
 
 
 def check_signed_off_by(repo, tag):
-    [_, _, user] = tag.split('_')
+    [_, _, user] = tag.split('_', 2)
     hostname = os.getenv("SINGULARITY_HOSTNAME")
 
     msg = 'signed off by check'
@@ -132,7 +132,7 @@ def check_signed_off_by(repo, tag):
 
 
 def check_subject_tag(repo, tag):
-    [assignment, component, user] = tag.split('_')
+    [assignment, component, user] = tag.split('_', 2)
 
     msg = 'subject tag check'
     msg += '\n'
