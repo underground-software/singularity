@@ -813,7 +813,7 @@ def handle_containerfile(rocket):
 FROM fedora:42
 
 RUN dnf -y update && \
-	dnf install -y --setopt=install_weak_deps=False \
+	dnf install -y --setopt=install_weak_deps=False --setopt=tsflags= \
 		git \
 		tar \
 		make \
