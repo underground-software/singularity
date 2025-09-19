@@ -842,6 +842,10 @@ RUN dnf -y update && \
 		strace \
 		man \
 		man-pages \
+		file \
+		bash-color-prompt \
+		bash-completion \
+		rsync \
 	&& \
 	dnf clean all && \
 	:
