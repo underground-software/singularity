@@ -65,6 +65,9 @@ def do_check(repo, cover_letter, patches):
             return f'patch {i+1}: no author found (should be impossible)!'
         found_author = patch_content[start:end]
 
+        dot_patch_hunks = 0
+        other_hunks = 0
+
         changelines = list(filter(lambda line: line.startswith('--- ') or line.startswith('+++ '), patch_content.split('\n')))
         for change in changelines:
             file = change.split(' ')[1].strip()
@@ -74,10 +77,21 @@ def do_check(repo, cover_letter, patches):
             if first_dir != found_author:
                 file_fixed = file[2:]
                 return f'illegal patch {i+1}: permission denied for path {file_fixed}!'
+            if file.endswith('.patch'):
+                dot_patch_hunks += 1
+            else:
+                other_hunks += 1
 
         # Try and apply and fail if there are whitespace errors
         def do_git_am(extra_args=[]):
             repo.git.execute([*git_am_args, *extra_args, patch_abspath]),
+
+        # if a patch is adding a single file whose name ends with .patch don't bother checking for whitespace errors
+        if dot_patch_hunks == 1 and other_hunks == 0:
+            if try_or_false(lambda: do_git_am(), git.GitCommandError):
+                continue
+            else:
+                return f'patch {i+1} failed to apply!'
 
         # If this fails, the patch may apply with whitespace errors
         if try_or_false(lambda: do_git_am(['--whitespace=error-all']),
