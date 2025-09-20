@@ -831,8 +831,8 @@ RUN dnf -y update && \
 		dwarves \
 		git-email \
 		vim \
-		emacs \
 		neovim \
+		emacs \
 		nano \
 		{nano_default_editor} \
 		mutt \
