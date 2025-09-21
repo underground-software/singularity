@@ -5,6 +5,7 @@ require shellcheck
 
 set -ex
 
+shellcheck start.sh
 shellcheck dev_sockets.sh
 shellcheck script-lint.sh
 shellcheck test.sh
