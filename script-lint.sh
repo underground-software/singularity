@@ -22,3 +22,5 @@ shellcheck git/hooks/post-update
 # -x needed to make shellcheck follow `source` command
 shellcheck -x backup/backup.sh
 shellcheck -x backup/restore.sh
+
+test "$(git ls-tree -r HEAD | grep -c '.*\.sh$')" -eq "13" || (echo "New script detected. Does it need to be added to script-lint?" && false)
