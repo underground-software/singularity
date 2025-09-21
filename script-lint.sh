@@ -9,6 +9,7 @@ shellcheck dev_sockets.sh
 shellcheck script-lint.sh
 shellcheck test.sh
 shellcheck orbit/warpdrive.sh
+shellcheck orbit/start.sh
 shellcheck denis/configure.sh
 shellcheck mailman/inspector.sh
 shellcheck git/admin.sh
