@@ -18,9 +18,10 @@ shellcheck git/create-repo.sh
 shellcheck git/setup-repo.sh
 shellcheck git/cgi-bin/git-receive-pack
 shellcheck git/hooks/post-update
+shellcheck daily_backup.sh
 
 # -x needed to make shellcheck follow `source` command
 shellcheck -x backup/backup.sh
 shellcheck -x backup/restore.sh
 
-test "$(git ls-tree -r HEAD | grep -c '.*\.sh$')" -eq "13" || (echo "New script detected. Does it need to be added to script-lint?" && false)
+test "$(git ls-tree -r HEAD | grep -c '.*\.sh$')" -eq "14" || (echo "New script detected. Does it need to be added to script-lint?" && false)
