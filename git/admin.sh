@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
 
-DOCKER_COMPOSE=${DOCKER_COMPOSE:-podman-compose}
+PODMAN_COMPOSE=${PODMAN_COMPOSE:-podman-compose}
 
-$DOCKER_COMPOSE exec git ./create-repo.sh "$@"
+$PODMAN_COMPOSE exec git ./create-repo.sh "$@"
