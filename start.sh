@@ -15,11 +15,15 @@ trap 'podman-compose down -v' EXIT
 
 # wait until synapse is done initializing
 podman-compose logs -f submatrix 2>&1 | sed '/Synapse now listening on TCP port 8008/ q'
-if [ -f test.sh ]
-then
-	./test.sh
-else
-	virtualenv .
-	pip install -r requirements.txt
-	pytest
-fi
+./test.sh
+podman-compose down -v
+podman-compose up -d
+podman-compose logs -f submatrix 2>&1 | sed '/Synapse now listening on TCP port 8008/ q'
+./dev_sockets.sh &
+./test-sub1.sh
+podman-compose down -v
+podman-compose up -d
+./test-sub2.sh
+podman-compose down -v
+podman-compose up -d
+./test-sub3.sh
