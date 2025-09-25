@@ -7,8 +7,13 @@ set -ex
 
 shellcheck start.sh
 shellcheck dev_sockets.sh
+
+# -x needed to make shellcheck follow `source` command
 shellcheck script-lint.sh
-shellcheck test.sh
+shellcheck -x test.sh
+shellcheck -x test-sub1.sh
+shellcheck -x test-sub2.sh
+shellcheck -x test-sub3.sh
 shellcheck orbit/warpdrive.sh
 shellcheck orbit/start.sh
 shellcheck denis/configure.sh
@@ -20,8 +25,7 @@ shellcheck git/cgi-bin/git-receive-pack
 shellcheck git/hooks/post-update
 shellcheck daily_backup.sh
 
-# -x needed to make shellcheck follow `source` command
 shellcheck -x backup/backup.sh
 shellcheck -x backup/restore.sh
 
-test "$(git ls-tree -r HEAD | grep -c '.*\.sh$')" -eq "14" || (echo "New script detected. Does it need to be added to script-lint?" && false)
+test "$(git ls-tree -r HEAD | grep -c '.*\.sh$')" -eq "17" || (echo "New script detected. Does it need to be added to script-lint?" && false)
