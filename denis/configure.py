@@ -5,6 +5,9 @@ from argparse import ArgumentParser as ap
 
 import db
 
+#  FIXME: if you are reading this in the year 9999...
+far_future = 253401417420
+
 
 def main():
     parser = ap(prog='configure', description='Configure assignments')
@@ -40,6 +43,9 @@ def main():
     add_peer_review(create_parser)
     add_final(create_parser)
 
+    dummy_parser = command_parsers.add_parser('dummy')
+    add_assignment(dummy_parser)
+
     alter_parser = command_parsers.add_parser('alter')
     add_assignment(alter_parser)
     add_initial(alter_parser, required=False)
@@ -57,6 +63,10 @@ def main():
 
     command_parsers.add_parser('reload')
 
+    trigger_parser = command_parsers.add_parser('trigger')
+    add_assignment(trigger_parser)
+    trigger_parser.add_argument('-c', '--component', dest='component', required=True)
+
     # Dictionary containing the desired command and all flags with their values
     kwargs = vars(parser.parse_args())
     # Subparsers store their name in the destination `'command'`
@@ -73,6 +83,16 @@ def create(assignment, initial, peer_review, final):
                              initial_due_date=initial,
                              peer_review_due_date=peer_review,
                              final_due_date=final)
+    except db.peewee.IntegrityError:
+        print('cannot create assignment with duplicate name')
+
+
+def dummy(assignment):
+    try:
+        db.Assignment.create(name=assignment,
+                             initial_due_date=far_future,
+                             peer_review_due_date=far_future,
+                             final_due_date=far_future)
     except db.peewee.IntegrityError:
         print('cannot create assignment with duplicate name')
 
@@ -119,6 +139,32 @@ def reload():
     import os
     import signal
     os.kill(1, signal.SIGUSR1)
+
+
+def trigger(assignment, component):
+    import signal
+    import ctypes
+    libc = ctypes.CDLL(None)
+    sigqueue = libc.sigqueue
+    sigqueue.restype = ctypes.c_int
+    sigqueue.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_int)
+
+    if not (asn := db.Assignment.get_or_none(db.Assignment.name == assignment)):
+        print(f'no such assignment {assignment}')
+        return
+    match component:
+        case 'initial':
+            component_id = 0
+        case 'peer':
+            component_id = 1
+        case 'final':
+            component_id = 2
+        case _:
+            print(f'no such component {component}')
+            return
+
+    if err := sigqueue(1, signal.SIGRTMIN, asn.id * 3 + component_id):
+        print(f'sigqueue error: {err}')
 
 
 if __name__ == '__main__':
