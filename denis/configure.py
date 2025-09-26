@@ -2,11 +2,17 @@
 
 from datetime import datetime
 from argparse import ArgumentParser as ap
+import sys
 
 import db
 
 #  FIXME: if you are reading this in the year 9999...
 far_future = 253401417420
+
+
+def errx(msg):
+    print(msg, file=sys.stderr)
+    sys.exit(1)
 
 
 def main():
@@ -84,7 +90,7 @@ def create(assignment, initial, peer_review, final):
                              peer_review_due_date=peer_review,
                              final_due_date=final)
     except db.peewee.IntegrityError:
-        print('cannot create assignment with duplicate name')
+        errx('cannot create assignment with duplicate name')
 
 
 def dummy(assignment):
@@ -94,7 +100,7 @@ def dummy(assignment):
                              peer_review_due_date=far_future,
                              final_due_date=far_future)
     except db.peewee.IntegrityError:
-        print('cannot create assignment with duplicate name')
+        errx('cannot create assignment with duplicate name')
 
 
 def alter(assignment, initial, peer_review, final):
@@ -106,12 +112,12 @@ def alter(assignment, initial, peer_review, final):
     if final is not None:
         alterations[db.Assignment.final_due_date] = final
     if not alterations:
-        return print('At least one new date must be specified')
+        errx('At least one new date must be specified')
     query = (db.Assignment
              .update(alterations)
              .where(db.Assignment.name == assignment))
     if query.execute() < 1:
-        print(f'no such assignment {assignment}')
+        errx(f'no such assignment {assignment}')
 
 
 def remove(assignment):
@@ -119,7 +125,7 @@ def remove(assignment):
              .delete()
              .where(db.Assignment.name == assignment))
     if query.execute() < 1:
-        print(f'no such assignment {assignment}')
+        errx(f'no such assignment {assignment}')
 
 
 def dump(fmt_iso):
@@ -138,7 +144,10 @@ def dump(fmt_iso):
 def reload():
     import os
     import signal
-    os.kill(1, signal.SIGUSR1)
+    try:
+        os.kill(1, signal.SIGUSR1)
+    except OSError as e:
+        errx(f'kill: {e}')
 
 
 def trigger(assignment, component):
@@ -150,8 +159,7 @@ def trigger(assignment, component):
     sigqueue.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_int)
 
     if not (asn := db.Assignment.get_or_none(db.Assignment.name == assignment)):
-        print(f'no such assignment {assignment}')
-        return
+        errx(f'no such assignment {assignment}')
     match component:
         case 'initial':
             component_id = 0
@@ -160,11 +168,10 @@ def trigger(assignment, component):
         case 'final':
             component_id = 2
         case _:
-            print(f'no such component {component}')
-            return
+            errx(f'no such component {component}')
 
     if err := sigqueue(1, signal.SIGRTMIN, asn.id * 3 + component_id):
-        print(f'sigqueue error: {err}')
+        errx(f'sigqueue error: {err}')
 
 
 if __name__ == '__main__':
