@@ -92,19 +92,19 @@ def main():
             else:
                 print(f'skipping final for {name}', file=sys.stderr)
 
-            while True:
-                # send SIGUSR1 to reload with new due dates, SIGTERM to exit, SIGRTMIN to trigger a deadline
-                info = signal.sigwaitinfo([signal.SIGUSR1, signal.SIGTERM, signal.SIGRTMIN])
-                match info.si_signo:
-                    case signal.SIGUSR1:
-                        print('reloading', file=sys.stderr)
-                    case signal.SIGTERM:
-                        again = False
-                    case signal.SIGRTMIN:
-                        handle_trigger(info)
-                        # no need to reload
-                        continue
-                break
+        while True:
+            # send SIGUSR1 to reload with new due dates, SIGTERM to exit, SIGRTMIN to trigger a deadline
+            info = signal.sigwaitinfo([signal.SIGUSR1, signal.SIGTERM, signal.SIGRTMIN])
+            match info.si_signo:
+                case signal.SIGUSR1:
+                    print('reloading', file=sys.stderr)
+                case signal.SIGTERM:
+                    again = False
+                case signal.SIGRTMIN:
+                    handle_trigger(info)
+                    # no need to reload
+                    continue
+            break
 
         for proc in procs:
             proc.terminate()
