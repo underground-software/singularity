@@ -34,6 +34,10 @@ git_am_args = ['git', '-c', 'advice.mergeConflict=false',
                'am', '--keep']
 
 
+def silent_execute(repo, args):
+    repo.git.execute(args, with_extended_output=False)
+
+
 def do_check(repo, cover_letter, patches):
     whitespace_errors = []
 
@@ -41,13 +45,13 @@ def do_check(repo, cover_letter, patches):
         args = git_am_args.copy()
         if keep_empty:
             args.append("--empty=keep")
-        repo.git.execute([*args, str(maildir/cover_letter.msg_id)])
+        silent_execute(repo, [*args, str(maildir/cover_letter.msg_id)])
 
     if try_or_false(lambda: am_cover_letter(keep_empty=False),
                     git.GitCommandError):
         return "missing cover letter!"
 
-    repo.git.execute(["git", "am", "--abort"])
+    silent_execute(repo, ["git", "am", "--abort"])
     if not try_or_false(lambda: am_cover_letter(keep_empty=True),
                         git.GitCommandError):
         return ("missing cover letter and "
@@ -84,7 +88,7 @@ def do_check(repo, cover_letter, patches):
 
         # Try and apply and fail if there are whitespace errors
         def do_git_am(extra_args=[]):
-            repo.git.execute([*git_am_args, *extra_args, patch_abspath]),
+            silent_execute(repo, [*git_am_args, *extra_args, patch_abspath])
 
         # if a patch is adding a single file whose name ends with .patch don't bother checking for whitespace errors
         if dot_patch_hunks == 1 and other_hunks == 0:
@@ -98,7 +102,7 @@ def do_check(repo, cover_letter, patches):
                         git.GitCommandError):
             continue
 
-        repo.git.execute(["git", "am", "--abort"])
+        silent_execute(repo, ["git", "am", "--abort"])
 
         # Try again, if we succeed, count this patch as a whitespace error
         if try_or_false(lambda: do_git_am(), git.GitCommandError):
@@ -125,7 +129,7 @@ def check(cover_letter, patches, submission_id):
         if auto_feedback[-1] == '!':
             for patch in patches:
                 patch_abspath = str(maildir / patch.msg_id)
-                repo.git.execute(['git', 'commit', '--allow-empty', '-F', patch_abspath])
+                silent_execute(repo, ['git', 'commit', '--allow-empty', '-F', patch_abspath])
         tag_and_push(repo, submission_id, msg=auto_feedback)
     return auto_feedback
 
@@ -145,7 +149,7 @@ def apply_peer_review(email, submission_id, review_id):
             with repo.config_writer() as config:
                 config.set_value('user', 'name', 'mailman')
                 config.set_value('user', 'email', 'mailman@mailman')
-            repo.git.execute([*args, patch_abspath])
+            silent_execute(repo, [*args, patch_abspath])
             tag_and_push(repo, submission_id)
         except git.GitCommandError as e:
             print(e, file=sys.stderr)
