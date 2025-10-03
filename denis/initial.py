@@ -56,8 +56,8 @@ except db.peewee.IntegrityError as e:
 
 utilities.release_subs([sub.submission_id for sub in usernames_to_subs.values() if sub])
 
-print(f'initial subs for {assignment} released')
-
 tags = utilities.update_tags(assignment, 'initial')
 
 utilities.run_automated_checks(tags, usernames_to_subs)
+
+print(f'completed {assignment} assignment processing for initial submission deadline')
