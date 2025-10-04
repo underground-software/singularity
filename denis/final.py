@@ -15,8 +15,8 @@ for oopsie in orbit.db.Oopsie.select().where(orbit.db.Oopsie.assignment == assig
 
 utilities.release_subs([sub.submission_id for sub in usernames_to_subs.values() if sub])
 
-print(f'final subs for {assignment} released')
-
 tags = utilities.update_tags(assignment, 'final')
 
 utilities.run_automated_checks(tags, usernames_to_subs)
+
+print(f'completed {assignment} assignment processing for final submission deadline')

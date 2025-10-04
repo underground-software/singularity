@@ -38,11 +38,15 @@ def main(argv):
     sub.save()
 
     irt_header = 'In-Reply-To: <'
+    sender_msg_id_header = 'X-KDLP-Orig-Message-ID: <'
+    sender_msg_id = None
     reply_id = None
     with open(f'/var/lib/email/mail/{emails[0].msg_id}') as f:
         for line in f:
             if not line:
                 break
+            if line.startswith(sender_msg_id_header):
+                sender_msg_id = line.removeprefix('X-KDLP-Orig-')
             if not line.startswith(irt_header):
                 continue
             at_sign = line.find('@', len(irt_header))
@@ -59,6 +63,7 @@ def main(argv):
     def set_status(status):
         sub.status = status
         sub.save()
+        print(f'finished processing {sender_msg_id}')
         return 0
 
     asn_db = denis.db.Assignment
