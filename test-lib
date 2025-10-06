@@ -116,7 +116,7 @@ setup_submissions_for() {
 	local user="$1"
 
 	pushd "$SCRIPT_DIR"
-	orbit/warpdrive.sh -u "$user" -p builder -n || orbit/warpdrive.sh -u "$user" -p builder -m
+	orbit/warpdrive.sh -u "$user" -f "$user" -p builder -n || orbit/warpdrive.sh -u "$user" -f "$user" -p builder -m
 	popd
 
 	pushd "$WORKDIR"/submissions
