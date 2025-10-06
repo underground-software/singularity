@@ -107,13 +107,18 @@ def check_signed_off_by(repo, tag):
     [_, _, user] = tag.split('_', 2)
     hostname = os.getenv("SINGULARITY_HOSTNAME")
 
+    usr_tbl = orbit.db.User
+    fullname = (usr_tbl.select()
+                       .where(usr_tbl.username == user)
+                       .first()).fullname
+
     msg = 'signed off by check'
     msg += '\n'
     msg += '-------------------'
     msg += '\n\n'
 
     commits = repo.git.execute(['git', 'rev-list', '--reverse', tag]).split('\n')
-    expected_dco = f'Signed-off-by: {user} <{user}@{hostname}>'
+    expected_dco = f'Signed-off-by: {fullname} <{user}@{hostname}>'
     nr_flawless = 0
     for i, commit in enumerate(commits):
         patch = repo.git.execute(['git', 'show', commit])
