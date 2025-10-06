@@ -13,6 +13,7 @@ FROM alpine:3.20 AS mailman
 RUN apk add \
 	py3-peewee \
 	py3-gitpython \
+	tzdata \
 	;
 
 

@@ -18,6 +18,8 @@ Section 2: Singularity Setup
 
  - Create an empty `repos` folder within the repository: `mkdir repos`.
 
+ - Create a symlink to the `.git` directory with: `ln -s .git gitdir`
+
  - Build the containers: `podman-compose build`.
 
  - Launch singularity: `podman-compose up -d`.

@@ -145,6 +145,8 @@ services:
         - watcher_source=./watcher
         - denis_source=./denis
         - orbit_source=./orbit
+    environment:
+      TZ: ${SINGULARITY_TIMEZONE}
     volumes:
       - type: volume
         source: email-mail
@@ -181,6 +183,9 @@ services:
         - journal_source=./journal
         - mailman_source=./mailman
         - orbit_source=./orbit
+    environment:
+      TZ: ${SINGULARITY_TIMEZONE}
+      SINGULARITY_HOSTNAME: ${SINGULARITY_HOSTNAME}
     volumes:
       - type: volume
         source: denis-db
@@ -218,7 +223,7 @@ services:
       context: git
       dockerfile: Containerfile
       additional_contexts:
-        - git_singularity_git_dir=./.git
+        - git_singularity_git_dir=./gitdir
         - git_course_repositories=repos
     volumes:
       - type: volume

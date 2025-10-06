@@ -1,25 +1,40 @@
-FROM alpine:3.20 as submatrix
+FROM alpine:3.20 as build
 
-RUN apk add \
-	synapse \
-	envsubst \
-	py3-curl \
-	tzdata \
-	;
+RUN apk update && \
+	apk add \
+		envsubst \
+	&& \
+	:
 
 COPY homeserver.yaml.template /etc/synapse/homeserver.yaml.template
+
+ARG MATRIX_HOSTNAME
+
+RUN envsubst '$MATRIX_HOSTNAME' < /etc/synapse/homeserver.yaml.template > /etc/synapse/homeserver.yaml
+
+FROM alpine:3.20 as submatrix
+
+COPY --from=build /etc/synapse/homeserver.yaml /etc/synapse/homeserver.yaml
+
+RUN apk update && \
+	apk add \
+		synapse \
+		py3-curl \
+		tzdata \
+	&& \
+	:
 
 COPY homeserver.log.config /etc/synapse/homeserver.log.config
 
 COPY orbit_auth.py /usr/local/share/submatrix/
 
-COPY start.sh /usr/local/share/submatrix/
-
-ARG MATRIX_HOSTNAME=localhost
-
-RUN envsubst '$MATRIX_HOSTNAME' < /etc/synapse/homeserver.yaml.template > /etc/synapse/homeserver.yaml
+# forgive the __import__ garbage, you can't start a with block after a semicolon (i.e. import foo; with...)
+# this creates a file in the sytem site-packages folder (whose exact location depends on the python version
+# and can only be discovered by asking python) that points to our folder for the auth plugin so that our
+# folder is added to the python path and synapse will be able to import the module code located in there.
+RUN python3 -c 'with open(__import__("pathlib").Path(__import__("site").getsitepackages()[0]) / "custom-site-pkgs.pth", "w") as f: f.write("/usr/local/share/submatrix\n")'
 
 USER 100:100
 
-ENTRYPOINT ["/usr/local/share/submatrix/start.sh"]
+ENTRYPOINT ["synapse_homeserver", "-c", "/etc/synapse/homeserver.yaml"]
 

@@ -7,12 +7,17 @@ assignment = sys.argv[1]
 
 ids = []
 
-ids += [sub for sub in utilities.user_to_sub(assignment, 'review1').values() if sub]  # NOQA: E501
-ids += [sub for sub in utilities.user_to_sub(assignment, 'review2').values() if sub]  # NOQA: E501
+usernames_to_subs_review1 = utilities.user_to_sub(assignment, 'review1')
+usernames_to_subs_review2 = utilities.user_to_sub(assignment, 'review2')
+
+ids += [sub.submission_id for sub in usernames_to_subs_review1.values() if sub]
+ids += [sub.submission_id for sub in usernames_to_subs_review2.values() if sub]
 
 utilities.release_subs(ids)
 
-print(f'peer review subs for {assignment} released')
+tags1 = utilities.update_tags(assignment, 'review1')
+tags2 = utilities.update_tags(assignment, 'review2')
 
-utilities.update_tags(assignment, 'review1')
-utilities.update_tags(assignment, 'review2')
+utilities.run_automated_checks(tags1 + tags2, usernames_to_subs_review1 | usernames_to_subs_review2, peer=True)
+
+print(f'completed {assignment} assignment processing for peer review submission deadline')

@@ -4,6 +4,7 @@
 
 import base64
 import bcrypt
+import git
 import html
 import markdown
 import os
@@ -105,7 +106,7 @@ class Session:
                 cok.load(raw)
                 res = cok.get('auth', cookies.Morsel()).value
 
-                if (ses_found := db.Session.get_or_none(db.Session.token == res)):  # NOQA: E501
+                if (ses_found := db.Session.get_or_none(db.Session.token == res)):
                     self.token = ses_found.token
                     self.username = ses_found.username
                     self.expiry = datetime.fromtimestamp(ses_found.expiry)
@@ -252,10 +253,11 @@ class Rocket:
         self._session.end()
         self.headers += self._session.mk_cookie_header()
 
-    def format_html(self, doc):
+    def format_html(self, doc, title):
         # loads cookie if exists
         self.session
-        return html_header + doc + f"""
+        page_header = html_header.format(title=title)
+        return page_header + doc + f"""
         <hr>
         <code>msg = {self._msg}</code><br>
         <code>whoami = {self.username}</code><br>
@@ -270,9 +272,11 @@ class Rocket:
                              self.headers)
         return [body]
 
-    def respond(self, response_document):
+    def respond(self, response_document, title=None):
+        if title is None:
+            title = 'KDLP'
         self.headers += [('Content-Type', 'text/html')]
-        response_document = self.format_html(response_document)
+        response_document = self.format_html(response_document, title)
         return self.raw_respond(HTTPStatus.OK, response_document.encode())
 
 
@@ -329,11 +333,11 @@ def handle_login(rocket):
             rocket.headers += [('Location', target)]
             return rocket.raw_respond(HTTPStatus.SEE_OTHER)
         elif target:
-            return rocket.respond(login_form(target_location=target))
+            return rocket.respond(login_form(target_location=target), 'Login')
         elif welcome:
-            return rocket.respond(mk_form_welcome(rocket.session))
+            return rocket.respond(mk_form_welcome(rocket.session), 'Welcome')
         else:
-            return rocket.respond(login_form())
+            return rocket.respond(login_form(), 'Login')
 
     if rocket.session:
         rocket.msg(f'{rocket.username} authenticated by token')
@@ -385,8 +389,8 @@ def handle_activity(rocket):
         return rocket.raw_respond(HTTPStatus.FORBIDDEN)
 
     submissions = (mailman.db.Submission.select()
-                   .where(mailman.db.Submission.user == rocket.session.username)  # NOQA: E501
-                   .order_by(- mailman.db.Submission.timestamp))
+                   .where(mailman.db.Submission.user == rocket.session.username)
+                   .order_by(-mailman.db.Submission.timestamp))
 
     def submission_fields(sub):
         return (datetime.fromtimestamp(sub.timestamp).astimezone().isoformat(),
@@ -410,7 +414,7 @@ def handle_activity(rocket):
     </tr>
     <tr>{table_content}</tr>
     </table>
-    """)
+    """, "Activity Log")
 
 
 class OopsStatus:
@@ -422,7 +426,7 @@ class OopsStatus:
 
 class AsmtTable:
     def __init__(self, assignment, oopsieness, peer1, peer2, init,
-                 review1, review2, final):
+                 review1, review1_grade, review2, review2_grade, final, final_grade, human_feedback):
         self.assignment = assignment
         self.name = assignment.name
         self.oopsieness = oopsieness
@@ -430,8 +434,12 @@ class AsmtTable:
         self.peer2 = peer2
         self.init = init
         self.review1 = review1
+        self.review1_grade = review1_grade
         self.review2 = review2
+        self.review2_grade = review2_grade
         self.final = final
+        self.final_grade = final_grade
+        self.human_feedback = human_feedback
 
     def oops_button_hover(self):
         match self.oopsieness:
@@ -444,6 +452,48 @@ class AsmtTable:
                 return "Oopsie used here!"
             case OopsStatus.UNAVAILABLE:
                 return "You have already used your oopsie"
+
+    def get_automated_feedback(self, attr):
+        if attr not in ['init', 'final'] or (gbl := getattr(self, attr)) is None:
+            return 'No submission'
+
+        match attr:
+            case 'init':
+                due_date = int(self.assignment.initial_due_date)
+            case 'final':
+                due_date = int(self.assignment.final_due_date)
+
+        if due_date < int(datetime.now().timestamp()):
+            return gbl.auto_feedback
+
+        match gbl.auto_feedback[-1]:
+            case '.':
+                return 'Submission accepted'
+            case '?':
+                return 'Issues detected in patchset'
+            case '!':
+                return 'Submission rejected'
+            case _:
+                return '---'
+
+    def get_total_score(self):
+        weighted_sum = 0
+        sum_of_weights = 0
+        try:
+            weighted_sum += 0.8 * int(self.final_grade)
+            sum_of_weights += 0.8
+            if self.peer1 is not None:
+                weighted_sum += 0.1 * int(self.review1_grade)
+                sum_of_weights += 0.1
+            if self.peer2 is not None:
+                weighted_sum += 0.1 * int(self.review2_grade)
+                sum_of_weights += 0.1
+        # if any of the grades are None, attempting to cast to int throws a TypeError
+        except TypeError:
+            return '-'
+        except ValueError:
+            return '???'
+        return f'{weighted_sum/sum_of_weights:.1f}'
 
     def gradeable_row(self, item_name, gradeable, rightmost_col):
         return f"""
@@ -477,8 +527,12 @@ class AsmtTable:
             return f"""
               {self.gradeable_row('Final Submission', self.final, self.oopsie_button())}
               <tr>
-                <th>Comments</th>
-                <td colspan="3">-</td>
+                <th>Automated Feedback</th>
+                <td colspan="3">{self.get_automated_feedback('final')}</td>
+              </tr>
+              <tr>
+                <th>Human Feedback</th>
+                <td colspan="3">{self.human_feedback}</td>
               </tr>
             """
         if (not self.init or
@@ -488,14 +542,14 @@ class AsmtTable:
               {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
               <tr>
                 <th>Automated Feedback</th>
-                <td colspan="3">-</td>
+                <td colspan="3">{self.get_automated_feedback('init')}</td>
               </tr>
             """
         return f"""
           {self.gradeable_row('Initial Submission', self.init, self.oopsie_button())}
           <tr>
             <th>Automated Feedback</th>
-            <td colspan="3">-</td>
+            <td colspan="3">{self.get_automated_feedback('init')}</td>
           </tr>
           <tr>
             <th></th>
@@ -503,12 +557,16 @@ class AsmtTable:
             <th>Submission ID</th>
             <th>Score</th>
           </tr>
-          {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, '-') if self.peer1 else ''}
-          {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, '-') if self.peer2 else ''}
-          {self.gradeable_row('Final Submission', self.final, '-')}
+          {self.gradeable_row(self.peer1 + ' Peer Review', self.review1, self.review1_grade if self.review1_grade else '-') if self.peer1 else ''}
+          {self.gradeable_row(self.peer2 + ' Peer Review', self.review2, self.review2_grade if self.review2_grade else '-') if self.peer2 else ''}
+          {self.gradeable_row('Final Submission', self.final, self.final_grade if self.final_grade else '-')}
           <tr>
-            <th>Comments</th>
-            <td colspan="3">-</td>
+            <th>Automated Feedback</th>
+            <td colspan="3">{self.get_automated_feedback('final')}</td>
+          </tr>
+          <tr>
+            <th>Human Feedback</th>
+            <td colspan="3">{self.human_feedback}</td>
           </tr>
         """
 
@@ -517,7 +575,7 @@ class AsmtTable:
         <table>
           <caption><h3>{self.name}</h3></caption>
           <tr>
-            <th>Total Score: -</th>
+            <th>Total Score: {self.get_total_score()}</th>
             <th>Timestamp</th>
             <th>Submission ID</th>
             <th>Request an 'Oopsie'</th>
@@ -560,7 +618,7 @@ def handle_dashboard(rocket):
                 <button type="submit" name="confirm" value="y">Confirm</button>
                 <br><br>
                 </form>
-            ''')
+            ''', 'Are you sure?')
         try:
             db.Oopsie.create(user=rocket.session.username, assignment=asn,
                              timestamp=int(now))
@@ -574,7 +632,7 @@ def handle_dashboard(rocket):
     grd_tbl = mailman.db.Gradeable
     user_gradeables = (grd_tbl.select()
                        .where(grd_tbl.user == rocket.session.username)
-                       .order_by(grd_tbl.timestamp.desc()))
+                       .order_by(-grd_tbl.timestamp))
     assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
     ret = '<form method="post" action="/dashboard">'
     for assignment in assignments:
@@ -590,9 +648,25 @@ def handle_dashboard(rocket):
         rev1 = asn_gradeables.where(grd_tbl.component == 'review1').first()
         rev2 = asn_gradeables.where(grd_tbl.component == 'review2').first()
         final = asn_gradeables.where(grd_tbl.component == 'final').first()
-        ret += str(AsmtTable(assignment, oopsieness, peer1, peer2, init, rev1,
-                             rev2, final))
-    return rocket.respond(ret + '</form>')
+
+        repo = git.Repo('/var/lib/git/grading.git')
+        grades = {}
+        for component in ['review1', 'review2', 'final']:
+            tag = f'{assignment.name}_{component}_{rocket.session.username}'
+            try:
+                grades[component] = repo.git.execute(['git', 'notes', '--ref=grade', 'show', tag])
+            except git.GitCommandError:
+                grades[component] = None
+
+        tag = f'{assignment.name}_final_{rocket.session.username}'
+        try:
+            human_feedback = repo.git.execute(['git', 'notes', '--ref=feedback', 'show', tag])
+        except git.GitCommandError:
+            human_feedback = '-'
+
+        ret += str(AsmtTable(assignment, oopsieness, peer1, peer2, init,
+                             rev1, grades['review1'], rev2, grades['review2'], final, grades['final'], human_feedback))
+    return rocket.respond(ret + '</form>', 'Dashboard')
 
 
 def find_creds_for_registration(student_id):
@@ -618,7 +692,7 @@ def handle_register(rocket):
         <label for="student_id">Student ID:</label>
         <input name="student_id" type="text" id="student_id" /><br />
         <button type="submit">Submit</button>
-    </form>''')
+    </form>''', 'Register')
 
     if rocket.method != 'POST':
         return form_respond()
@@ -633,7 +707,7 @@ def handle_register(rocket):
     return rocket.respond(f'''
     <h1>Save these credentials, you will not be able to access them again</h1><br>
     <h3>Username: {username}</h3><br>
-    <h3>Password: {password}</h3><br>''')
+    <h3>Password: {password}</h3><br>''', 'Welcome to the classroom')
 
 
 def extract_basic_auth(rocket):
@@ -716,7 +790,7 @@ def handle_cgit(rocket):
         if raw_return:
             return rocket.raw_respond(status, raw_body)
         outstring = raw_body.decode()
-        return rocket.respond(outstring)
+        return rocket.respond(outstring, 'CGit')  # TODO: get real title? (file issue upstream)
     except (UnicodeDecodeError, ValueError, IndexError) as ex:
         return cgit_internal_server_error(type(ex))
 
@@ -735,41 +809,54 @@ def handle_containerfile(rocket):
     if (not (user := tbl.get_or_none(tbl.username == username)) or
             not (fullname := user.fullname)):
         fullname = 'Unknown'
-    return rocket.raw_respond(HTTPStatus.OK, f'''
-FROM fedora:41
+    return rocket.raw_respond(HTTPStatus.OK, rf'''
+FROM fedora:42
 
-RUN <<DNF
-dnf -y update
-dnf install -y --setopt=install_weak_deps=False \
-git \
-tar \
-make \
-gcc \
-qemu-system-riscv \
-binutils-riscv64-linux-gnu \
-gcc-riscv64-linux-gnu \
-bc \
-flex \
-bison \
-openssl-devel \
-elfutils-libelf-devel \
-ncurses-devel \
-dwarves \
-git-email \
-vim \
-nano \
-{nano_default_editor} \
-mutt \
-cpio \
-wget \
-cyrus-sasl-plain \
-strace
-dnf clean all
-DNF
+RUN dnf -y update && \
+	dnf install -y --setopt=install_weak_deps=False --setopt=tsflags= \
+		git \
+		tar \
+		make \
+		gcc \
+		qemu-system-riscv \
+		qemu-user-static-riscv \
+		binutils-riscv64-linux-gnu \
+		gcc-riscv64-linux-gnu \
+		bc \
+		flex \
+		bison \
+		openssl-devel \
+		elfutils-libelf-devel \
+		ncurses-devel \
+		dwarves \
+		git-email \
+		vim \
+		neovim \
+		emacs \
+		nano \
+		{nano_default_editor} \
+		mutt \
+		cpio \
+		wget \
+		cyrus-sasl-plain \
+		gdb \
+		diffutils \
+		strace \
+		man \
+		man-pages \
+		file \
+		bash-color-prompt \
+		bash-completion \
+		rsync \
+	&& \
+	dnf clean all && \
+	:
 
 RUN useradd {username} -U
 USER {username}:{username}
 WORKDIR /home/{username}/
+
+RUN mkdir .cache
 
 RUN cat <<'MUTTRC' > ~/.muttrc
 set realname="{fullname}"
@@ -789,20 +876,27 @@ MUTTRC
 
 RUN cat <<'GITCONFIG' > ~/.gitconfig
 [user]
-name = '{fullname}'
-email = {username}@{hostname}
+	name = '{fullname}'
+	email = {username}@{hostname}
 [sendemail]
-smtpUser = {username}
-smtpPass = {password}
-smtpserver = {hostname}
-smtpserverport = 465
-smtpencryption = ssl
+	smtpUser = {username}
+	smtpPass = {password}
+	smtpserver = {hostname}
+	smtpserverport = 465
+	smtpencryption = ssl
+[credential "https://{hostname}"]
+	helper = store
+	username = {username}
 GITCONFIG
+
+RUN cat <<'GITCREDENTIALS' > ~/.git-credentials
+https://{username}:{password}@{hostname}
+GITCREDENTIALS
 
 VOLUME /home
 
 ENTRYPOINT ["/usr/bin/bash", "-l", "-i"]
-    '''.strip().encode())
+'''.encode())  # NOQA: W191 E101
 
 
 def handle_error(rocket):
@@ -815,7 +909,7 @@ def handle_error(rocket):
         return rocket.raw_respond(HTTPStatus.INTERNAL_SERVER_ERROR)
     error_description = (f'<h1>HTTP ERROR {error.value}: '
                          f'{error.name.upper().replace("_", " ")}</h1>')
-    return rocket.respond(error_description)
+    return rocket.respond(error_description, f'ERROR {error.value}')
 
 
 def handle_try_md(rocket):
@@ -828,7 +922,12 @@ def handle_try_md(rocket):
         md = file.read()
     html = markdown.markdown(md, extensions=['tables', 'fenced_code',
                                              'footnotes', 'toc'])
-    return rocket.respond(html)
+    # Use the first line of the document as the title, sans #
+    if (title_end := md.find('\n')) != -1:
+        title = md[0:title_end].lstrip('#').strip()
+    else:
+        title = 'KDLP'
+    return rocket.respond(html, title)
 
 
 def application(env, SR):

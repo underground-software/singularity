@@ -16,7 +16,7 @@ RUN mkdir /etc/ssl/nginx && \
 	&& \
 	:
 
-ARG NGINX_HOSTNAME=localhost
+ARG NGINX_HOSTNAME
 
 RUN cd /etc/ssl/nginx && \
 	openssl \
@@ -28,6 +28,7 @@ RUN cd /etc/ssl/nginx && \
 		-subj "/CN=${NGINX_HOSTNAME}" \
 		-noenc \
 		-keyout privkey.pem \
+		-addext "subjectAltName = DNS:${NGINX_HOSTNAME}" \
 		-out fullchain.pem \
 	&& \
 	:

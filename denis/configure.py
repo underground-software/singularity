@@ -1,8 +1,20 @@
 #!/usr/bin/env python3
 
+from datetime import datetime
 from argparse import ArgumentParser as ap
+import sys
+import os
 
 import db
+import config
+
+#  FIXME: if you are reading this in the year 9999...
+far_future = 253401417420
+
+
+def errx(msg):
+    print(msg, file=sys.stderr)
+    sys.exit(1)
 
 
 def main():
@@ -39,6 +51,9 @@ def main():
     add_peer_review(create_parser)
     add_final(create_parser)
 
+    dummy_parser = command_parsers.add_parser('dummy')
+    add_assignment(dummy_parser)
+
     alter_parser = command_parsers.add_parser('alter')
     add_assignment(alter_parser)
     add_initial(alter_parser, required=False)
@@ -48,8 +63,17 @@ def main():
     remove_parser = command_parsers.add_parser('remove')
     add_assignment(remove_parser)
 
-    command_parsers.add_parser('dump')
+    dump_parser = command_parsers.add_parser('dump')
+    dump_parser.add_argument('-i', '--iso',
+                             action='store_true',
+                             dest='fmt_iso',
+                             help='Dump dates in ISO format')
+
     command_parsers.add_parser('reload')
+
+    trigger_parser = command_parsers.add_parser('trigger')
+    add_assignment(trigger_parser)
+    trigger_parser.add_argument('-c', '--component', dest='component', required=True)
 
     # Dictionary containing the desired command and all flags with their values
     kwargs = vars(parser.parse_args())
@@ -68,7 +92,17 @@ def create(assignment, initial, peer_review, final):
                              peer_review_due_date=peer_review,
                              final_due_date=final)
     except db.peewee.IntegrityError:
-        print('cannot create assignment with duplicate name')
+        errx('cannot create assignment with duplicate name')
+
+
+def dummy(assignment):
+    try:
+        db.Assignment.create(name=assignment,
+                             initial_due_date=far_future,
+                             peer_review_due_date=far_future,
+                             final_due_date=far_future)
+    except db.peewee.IntegrityError:
+        errx('cannot create assignment with duplicate name')
 
 
 def alter(assignment, initial, peer_review, final):
@@ -80,12 +114,12 @@ def alter(assignment, initial, peer_review, final):
     if final is not None:
         alterations[db.Assignment.final_due_date] = final
     if not alterations:
-        return print('At least one new date must be specified')
+        errx('At least one new date must be specified')
     query = (db.Assignment
              .update(alterations)
              .where(db.Assignment.name == assignment))
     if query.execute() < 1:
-        print(f'no such assignment {assignment}')
+        errx(f'no such assignment {assignment}')
 
 
 def remove(assignment):
@@ -93,22 +127,60 @@ def remove(assignment):
              .delete()
              .where(db.Assignment.name == assignment))
     if query.execute() < 1:
-        print(f'no such assignment {assignment}')
+        errx(f'no such assignment {assignment}')
 
 
-def dump():
+def dump(fmt_iso):
+    def timestamp_to_formatted(timestamp):
+        dt = datetime.fromtimestamp(timestamp).astimezone()
+        return dt.isoformat() if fmt_iso else dt.strftime('%a %b %d %Y %T %Z (%z)')
+
+    reload_mtime = os.path.getmtime(config.RELOAD_FILE)
+    db_mtime = os.path.getmtime(db.DB_PATH)
+    if (db_mtime > reload_mtime):
+        print('WARNING: Denis database is dirty, reload to update waiters')
+
     print(' --- Assignments ---')
     for asn in db.Assignment.select():
         print(f'''{asn.name}:
-\tInitial: {asn.initial_due_date}
-\tPeer Review: {asn.peer_review_due_date}
-\tFinal: {asn.final_due_date}''')
+\tInitial:\t{timestamp_to_formatted(asn.initial_due_date)}
+\tPeer Review:\t{timestamp_to_formatted(asn.peer_review_due_date)}
+\tFinal:\t\t{timestamp_to_formatted(asn.final_due_date)}''')
 
 
 def reload():
     import os
     import signal
-    os.kill(1, signal.SIGUSR1)
+    try:
+        os.kill(1, signal.SIGUSR1)
+        # update mtime/utime with last reload
+        os.utime(config.RELOAD_FILE)
+    except OSError as e:
+        errx(f'kill: {e}')
+
+
+def trigger(assignment, component):
+    import signal
+    import ctypes
+    libc = ctypes.CDLL(None)
+    sigqueue = libc.sigqueue
+    sigqueue.restype = ctypes.c_int
+    sigqueue.argtypes = (ctypes.c_int, ctypes.c_int, ctypes.c_int)
+
+    if not (asn := db.Assignment.get_or_none(db.Assignment.name == assignment)):
+        errx(f'no such assignment {assignment}')
+    match component:
+        case 'initial':
+            component_id = 0
+        case 'peer':
+            component_id = 1
+        case 'final':
+            component_id = 2
+        case _:
+            errx(f'no such component {component}')
+
+    if err := sigqueue(1, signal.SIGRTMIN, asn.id * 3 + component_id):
+        errx(f'sigqueue error: {err}')
 
 
 if __name__ == '__main__':

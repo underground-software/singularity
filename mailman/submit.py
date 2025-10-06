@@ -41,11 +41,15 @@ def main(argv):
     sub.save()
 
     irt_header = 'In-Reply-To: <'
+    sender_msg_id_header = 'X-KDLP-Orig-Message-ID: <'
+    sender_msg_id = None
     reply_id = None
     with open(f'/var/lib/email/mail/{emails[0].msg_id}') as f:
         for line in f:
             if not line:
                 break
+            if line.startswith(sender_msg_id_header):
+                sender_msg_id = line.removeprefix('X-KDLP-Orig-')
             if not line.startswith(irt_header):
                 continue
             at_sign = line.find('@', len(irt_header))
@@ -62,6 +66,7 @@ def main(argv):
     def set_status(status):
         sub.status = status
         sub.save()
+        print(f'finished processing {sender_msg_id}')
         return 0
 
     # buffer defaults to 7 if value is unset or invalid
@@ -81,7 +86,7 @@ def main(argv):
     gr_db = db.Gradeable
     if asn := asn_db.get_or_none(asn_db.name == emails[0].rcpt):
         cover_letter, *patches = emails
-        status = patchset.check(cover_letter, patches, logfile)
+        auto_feedback = patchset.check(cover_letter, patches, logfile)
         if len(emails) < 2:
             return set_status('missing patches')
         typ = ('initial' if timestamp < (asn.initial_due_date
@@ -91,11 +96,11 @@ def main(argv):
         if not typ:
             return set_status(f'{asn.name} past due')
         gr_db.create(submission_id=logfile, timestamp=timestamp, user=user,
-                     assignment=asn.name, component=typ, status=status)
+                     assignment=asn.name, component=typ, auto_feedback=auto_feedback)
         return set_status(f'{asn.name}: {typ}')
 
     if reply_id:
-        status = patchset.apply_peer_review(emails[0], logfile, reply_id)
+        auto_feedback = patchset.apply_peer_review(emails[0], logfile, reply_id)
         if not (orig := gr_db.get_or_none(gr_db.submission_id == reply_id)):
             return set_status('not a reply to a submission')
         asn_name = orig.assignment
@@ -118,7 +123,7 @@ def main(argv):
                 return set_status('reviewed wrong submission')
         gr_db.create(submission_id=logfile, timestamp=timestamp,
                      user=user, assignment=asn_name, component=typ,
-                     status=status)
+                     auto_feedback=auto_feedback)
         return set_status(f'{asn_name}: {typ}')
 
     return set_status('Not a recognized recipient')
