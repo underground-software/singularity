@@ -468,11 +468,11 @@ class AsmtTable:
 
         match gbl.auto_feedback[-1]:
             case '.':
-                return 'Submission accepted'
+                return 'Submission received, no issues detected'
             case '?':
-                return 'Issues detected in patchset'
+                return 'Submission received, issues detected'
             case '!':
-                return 'Submission rejected'
+                return 'Submission received, fatal errors detected'
             case _:
                 return '---'
 
