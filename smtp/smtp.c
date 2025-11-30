@@ -549,6 +549,8 @@ static void handle_auth(enum state *state)
 		if(user_end == NULL)
 			REPLY("535 Authentication credentials invalid")
 		username_size = (size_t)(user_end - user_start);
+		if (username_size > sizeof username)
+			REPLY("535 Username too long")
 		memcpy(username, user_start, username_size);
 		if(!validate_and_case_fold_email_address(username_size, username))
 			REPLY("535 Invalid username")
