@@ -463,7 +463,7 @@ class AsmtTable:
             case 'final':
                 due_date = int(self.assignment.final_due_date)
 
-        if due_date < int(datetime.now().timestamp()):
+        if due_date <= int(datetime.now().timestamp()):
             return gbl.auto_feedback
 
         match gbl.auto_feedback[-1]:
