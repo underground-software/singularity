@@ -296,8 +296,8 @@ def mk_form_welcome(session):
          </div>
     </div>
     <div class="logout_buttons">
-        <form id="logout">
-            <input class="logout" type="button" onclick="location.href='/logout';" value="Logout" />
+        <form id="logout" method="get" action="/logout">
+            <input class="logout" type="submit" value="Logout" />
         </form>
     </div>'''
 
