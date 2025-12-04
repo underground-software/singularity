@@ -321,6 +321,7 @@ def login_form(target_location=None):
 
 
 def handle_login(rocket):
+    rocket.headers += [('Cache-Control', 'no-cache')]
     target = rocket.queries_query('target')
 
     # harden the redirect to prevent csrf type attacks
