@@ -254,9 +254,8 @@ class Rocket:
         self.headers += self._session.mk_cookie_header()
 
     def format_html(self, doc, title):
-        # loads cookie if exists
-        self.session
-        page_header = html_header.format(title=title)
+        auth_button_text = "Account" if self.session else "Login"
+        page_header = html_header.format(title=title, auth_button_text=auth_button_text)
         return page_header + doc + f"""
         <hr>
         <code>msg = {self._msg}</code><br>
