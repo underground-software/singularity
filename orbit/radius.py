@@ -651,21 +651,20 @@ def handle_dashboard(rocket):
 
         repo = git.Repo('/var/lib/git/grading.git')
         grades = {}
+        human_feedback = {}
         for component in ['review1', 'review2', 'final']:
             tag = f'{assignment.name}_{component}_{rocket.session.username}'
             try:
                 grades[component] = repo.git.execute(['git', 'notes', '--ref=grade', 'show', tag])
             except git.GitCommandError:
                 grades[component] = None
-
-        tag = f'{assignment.name}_final_{rocket.session.username}'
-        try:
-            human_feedback = repo.git.execute(['git', 'notes', '--ref=feedback', 'show', tag])
-        except git.GitCommandError:
-            human_feedback = '-'
+            try:
+                human_feedback[component] = repo.git.execute(['git', 'notes', '--ref=feedback', 'show', tag])
+            except git.GitCommandError:
+                human_feedback[component] = '-'
 
         ret += str(AsmtTable(assignment, oopsieness, peer1, peer2, init,
-                             rev1, grades['review1'], rev2, grades['review2'], final, grades['final'], human_feedback))
+                             rev1, grades['review1'], rev2, grades['review2'], final, grades['final'], str(human_feedback)))
     return rocket.respond(ret + '</form>', 'Dashboard')
 
 
