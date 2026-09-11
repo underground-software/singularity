@@ -818,6 +818,9 @@ RUN dnf -y update && \
 		tar \
 		make \
 		gcc \
+		clang \
+		llvm \
+		lld \
 		qemu-system-riscv \
 		qemu-user-static-riscv \
 		binutils-riscv64-linux-gnu \
