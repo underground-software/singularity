@@ -100,7 +100,7 @@ def do_newuser(args):
 def do_roster(args):
     print('Users:')
     for u in db.User.select():
-        print(f'{u.username}, {u.pwdhash}, {u.student_id}')
+        print(f'{u.username}, {u.pwdhash}, {u.student_id}, {u.fullname}')
 
 
 def do_list_sessions(args):
