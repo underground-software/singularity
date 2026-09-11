@@ -810,7 +810,7 @@ def handle_containerfile(rocket):
             not (fullname := user.fullname)):
         fullname = 'Unknown'
     return rocket.raw_respond(HTTPStatus.OK, rf'''
-FROM fedora:42
+FROM fedora:44
 
 RUN dnf -y update && \
 	dnf install -y --setopt=install_weak_deps=False --setopt=tsflags= \
