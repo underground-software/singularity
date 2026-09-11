@@ -25,5 +25,9 @@ trusted_key_servers: []
 modules:
   - module: orbit_auth.OrbitAuthProvider
     config: {}
+rc_login:
+  address:
+    per_second: 30
+    burst_count: 30
 
 # vim:ft=yaml
