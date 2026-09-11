@@ -16,12 +16,14 @@ def errx(msg):
     exit(1)
 
 
-def need(a, u=False, p=False):
+def need(a, u=False, p=False, f=False):
     needed = []
     if u and a.username is None:
         needed.append('username')
     if p and a.password is None:
         needed.append('password')
+    if f and a.fullname is None:
+        needed.append('fullname')
     if needed:
         errx(f"Need {' and '.join(needed)}. Bye.")
 
@@ -45,6 +47,15 @@ def do_change_password(args):
     new_hash = do_bcrypt_hash(args)
     query = (db.User
              .update({db.User.pwdhash: new_hash})
+             .where(db.User.username == args.username))
+    if query.execute() < 1:
+        nou(args.username)
+
+
+def do_change_fullname(args):
+    need(args, u=True, f=True)
+    query = (db.User
+             .update({db.User.fullname: args.fullname})
              .where(db.User.username == args.username))
     if query.execute() < 1:
         nou(args.username)
@@ -119,6 +130,9 @@ def hyperspace_main(raw_args):
     actions.add_argument('-m', '--mutatepassword', action='store_const',
                          help='Change password for supplied username to supplied password',
                          dest='do', const=do_change_password)
+    actions.add_argument('-e', '--editfullname', action='store_const',
+                         help='Change full name for supplied username to supplied full name',
+                         dest='do', const=do_change_fullname)
     actions.add_argument('-c', '--clearpassword', action='store_const',
                          help='clear password for supplied username so they cannot login',
                          dest='do', const=do_reset_password)
