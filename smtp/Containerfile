@@ -1,6 +1,7 @@
-FROM alpine:3.20 AS build
+FROM alpine:3.24 AS build
 RUN apk add \
 	clang \
+	gcc \
 	make \
 	;
 

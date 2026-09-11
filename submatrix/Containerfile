@@ -1,4 +1,4 @@
-FROM alpine:3.20 as build
+FROM alpine:3.24 as build
 
 RUN apk update && \
 	apk add \
@@ -12,7 +12,7 @@ ARG MATRIX_HOSTNAME
 
 RUN envsubst '$MATRIX_HOSTNAME' < /etc/synapse/homeserver.yaml.template > /etc/synapse/homeserver.yaml
 
-FROM alpine:3.20 as submatrix
+FROM alpine:3.24 as submatrix
 
 COPY --from=build /etc/synapse/homeserver.yaml /etc/synapse/homeserver.yaml
 
