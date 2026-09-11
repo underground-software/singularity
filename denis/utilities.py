@@ -174,9 +174,11 @@ def check_subject_tag(repo, tag):
 def run_automated_checks(tags, username_to_subs, peer=False):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.clone_from(PULL_URL, repo_path)
+        # fetch from the pull URL: the CGI server behind the push URL drops
+        # the Content-Encoding header, so a gzipped fetch request fails there
+        repo.remotes.origin.fetch('refs/notes/*:refs/notes/*')
 
         remote = repo.create_remote(REMOTE_NAME, PUSH_URL)
-        remote.fetch('refs/notes/*:refs/notes/*')
         configure_repo(repo)
 
         for tag in tags:
