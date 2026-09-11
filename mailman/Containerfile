@@ -1,6 +1,7 @@
-FROM alpine:3.20 AS build
+FROM alpine:3.24 AS build
 RUN apk add \
 	clang \
+	gcc \
 	make \
 	;
 
@@ -8,7 +9,7 @@ COPY --from=watcher_source . /watcher
 
 RUN make -C /watcher CC='clang -static'
 
-FROM alpine:3.20 AS mailman
+FROM alpine:3.24 AS mailman
 
 RUN apk add \
 	py3-peewee \
