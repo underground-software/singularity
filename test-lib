@@ -105,7 +105,7 @@ trigger_deadline() {
 	if [ "$cmp" == "peer" ]; then
 		cmp="$cmp review"
 	fi
-	podman-compose logs -f denis | ( sed "/completed $asn assignment processing for $cmp submission deadline/ q" && kill 0 ) || true
+	podman-compose logs --no-log-prefix --no-color -f denis | ( sed "/completed $asn assignment processing for $cmp submission deadline/ q" && kill 0 ) || true
 	popd
 }
 
@@ -159,7 +159,7 @@ exit_after_sending() {
 	last_id=$(grep -m 1 "Message-ID" "$WORKDIR"/last_email)
 	rm ./*.patch
 	popd
-	podman-compose logs -f mailman | ( sed "/finished processing $last_id/ q" && kill 0 ) || true
+	podman-compose logs --no-log-prefix --no-colors -f mailman | ( sed "/finished processing $last_id/ q" && kill 0 ) || true
 }
 
 # preconditions:
