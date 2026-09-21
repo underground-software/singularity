@@ -19,8 +19,8 @@ tags1 = utilities.update_tags(assignment, 'review1')
 tags2 = utilities.update_tags(assignment, 'review2')
 
 utilities.run_automated_checks(assignment, 'review1', tags1,
-                               usernames_to_subs_review1, peer=True)
+                               usernames_to_subs_review1)
 utilities.run_automated_checks(assignment, 'review2', tags2,
-                               usernames_to_subs_review2, peer=True)
+                               usernames_to_subs_review2)
 
 print(f'completed {assignment} assignment processing for peer review submission deadline')
