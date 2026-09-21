@@ -62,7 +62,7 @@ def update_tags(assignment, component):
         updated_tags = []
         for user in orbit.db.User.select():
             new_tag_name = f'{assignment}_{component}_{user.username}'
-            updated_tags.append(new_tag_name)
+            updated_tags.append((new_tag_name, user.username))
             if new_tag_name in repo.tags:
                 print('Potential issue? Attempted to create duplicate tag '
                       f'{new_tag_name}')
@@ -81,9 +81,7 @@ def update_tags(assignment, component):
     return updated_tags
 
 
-def check_corrupt_or_missing(repo, tag, username_to_subs):
-    [assignment, component, user] = tag.split('_', 2)
-
+def check_corrupt_or_missing(repo, tag, user, username_to_subs):
     gradable = username_to_subs[user]
 
     msg = 'corruption and existence check'
@@ -103,8 +101,7 @@ def check_corrupt_or_missing(repo, tag, username_to_subs):
     return msg
 
 
-def check_signed_off_by(repo, tag):
-    [_, _, user] = tag.split('_', 2)
+def check_signed_off_by(repo, tag, user):
     hostname = os.getenv("SINGULARITY_HOSTNAME")
 
     usr_tbl = orbit.db.User
@@ -136,9 +133,7 @@ def check_signed_off_by(repo, tag):
     return msg
 
 
-def check_subject_tag(repo, tag):
-    [assignment, component, user] = tag.split('_', 2)
-
+def check_subject_tag(repo, tag, assignment, component, user):
     msg = 'subject tag check'
     msg += '\n'
     msg += '-----------------'
@@ -171,7 +166,8 @@ def check_subject_tag(repo, tag):
     return msg
 
 
-def run_automated_checks(tags, username_to_subs, peer=False):
+def run_automated_checks(assignment, component, tags, username_to_subs,
+                         peer=False):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.clone_from(PULL_URL, repo_path)
         # fetch from the pull URL: the CGI server behind the push URL drops
@@ -181,15 +177,15 @@ def run_automated_checks(tags, username_to_subs, peer=False):
         remote = repo.create_remote(REMOTE_NAME, PUSH_URL)
         configure_repo(repo)
 
-        for tag in tags:
+        for tag, user in tags:
             msg = 'Automated tests by denis'
             msg += '\n\n'
-            msg += check_corrupt_or_missing(repo, tag, username_to_subs)
+            msg += check_corrupt_or_missing(repo, tag, user, username_to_subs)
 
             if msg[-3] != '!' and not peer:
                 msg += '\n\n'
-                msg += check_signed_off_by(repo, tag)
-                msg += check_subject_tag(repo, tag)
+                msg += check_signed_off_by(repo, tag, user)
+                msg += check_subject_tag(repo, tag, assignment, component, user)
 
             repo.git.execute(['git', 'notes', '--ref=denis', 'add', tag, '-m', msg])
 
