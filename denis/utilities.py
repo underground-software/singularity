@@ -166,8 +166,7 @@ def check_subject_tag(repo, tag, assignment, component, user):
     return msg
 
 
-def run_automated_checks(assignment, component, tags, username_to_subs,
-                         peer=False):
+def run_automated_checks(assignment, component, tags, username_to_subs):
     with tempfile.TemporaryDirectory() as repo_path:
         repo = git.Repo.clone_from(PULL_URL, repo_path)
         # fetch from the pull URL: the CGI server behind the push URL drops
@@ -182,7 +181,7 @@ def run_automated_checks(assignment, component, tags, username_to_subs,
             msg += '\n\n'
             msg += check_corrupt_or_missing(repo, tag, user, username_to_subs)
 
-            if msg[-3] != '!' and not peer:
+            if msg[-3] != '!' and component not in ('review1', 'review2'):
                 msg += '\n\n'
                 msg += check_signed_off_by(repo, tag, user)
                 msg += check_subject_tag(repo, tag, assignment, component, user)
