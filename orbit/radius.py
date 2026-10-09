@@ -495,6 +495,12 @@ class AsmtTable:
             return '???'
         return f'{weighted_sum/sum_of_weights:.1f}'
 
+    def format_human_feedback(self):
+        formatted_human_feedback_array = []
+        for component, feedback in self.human_feedback.items():
+            formatted_human_feedback_array.append(f'{component}: {html.escape(feedback)}')
+        return '\n'.join(formatted_human_feedback_array)
+
     def gradeable_row(self, item_name, gradeable, rightmost_col):
         return f"""
         <tr>
@@ -532,7 +538,7 @@ class AsmtTable:
               </tr>
               <tr>
                 <th>Human Feedback</th>
-                <td colspan="3">{self.human_feedback}</td>
+                <td colspan="3" style="white-space: pre-wrap">{self.format_human_feedback()}</td>
               </tr>
             """
         if (not self.init or
@@ -566,7 +572,7 @@ class AsmtTable:
           </tr>
           <tr>
             <th>Human Feedback</th>
-            <td colspan="3">{self.human_feedback}</td>
+            <td colspan="3" style="white-space: pre-wrap">{self.format_human_feedback()}</td>
           </tr>
         """
 
@@ -633,7 +639,7 @@ def handle_dashboard(rocket):
     user_gradeables = (grd_tbl.select()
                        .where(grd_tbl.user == rocket.session.username)
                        .order_by(-grd_tbl.timestamp))
-    assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date)
+    assignments = asmt_tbl.select().order_by(asmt_tbl.initial_due_date.desc())
     ret = '<form method="post" action="/dashboard">'
     for assignment in assignments:
         oopsieness = get_asmt_oopsieness(oops, assignment.name,
@@ -664,7 +670,7 @@ def handle_dashboard(rocket):
                 human_feedback[component] = '-'
 
         ret += str(AsmtTable(assignment, oopsieness, peer1, peer2, init,
-                             rev1, grades['review1'], rev2, grades['review2'], final, grades['final'], str(human_feedback)))
+                             rev1, grades['review1'], rev2, grades['review2'], final, grades['final'], human_feedback))
     return rocket.respond(ret + '</form>', 'Dashboard')
 
 
